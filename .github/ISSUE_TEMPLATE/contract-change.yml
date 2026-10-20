@@ -1,0 +1,27 @@
+name: Change the contract
+description: Give Phoenix a concrete new requirement to rebuild against.
+title: "[Contract] "
+labels: ["contract"]
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observable behavior
+      description: What should an HTTP client observe?
+      placeholder: When an event expires, its body must no longer appear in inspection responses.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Acceptance example
+      description: Give an example input, expected output, and an edge case.
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility
+      description: What existing data or behavior must survive?
+    validations:
+      required: true

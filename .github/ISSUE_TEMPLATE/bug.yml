@@ -1,0 +1,17 @@
+name: Reproduction or harness bug
+description: Report a problem with a candidate, verifier, or evidence bundle.
+title: "[Bug] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Commit or evidence run ID
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and expected behavior
+      description: Include commands, Python version, and sanitized output. No secrets or real payloads.
+    validations:
+      required: true

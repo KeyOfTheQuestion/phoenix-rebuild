@@ -1,0 +1,3 @@
+* text=auto
+# Evidence hashes must survive a checkout unchanged, including on Windows.
+docs/evidence/** -text -whitespace

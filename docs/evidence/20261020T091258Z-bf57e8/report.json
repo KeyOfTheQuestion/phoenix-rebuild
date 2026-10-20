@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "kind": "reference-verification",
+  "started_at": "2026-10-20T09:12:58.359377+00:00",
+  "candidate_sha256": "857cb24936ce6e0a7a941466b57b01fb8125748a1eb197306a62d664616cf142",
+  "checks": [
+    {
+      "id": "C01",
+      "title": "Service boots from its documented interface",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 388.39
+    },
+    {
+      "id": "C02",
+      "title": "Health exposes the schema version",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 0.44
+    },
+    {
+      "id": "S01",
+      "title": "Administrative routes reject missing and wrong credentials",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 2.99
+    },
+    {
+      "id": "C03",
+      "title": "Create a named inbox with an unpredictable token",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 3.73
+    },
+    {
+      "id": "C04",
+      "title": "Capture a real UTF-8 webhook request",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 1.22
+    },
+    {
+      "id": "C05",
+      "title": "Preserve body, metadata, and safe headers",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 0.72
+    },
+    {
+      "id": "R01",
+      "title": "Deduplicate deliveries and reject body conflicts",
+      "category": "reliability",
+      "passed": true,
+      "duration_ms": 1.37
+    },
+    {
+      "id": "R02",
+      "title": "Concurrent retries create one logical event",
+      "category": "reliability",
+      "passed": true,
+      "duration_ms": 5.39
+    },
+    {
+      "id": "R03",
+      "title": "Unkeyed deliveries remain independent",
+      "category": "reliability",
+      "passed": true,
+      "duration_ms": 2.59
+    },
+    {
+      "id": "R04",
+      "title": "Idempotency keys are scoped to an inbox",
+      "category": "reliability",
+      "passed": true,
+      "duration_ms": 2.09
+    },
+    {
+      "id": "C06",
+      "title": "Bound pagination and list newest events first",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 3.3
+    },
+    {
+      "id": "S02",
+      "title": "Reject malformed inbox input",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 2.96
+    },
+    {
+      "id": "S03",
+      "title": "Reject oversized and malformed request bodies",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 2.35
+    },
+    {
+      "id": "C07",
+      "title": "Accept non-JSON and empty webhook bodies",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 3.13
+    },
+    {
+      "id": "S04",
+      "title": "Keep credentials out of storage responses and logs",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 2.2
+    },
+    {
+      "id": "S05",
+      "title": "Reject incorrect hook tokens without revealing inboxes",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 0.96
+    },
+    {
+      "id": "C08",
+      "title": "Unknown resources and unsupported methods return JSON",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 1.45
+    },
+    {
+      "id": "D01",
+      "title": "Events and idempotency survive process restart",
+      "category": "compatibility",
+      "passed": true,
+      "duration_ms": 171.56
+    },
+    {
+      "id": "D02",
+      "title": "Read old events and preserve their idempotency state",
+      "category": "compatibility",
+      "passed": true,
+      "duration_ms": 1.38
+    }
+  ],
+  "execution": "local-subprocess",
+  "evaluation_isolation": "procedural",
+  "human_interventions": null,
+  "predecessor_sha256": "857cb24936ce6e0a7a941466b57b01fb8125748a1eb197306a62d664616cf142",
+  "compatibility_fixture": "database populated via predecessor HTTP API before candidate startup",
+  "duration_seconds": 0.601,
+  "passed": 19,
+  "total": 19,
+  "status": "passed",
+  "id": "20261020T091258Z-bf57e8",
+  "contract_sha256": "3efefc3d38071cc4f4f173a1724324bdc98ce0c3f12db784447bd7c236313eef",
+  "verifier_sha256": "435142a64f7d62b54d58c5187973e237ca2140d25833b464d3d68279c0fdab6d",
+  "provenance": {
+    "generator": "human-reviewed-reference",
+    "model": null
+  },
+  "usage": null,
+  "cost_usd": null
+}

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1e9">
+  <meta name="description" content="Can AI rebuild the same backend from a contract? Phoenix publishes the source, acceptance checks, and data compatibility evidence from every attempt.">
+  <meta property="og:title" content="Phoenix — a backend, born again.">
+  <meta property="og:description" content="Fresh code. The same contract. The old data. An open, executable AI engineering experiment.">
+  <meta property="og:image" content="https://keyofthequestion.github.io/phoenix-rebuild/og.svg">
+  <title>Phoenix — A backend, born again.</title>
+  <link rel="icon" type="image/svg+xml" href="mark.svg">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#notebook">Skip to experiment records</a>
+  <header class="shell topbar">
+    <a class="brand" href="#" aria-label="Phoenix home"><img src="mark.svg" width="30" height="32" alt=""><strong>phoenix</strong><span>REBUILD LAB</span></a>
+    <nav aria-label="Main navigation"><a href="#notebook" data-i18n="navNotebook">Notebook</a><a href="contract.html" data-i18n="navContract">The contract</a><a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild" target="_blank" rel="noopener">GitHub ↗</a><button id="language" class="language" aria-label="Switch language">中文</button></nav>
+  </header>
+  <main>
+    <section class="shell hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="orange-dot"></span><span data-i18n="eyebrow">AN OPEN SOFTWARE EXPERIMENT · NO. 001</span></div>
+        <h1 data-i18n="headline">A backend.<br><em>Born again.</em></h1>
+        <p class="intro" data-i18n="intro">Keep the contract. Start with no implementation. Ask AI to build it again. Then make it prove the old data still works.</p>
+        <div class="hero-actions"><a class="button primary" href="#notebook"><span data-i18n="inspect">Inspect the evidence</span><span>↘</span></a><button class="button secondary" id="copy-command" type="button" data-i18n="run">Run it yourself ⌘</button></div>
+        <div class="hero-footnote"><span class="tiny-rule"></span><span data-i18n="footnote">Every attempt is a record. A failed rebuild stays on the page.</span></div>
+      </div>
+      <div class="experiment-card" aria-label="Reconstruction experiment diagram">
+        <div class="card-caption"><span data-i18n="subjectLabel">RECONSTRUCTION SUBJECT</span><span class="capsule">001 / WEBHOOK INBOX</span></div>
+        <div class="phoenix-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><svg viewBox="0 0 300 240"><path d="M48 68L139 105L94 25L165 92L231 42L202 123L262 99L218 162L158 204L112 172L72 153L127 144Z" fill="#e45a2a"/><path d="M139 105L165 92L158 204L127 144Z" fill="#b83c18"/><path d="M165 92L231 42L202 123L158 204Z" fill="#f4834d"/><circle cx="182" cy="108" r="4" fill="#201f1c"/><path d="M38 203H260" stroke="#d8d2c4" stroke-dasharray="4 5"/></svg><span class="coordinate">SPEC → CODE → PROOF</span></div>
+        <div class="flow-step"><span class="step-number">01</span><div><b data-i18n="flow1">One public contract</b><small data-i18n="flow1sub">Behavior + stable SQLite schema</small></div><span class="flow-symbol">↓</span></div>
+        <div class="flow-step"><span class="step-number">02</span><div><b data-i18n="flow2">A fresh implementation</b><small data-i18n="flow2sub">No baseline source staged for generation</small></div><span class="flow-symbol">↓</span></div>
+        <div class="flow-step"><span class="step-number">03</span><div><b data-i18n="flow3">Independent acceptance</b><small data-i18n="flow3sub">Real HTTP + concurrency + old data</small></div><span class="flow-symbol checkmark">↗</span></div>
+        <div class="card-bottom"><span class="green-dot"></span><span data-i18n="cardBottom">Useful software. Inspectable claims.</span></div>
+      </div>
+    </section>
+    <section class="shell metric-strip" aria-label="Measured experiment results">
+      <div><span class="metric-label" data-i18n="aiRuns">AI REBUILD ATTEMPTS</span><b id="ai-count">—</b><small data-i18n="aiCountNote">Reference checks excluded</small></div>
+      <div><span class="metric-label" data-i18n="successful">SUCCESSFUL AI REBUILDS</span><b id="success-count">—</b><small data-i18n="successNote">All 19 acceptance checks passed</small></div>
+      <div><span class="metric-label" data-i18n="compat">OLD-DATA COMPATIBILITY</span><b id="compat-status">—</b><small data-i18n="compatNote">Data written by the predecessor's API</small></div>
+      <div class="metric-principle"><span class="metric-label" data-i18n="principle">THE RULE</span><p data-i18n="principleText">A green test is a claim.<br>The artifacts are the evidence.</p></div>
+    </section>
+    <section class="shell notebook" id="notebook">
+      <div class="section-heading"><div><div class="eyebrow" data-i18n="labNotes">THE LAB NOTEBOOK</div><h2 data-i18n="recordTitle">Nothing up our sleeves.</h2><p data-i18n="recordIntro">Open an attempt. Read its checks, generated code, and exact contract.</p></div><div class="filters" role="group" aria-label="Filter experiment records"><button class="active" data-filter="all" aria-pressed="true" data-i18n="all">All records</button><button data-filter="ai-rebuild" aria-pressed="false" data-i18n="aiOnly">AI rebuilds</button></div></div>
+      <div id="load-error" role="status" hidden></div>
+      <div class="table-wrap"><table><caption class="sr-only">Phoenix experiment records</caption><thead><tr><th data-i18n="colAttempt">ATTEMPT / UTC</th><th data-i18n="colOrigin">ORIGIN</th><th data-i18n="colVerdict">VERDICT</th><th data-i18n="colChecks">CHECKS</th><th data-i18n="colDuration">VERIFY TIME</th><th><span class="sr-only">Evidence</span></th></tr></thead><tbody id="runs"><tr><td colspan="6" class="empty" data-i18n="loading">Loading the public record…</td></tr></tbody></table></div>
+      <p class="ledger-note" data-i18n="ledgerNote">Usage is published only when the generator reports it. Monetary cost is unknown. No invented savings, streaks, or scores.</p>
+    </section>
+    <section class="shell lower-grid">
+      <article class="method"><div class="eyebrow" data-i18n="whatProves">WHAT THIS ACTUALLY TESTS</div><h2 data-i18n="methodTitle">The code changes.<br>The promise stays.</h2><p data-i18n="methodIntro">Our first subject is a durable webhook inbox, not a hello-world endpoint. The contract asks for a small service with real boundaries.</p><ul><li data-i18n="feature1">Capture exact UTF-8 webhook bodies</li><li data-i18n="feature2">Deduplicate concurrent deliveries</li><li data-i18n="feature3">Keep credentials out of responses and logs</li><li data-i18n="feature4">Read persisted events after a restart or rebuild</li></ul><a class="text-link" href="contract.html" data-i18n="readContract">Read the complete contract ↗</a></article>
+      <article class="terminal-card"><div class="terminal-top"><span>● ● ●</span><span>YOUR MACHINE / PYTHON 3.9+</span></div><h3 data-i18n="replicate">Don't take our word for it.</h3><pre><code><span class="comment"># clone the experiment</span>
+git clone https://github.com/KeyOfTheQuestion/phoenix-rebuild
+cd phoenix-rebuild
+
+<span class="comment"># verify the baseline · no API key</span>
+python3 -m phoenix verify
+
+<span class="comment"># rebuild · authenticated Codex CLI</span>
+python3 -m phoenix rebuild
+
+<span class="comment"># audit every published artifact</span>
+python3 -m phoenix audit</code></pre><a class="terminal-link" href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/setup.md" data-i18n="setup">Setup, execution boundaries & methodology ↗</a></article>
+    </section>
+    <section class="shell limits"><span class="eyebrow" data-i18n="honestTitle">AN EXPERIMENT, WITH LIMITS</span><p data-i18n="honestBody">Passing means these checks passed for this candidate and contract. It is not a production-readiness certification or a model ranking. Generation context is separated procedurally; local execution is not a hostile-code sandbox. All public payloads are synthetic.</p></section>
+  </main>
+  <footer class="shell footer"><a class="brand" href="#"><img src="mark.svg" alt="" width="22" height="24"><strong>phoenix</strong></a><span data-i18n="footer">Built in public by KeyOfTheQuestion. Evidence over adjectives.</span><a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/issues/new?template=contract-change.yml" data-i18n="challenge">Propose the next contract ↗</a></footer>
+  <dialog id="evidence-dialog" aria-labelledby="dialog-title"><div class="dialog-top"><span class="eyebrow">EVIDENCE / <span id="dialog-run-id"></span></span><button id="close-dialog" type="button" aria-label="Close evidence">×</button></div><h2 id="dialog-title">Acceptance report</h2><p id="dialog-summary"></p><div class="artifact-links" id="artifact-links"></div><div id="checks-list"></div><p class="ledger-note" id="dialog-provenance"></p></dialog>
+</body>
+</html>

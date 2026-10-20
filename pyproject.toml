@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phoenix-rebuild"
+version = "0.1.0"
+description = "Can an AI rebuild the same backend from its contract? An open, executable experiment."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "KeyOfTheQuestion"}]
+dependencies = []
+
+[project.scripts]
+phoenix = "phoenix.__main__:main"
+
+[tool.setuptools]
+packages = ["phoenix"]

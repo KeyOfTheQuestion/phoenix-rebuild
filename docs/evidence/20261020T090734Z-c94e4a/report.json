@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "ai-rebuild",
+  "status": "generation-failed",
+  "started_at": "2026-10-20T09:07:34.852094+00:00",
+  "passed": 0,
+  "total": 0,
+  "duration_seconds": 6.851,
+  "human_interventions": 0,
+  "execution": "not-executed",
+  "checks": [],
+  "error": "Generator exited with code 1; inspect local .phoenix/generator-errors/latest.log",
+  "id": "20261020T090734Z-c94e4a",
+  "contract_sha256": "3efefc3d38071cc4f4f173a1724324bdc98ce0c3f12db784447bd7c236313eef",
+  "verifier_sha256": "b1a9886eb8da776647db536e731e87899a77c3e3b4633b73c944f8917ac48d9c",
+  "provenance": {
+    "generator": "codex-cli",
+    "version": "codex-cli 0.154.0",
+    "model": null,
+    "model_selection": "local CLI configuration",
+    "attempt": 1,
+    "usage": null,
+    "observed_tool_calls": 0,
+    "generation_seconds": 6.85,
+    "context_boundary": "fresh-directory, prompt-enforced; not a hostile-agent sandbox"
+  },
+  "usage": null,
+  "cost_usd": null,
+  "candidate_sha256": "f8aa40dc0394c5e61a367ae5194e04a62a7fcbbb6dabd9bafe2eef0ab03bb221",
+  "metadata_note": "The initial harness omitted the placeholder source digest on a generation failure. Added before first publication; the failure verdict is unchanged."
+}
