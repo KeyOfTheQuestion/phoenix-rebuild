@@ -90,4 +90,10 @@ Propose an observable requirement with a concrete acceptance example using the [
 
 Built in public by [KeyOfTheQuestion](https://github.com/KeyOfTheQuestion). Inspired by specification-driven software engineering, including [StrongDM Attractor](https://github.com/strongdm/attractor). Phoenix's focus is a small, inspectable reconstruction experiment with executable data compatibility evidence.
 
+<details><summary>Preview the experiment notebook</summary>
+
+[![Phoenix notebook launch-day screenshot](docs/preview.png)](https://keyofthequestion.github.io/phoenix-rebuild/)
+
+</details>
+
 MIT licensed. No tracking, accounts, paid service, or frontend build step for the notebook.

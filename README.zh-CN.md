@@ -58,3 +58,9 @@ python3 -m phoenix replay <记录编号>
 - 公开请求数据均为合成示例。不要把真实业务凭据或客户数据上传到记录中。
 
 欢迎通过 [Issue](https://github.com/KeyOfTheQuestion/phoenix-rebuild/issues/new?template=contract-change.yml) 提出下一轮需求，附上可观察的行为与验收例子。项目由 [KeyOfTheQuestion](https://github.com/KeyOfTheQuestion) 公开构建，采用 MIT 协议。
+
+<details><summary>查看实验记录簿预览</summary>
+
+[![Phoenix 首日展示截图](docs/preview.png)](https://keyofthequestion.github.io/phoenix-rebuild/)
+
+</details>
