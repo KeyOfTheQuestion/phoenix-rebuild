@@ -39,6 +39,19 @@ the generator fails. It is not automatically published.
 
 ## Execution boundary
 
+To repeat a trusted archived run without another model call:
+
+```sh
+python3 -m phoenix replay PUBLISHED_RUN_ID
+```
+
+Replay validates the ledger, manifest and recorded hashes before executing
+archived code from verified bytes. It uses temporary candidate/predecessor copies
+and leaves the archive unchanged. Exit code 0 means acceptance passed, 1 means
+acceptance failed, and 2 means the requested record was refused (including a
+generation failure or inconsistent evidence). Hash consistency is not a security
+sandbox or an independent signature.
+
 The generator returns code as structured text; the verifier runs it using a
 temporary working directory and a minimal environment. This is normal local
 execution of code, **not a security sandbox**. It can access files and network

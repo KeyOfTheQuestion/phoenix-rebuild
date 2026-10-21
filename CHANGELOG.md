@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-21 · Replay integrity
+
+- Fixed archived replay loading source before checking its manifest and hashes.
+- Added shared bundle validation, controlled refusal of malformed records and generation failures, and execution of verified bytes in temporary copies without modifying archives.
+- Added ten regression cases covering modified source, missing/unlisted artifacts, symlinks, unsafe IDs, malformed ledgers, generation failures, valid replay and source changes after validation.
+- Documented the reproduction, original code location, repair and verification in the [maintenance record](docs/maintenance/2026-10-21-replay-integrity.md). Historical evidence remains unchanged.
+
 ## 0.1.0 · 2026-10-20
 
 - Added contract 001, a standard-library webhook inbox, and 19 independent HTTP checks.

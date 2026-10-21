@@ -44,7 +44,7 @@ python3 -m phoenix rebuild --predecessor docs/evidence/记录编号/server.py
 python3 -m phoenix replay <记录编号>
 ```
 
-复验使用归档的验收器和上一实现（若有），不调用模型。
+复验会先核对公开记录、文件清单和文件指纹，再用校验过的源码临时副本运行候选实现、验收器和上一实现（若有）。证据不一致或生成失败的记录会在加载归档代码前被拒绝，退出码为 2。复验不修改证据目录，也不调用模型。详见[复验完整性修复与验证记录](docs/maintenance/2026-10-21-replay-integrity.md)。
 
 ## 记录的含义和边界
 

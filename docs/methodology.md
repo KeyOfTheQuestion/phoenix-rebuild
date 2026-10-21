@@ -77,7 +77,17 @@ or generation workflow was built without human input.
 
 ## Reproduce, don't infer
 
-Run `python3 -m phoenix replay RUN_ID` for records with an archived verifier.
+Run `python3 -m phoenix replay RUN_ID` for trusted records with an archived verifier.
+Replay validates the requested ledger entry, manifest, report and artifact hashes
+before loading any archived code. It rejects unlisted artifacts, symlinked files,
+unsafe record IDs and generation failures with exit code 2. It compiles the
+verified verifier bytes directly and writes the checked candidate and predecessor
+bytes into a temporary directory; it neither reopens the original source files
+after validation nor writes bytecode into the archive. This guards consistency,
+not the trustworthiness of code whose manifest was also deliberately replaced.
+The [2026-10-21 maintenance record](maintenance/2026-10-21-replay-integrity.md)
+documents the original bypass, regression cases and verification.
+
 For an earlier record, run `python3 -m phoenix verify --candidate
 docs/evidence/RUN_ID/server.py` with the current harness and disclose the change.
 Run `python3 -m phoenix audit` to validate the published ledger and artifact

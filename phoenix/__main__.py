@@ -51,20 +51,33 @@ def main():
         print("Evidence audit: " + ("FAILED" if errors else "passed"))
         return 1 if errors else 0
     if args.command == "replay":
-        import importlib.util
+        import tempfile
+        import types
         from pathlib import Path
-        if Path(args.run_id).name != args.run_id:
-            parser.error("run_id must be a published record id")
-        directory = ROOT / "docs/evidence" / args.run_id
-        if not (directory / "verifier.py").exists():
-            parser.error("This early record has no archived verifier; use verify --candidate instead")
-        spec = importlib.util.spec_from_file_location("archived_verifier", directory / "verifier.py")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        kwargs = {}
-        if (directory / "predecessor.py").exists():
-            kwargs["predecessor"] = directory / "predecessor.py"
-        report = module.evaluate(directory / "server.py", **kwargs)
+        from .audit import EvidenceError, verified_run
+        try:
+            archived, artifacts = verified_run(ROOT / "docs", args.run_id)
+            if archived["status"] == "generation-failed":
+                raise EvidenceError("Generation failed; there is no executable candidate to replay")
+            if "verifier.py" not in artifacts:
+                raise EvidenceError("This record has no archived verifier; use verify --candidate instead")
+        except EvidenceError as error:
+            print("Replay refused: " + str(error), file=sys.stderr)
+            return 2
+        # Execute precisely the verified bytes, without importing stale bytecode
+        # or reopening source files that may have changed after the audit.
+        module = types.ModuleType("archived_verifier")
+        exec(compile(artifacts["verifier.py"], "archived-verifier.py", "exec"), module.__dict__)
+        with tempfile.TemporaryDirectory(prefix="phoenix-replay-") as temporary:
+            directory = Path(temporary)
+            candidate = directory / "server.py"
+            candidate.write_bytes(artifacts["server.py"])
+            kwargs = {}
+            if archived.get("predecessor_sha256"):
+                predecessor = directory / "predecessor.py"
+                predecessor.write_bytes(artifacts["predecessor.py"])
+                kwargs["predecessor"] = predecessor
+            report = module.evaluate(candidate, **kwargs)
         print(json.dumps(report, indent=2))
         return 0 if report["status"] == "passed" else 1
 

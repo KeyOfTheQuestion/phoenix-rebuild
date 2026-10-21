@@ -8,6 +8,7 @@
 - [x] Failed attempts, candidate source, contract, hashes and reported usage.
 - [x] Static bilingual notebook with inspectable evidence.
 - [x] Re-run an archived candidate using its archived verifier.
+- [x] Check the complete evidence bundle before replaying archived code, and execute the verified bytes without changing the archive (2026-10-21; [repair and checks](maintenance/2026-10-21-replay-integrity.md)).
 
 ## Next bounded improvements (one meaningful change per iteration)
 
