@@ -75,6 +75,20 @@ or generation workflow was built without human input.
 - Automatic improvement is bounded by a task backlog and visible commits.
   A scheduled run can fail or be skipped when the host or authentication is down.
 
+## Notebook verification
+
+The notebook has a separate optional Chromium suite, run in CI and before Pages
+publication. It serves the real static files under `/phoenix-rebuild/`, exercises
+filters and language persistence, opens every record's dialog, follows report
+links, and checks all displayed artifact URLs against the archived manifest.
+It also verifies contract navigation and visible failures for unavailable ledger
+or report requests. These browser checks do not execute generated services and
+do not count as reconstruction attempts or extra backend acceptance checks.
+
+The suite uses fresh browser contexts and local synthetic failure responses.
+It covers Chromium desktop behavior, not all browsers, mobile devices or
+accessibility requirements. See the [2026-10-22 verification record](maintenance/2026-10-22-notebook-browser-checks.md).
+
 ## Reproduce, don't infer
 
 Run `python3 -m phoenix replay RUN_ID` for trusted records with an archived verifier.

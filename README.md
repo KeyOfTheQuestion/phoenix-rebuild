@@ -86,6 +86,12 @@ curl -s "http://127.0.0.1:8787/hooks/INBOX_ID/INBOX_TOKEN" \
 
 This is a local development service. It does not currently deliver outbound webhooks, host production traffic, or implement tenant-level authorization.
 
+## Check the notebook in a browser
+
+Optional development checks use Python 3.10+ and pinned Playwright with headless Chromium. They exercise the real notebook under a Pages-style project path: ledger metrics, filters, language persistence, every evidence dialog and artifact link, contract navigation, and loading-error recovery. These checks run in CI and before Pages publication; they do not change the service's Python 3.9+ requirement or add runtime dependencies.
+
+See [browser test setup](docs/setup.md#notebook-browser-checks) and the [2026-10-22 checks and reconstruction record](docs/maintenance/2026-10-22-notebook-browser-checks.md).
+
 ## Help change the contract
 
 Propose an observable requirement with a concrete acceptance example using the [contract-change issue template](https://github.com/KeyOfTheQuestion/phoenix-rebuild/issues/new?template=contract-change.yml). Good next challenges: expiry policies, schema migration, and bounded replay with an explicit destination policy. Published results must retain failures and disclose human intervention. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/roadmap.md).

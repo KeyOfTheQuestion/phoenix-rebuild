@@ -84,3 +84,30 @@ python3 -m phoenix audit
 Reconstruction results are evidence: keep historical attempts even when improving
 the harness. Describe material method changes in the changelog, and give each run
 its own contract and verifier snapshots.
+
+## Notebook browser checks
+
+These optional development tools require Python 3.10+; the following example
+uses Python 3.12 in a local, ignored environment. The reference service and
+independent HTTP harness continue to need only Python 3.9+ and its standard
+library.
+
+```sh
+python3.12 -m venv .phoenix/browser-env
+.phoenix/browser-env/bin/python -m pip install -r requirements-browser.txt
+.phoenix/browser-env/bin/python -m playwright install --only-shell chromium
+.phoenix/browser-env/bin/python tests/browser_smoke.py
+```
+
+On Linux, use `install --with-deps --only-shell chromium` to install Chromium's
+system libraries as well. See the official [Playwright browser installation guide](https://playwright.dev/python/docs/browsers).
+The pinned Playwright package and matching browser binary are test dependencies;
+the public site still has no frontend build step or browser automation dependency.
+
+The suite starts and stops its own local HTTP server on an assigned free port,
+uses fresh browser contexts, and checks the real site under a project subpath.
+It covers ledger counts, filtering, language persistence, every record's dialog
+and artifact URLs, contract navigation, and failed ledger/report loading.
+`python3 -m unittest discover -s tests -v` keeps running only the dependency-free
+unit checks. Run `tests/browser_smoke.py` explicitly for browser coverage.
+CI runs both suites; the existing Pages workflow also requires both to pass.

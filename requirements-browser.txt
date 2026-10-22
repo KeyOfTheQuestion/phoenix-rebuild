@@ -1,0 +1,3 @@
+# Optional notebook checks only; the service and acceptance harness need none of these.
+# Playwright 1.64 requires Python 3.10+ and its matching Chromium binary.
+playwright==1.64.0

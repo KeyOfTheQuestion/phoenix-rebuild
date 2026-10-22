@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-22 · Notebook browser verification
+
+- Added seven optional Playwright/Chromium checks for notebook metrics, record filters, persisted language selection, all evidence dialogs and artifact links, contract navigation, and failed ledger/report loading.
+- Exercise the real static site under a Pages-style project subpath and verify displayed artifact bytes against their archived hashes.
+- Run the browser suite in CI and before publication through the existing Pages workflow. Keep the service and backend harness dependency-free on Python 3.9+; optional browser tools require Python 3.10+.
+- Documented actual browser results, a deliberately broken filter negative control and the bounded daily reconstruction in the [verification record](docs/maintenance/2026-10-22-notebook-browser-checks.md).
+
 ## 2026-10-21 · Replay integrity
 
 - Fixed archived replay loading source before checking its manifest and hashes.
