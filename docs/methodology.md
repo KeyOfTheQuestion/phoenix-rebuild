@@ -61,7 +61,7 @@ or generation workflow was built without human input.
 
 ## Known limits
 
-- Generated code executes in a local child process, with a minimal environment,
+- Default generation and archived replay execute code in a local child process, with a minimal environment,
   but retains that user's operating-system permissions and network access.
 - Default CLI configuration can change across CLI versions. An unspecified model
   is reported as a selection policy, not assigned a guessed model name.
@@ -88,6 +88,22 @@ do not count as reconstruction attempts or extra backend acceptance checks.
 The suite uses fresh browser contexts and local synthetic failure responses.
 It covers Chromium desktop behavior, not all browsers, mobile devices or
 accessibility requirements. See the [2026-10-22 verification record](maintenance/2026-10-22-notebook-browser-checks.md).
+
+## Optional container verification
+
+`container-verify` runs the unchanged HTTP harness, candidate and predecessor
+inside one Docker container. It checks an actual boundary probe, disables
+external networking, uses a read-only root and input mount, and limits CPU,
+memory, temporary storage and PIDs. Only source snapshots are mounted; host
+credentials are not forwarded. The image is pinned by digest. A runtime or
+policy failure returns an error without falling back to host execution.
+
+This is a separate verification mode with the current harness. It emits JSON
+without adding a reconstruction attempt to the ledger. Daily generation and
+archived replay retain local subprocess execution. The shared container/UID
+does not protect the evaluator from a deliberately adversarial candidate, and
+Docker shares the host kernel. See the [profile and limits](container-runner.md)
+and [2026-10-23 verification record](maintenance/2026-10-23-container-runner.md).
 
 ## Reproduce, don't infer
 

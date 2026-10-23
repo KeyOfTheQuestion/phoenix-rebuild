@@ -41,7 +41,7 @@ python3 -m phoenix rebuild --predecessor docs/evidence/RUN_ID/server.py
 
 The adapter makes actual model calls using your CLI authentication and usage allowance. It starts with a clean CLI configuration, preserves authentication, stages **no reference source or verifier**, and requests a structured, complete Python program. Each candidate gets a new directory; retries receive only failure summaries, not the previous source. Supply `--model <available-model>` to select a model or `--use-user-config` to opt into your personal CLI configuration.
 
-Generation never deletes repository code. Only disposable temporary directories are discarded. Evidence is saved under `docs/evidence/` before cleanup. Generated candidates run locally with a minimal environment; this is **not an adversarial-code sandbox**. See [execution boundaries](docs/setup.md) before evaluating code you do not trust.
+Generation never deletes repository code. Only disposable temporary directories are discarded. Evidence is saved under `docs/evidence/` before cleanup. Default generation and archived replay run candidates as local child processes with a minimal environment; this is **not an adversarial-code sandbox**. See [execution boundaries](docs/setup.md) before evaluating code you do not trust.
 
 ## Inspect the proof
 
@@ -64,6 +64,12 @@ python3 -m phoenix verify --candidate path/to/trusted/server.py
 Replaying first checks the ledger, manifest and artifact hashes, then runs a temporary copy of the verified candidate, verifier and predecessor (when recorded). It refuses inconsistent bundles and generation failures with exit code 2, before loading archived code, and does not write into the evidence directory. It does not regenerate code or charge model usage. See the [replay integrity repair and verification](docs/maintenance/2026-10-21-replay-integrity.md).
 
 Passing is evidence for these checks and this contract—not production certification, model superiority, or guaranteed correctness. Artifact hashes detect inconsistent files; they are not an independent signature. USD cost is unknown and is never estimated from invented prices.
+
+## Verify inside an optional container
+
+With a Linux cgroup-v2 Docker engine, `python3 -m phoenix container-verify` runs the same HTTP checks in a disposable container with external networking disabled, a read-only root/input mount, no host credentials forwarded, and explicit CPU, memory and PID limits. An actual boundary probe must confirm the profile before a report is accepted. The image is pinned by digest, and an unavailable runtime produces an error without host fallback.
+
+This separate command emits verification JSON; daily generation and historical replay retain local execution and their original evidence. See the [container profile, limits and setup](docs/container-runner.md) and [2026-10-23 verification record](docs/maintenance/2026-10-23-container-runner.md).
 
 ## Run the webhook inbox
 

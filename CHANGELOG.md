@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-23 · Optional Docker verification
+
+- Added `container-verify`, a separately invoked HTTP acceptance mode with a digest-pinned Python image, only read-only source snapshots mounted, external networking disabled, and CPU/memory/PID/tmpfs limits.
+- Validate actual container boundary observations, snapshot hashes and complete passing verdicts; refuse unavailable runtimes and unconfirmed policies without a host fallback.
+- Added eight dependency-free runner unit tests and explicit Linux Docker integration checks for the reference, latest audited AI candidate, real predecessor data and timeout cleanup. CI and the existing Pages workflow run the integration command.
+- Default generation and archived replay remain local. The [verification record](docs/maintenance/2026-10-23-container-runner.md) distinguishes local checks, real CI container checks and today's bounded reconstruction.
+
 ## 2026-10-22 · Notebook browser verification
 
 - Added seven optional Playwright/Chromium checks for notebook metrics, record filters, persisted language selection, all evidence dialogs and artifact links, contract navigation, and failed ledger/report loading.

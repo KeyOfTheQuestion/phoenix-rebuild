@@ -13,6 +13,10 @@ def main():
     verify.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     verify.add_argument("--publish", action="store_true", help="Save a public reference-verification record")
     verify.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"), help="Previous implementation used to create a real database via HTTP")
+    container = commands.add_parser("container-verify", help="Run HTTP acceptance inside an optional, restricted Docker container")
+    container.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
+    container.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"))
+    container.add_argument("--timeout", type=int, default=90, help="Container execution deadline, 1..300 seconds; image pull is separately bounded")
     generate = commands.add_parser("rebuild", help="Generate a fresh candidate using your authenticated Codex CLI")
     generate.add_argument("--attempts", type=int, choices=range(1, 6), default=2)
     generate.add_argument("--timeout", type=int, default=300)
@@ -24,6 +28,15 @@ def main():
     replay = commands.add_parser("replay", help="Re-run a trusted published candidate with its archived verifier")
     replay.add_argument("run_id")
     args = parser.parse_args()
+    if args.command == "container-verify":
+        from .container import evaluate_in_container
+        try:
+            report = evaluate_in_container(args.candidate, predecessor=args.predecessor, timeout=args.timeout)
+        except (RuntimeError, OSError) as error:
+            print(str(error), file=sys.stderr)
+            return 2
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0 if report["status"] == "passed" else 1
     if args.command == "verify":
         report = evaluate(args.candidate, predecessor=args.predecessor)
         if args.publish:

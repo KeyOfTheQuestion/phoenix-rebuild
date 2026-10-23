@@ -39,6 +39,13 @@ the generator fails. It is not automatically published.
 
 ## Execution boundary
 
+Optional Docker verification is available with `python3 -m phoenix container-verify`.
+It requires a Linux cgroup-v2 Docker engine and first-use registry access. It runs
+the unchanged HTTP verifier and candidate inside a restricted, disposable
+container with no host credentials forwarded and no external network. See the
+[container setup and precise limits](container-runner.md). A missing runtime
+returns exit code 2; it never silently executes the candidate on the host.
+
 To repeat a trusted archived run without another model call:
 
 ```sh
@@ -52,7 +59,7 @@ acceptance failed, and 2 means the requested record was refused (including a
 generation failure or inconsistent evidence). Hash consistency is not a security
 sandbox or an independent signature.
 
-The generator returns code as structured text; the verifier runs it using a
+The default generator returns code as structured text; local verification and replay run it using a
 temporary working directory and a minimal environment. This is normal local
 execution of code, **not a security sandbox**. It can access files and network
 resources allowed to the operating-system user. Evaluate only trusted candidates,

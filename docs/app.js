@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-10-22 维护：记录页浏览器检查现已在 CI 和发布前执行。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-10-22-notebook-browser-checks.md">查看检查及重建记录 ↗</a>',
+  maintenanceNote:'2026-10-23 维护：新增可选 Docker 验收，限制资源并检查实际边界。每日重建与历史复验仍在本地执行。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-10-23-container-runner.md">查看验证记录 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',
