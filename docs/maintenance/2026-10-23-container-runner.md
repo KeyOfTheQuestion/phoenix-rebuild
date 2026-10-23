@@ -41,6 +41,27 @@ The CI output is the source for actual container runtime results. No model calls
 are made in those checks. The local reconstruction below remains a separate,
 published AI attempt.
 
+## Recorded Linux CI result
+
+The real [container job](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/39891329444/job/120211527986)
+passed for implementation commit
+[`e30d7c3`](https://github.com/KeyOfTheQuestion/phoenix-rebuild/commit/e30d7c3ed7b1b8c0dcc2bc49740194e741b1e380).
+The complete [`CONTAINER_EVIDENCE` JSON](2026-10-23-container-ci.json) was parsed
+from that completed job's log, not reconstructed from expected values. Its
+`checked_at` is `2026-10-23T02:45:54.176602+00:00` (UTC).
+
+Both the reference and today's archived AI candidate passed 19/19 HTTP checks
+inside Docker. The observed probe confirmed UID 65534, only the `lo` interface,
+read-only root/input mounts, a 64 MiB restricted tmpfs, zero effective
+capabilities, `NoNewPrivs`, 256 MiB memory, zero extra swap, 128 PIDs and CPU
+quota/period `100000/100000`. The Docker socket and synthetic host-only marker
+were absent. The timeout control was refused at its deadline, and the final
+check found no leftover Phoenix containers.
+
+The corresponding CI matrix and Pages workflow also completed successfully.
+These are verification results for the pinned image and tested runner, not new
+AI generation attempts or claims about arbitrary hostile code.
+
 ## Reproduce the container check
 
 On a Linux cgroup-v2 Docker host:
