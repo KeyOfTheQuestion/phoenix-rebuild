@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-24 · Archived verifier replay inside Docker
+
+- Added `replay RUN_ID --container --timeout 90`, using the exact verified archive bytes for the candidate, archived verifier and recorded predecessor. Archived code is not loaded on the host in this mode; unavailable Docker never triggers host fallback.
+- Preserve early SQL-fixture records without substituting a current verifier or reference predecessor. Output identifies the record, contract and source hashes without changing the historical ledger.
+- Added seven focused unit cases for byte snapshots, archive gating, host-execution refusal, post-validation disk changes and original fixture selection. Extend real Linux CI to replay both the latest AI record and an early record with a distinct archived verifier.
+- Record today's actual bounded reconstruction and tool version in the [verification record](docs/maintenance/2026-10-24-container-replay.md). Daily generation remains local; model identity and cost are still unknown.
+
 ## 2026-10-23 · Optional Docker verification
 
 - Added `container-verify`, a separately invoked HTTP acceptance mode with a digest-pinned Python image, only read-only source snapshots mounted, external networking disabled, and CPU/memory/PID/tmpfs limits.

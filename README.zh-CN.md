@@ -42,6 +42,7 @@ python3 -m phoenix rebuild --predecessor docs/evidence/记录编号/server.py
 
 ```sh
 python3 -m phoenix replay <记录编号>
+python3 -m phoenix replay <记录编号> --container --timeout 90
 ```
 
 复验会先核对公开记录、文件清单和文件指纹，再用校验过的源码临时副本运行候选实现、验收器和上一实现（若有）。证据不一致或生成失败的记录会在加载归档代码前被拒绝，退出码为 2。复验不修改证据目录，也不调用模型。详见[复验完整性修复与验证记录](docs/maintenance/2026-10-21-replay-integrity.md)。
@@ -50,7 +51,9 @@ python3 -m phoenix replay <记录编号>
 
 使用支持 Linux cgroup v2 的 Docker 引擎时，执行 `python3 -m phoenix container-verify`，可在一次性容器中运行同一套 HTTP 验收。外部网络关闭，根文件系统和输入只读，不透传主机凭据，并限制 CPU、内存与进程数。验收报告必须通过实际边界探测；镜像使用固定摘要，运行环境不可用时会报错，不自动退回主机执行。
 
-这是单独输出验证 JSON 的命令；每日重建与历史复验仍使用本地执行，保留原有证据含义。详见[容器配置、限制与安装说明](docs/container-runner.md)及 [2026-10-23 验证记录](docs/maintenance/2026-10-23-container-runner.md)。
+`container-verify` 使用当前验收器。复验历史实验时，可用 `replay 记录编号 --container`：先校验证据包，再把校验过的候选源码、归档验收器和已记录的上一实现源码字节交给 Docker，不在主机加载归档验收器。没有记录上一实现的早期实验会保留原来的 SQL 测试样本。结果附带记录编号和文件指纹，不改写历史结果，也不调用模型。每日重建及未启用此选项的复验仍在本地执行。
+
+详见[容器配置、限制与安装说明](docs/container-runner.md)及 [2026-10-24 历史复验验证记录](docs/maintenance/2026-10-24-container-replay.md)。
 
 ## 浏览器端验证记录页
 
@@ -63,7 +66,7 @@ python3 -m phoenix replay <记录编号>
 - `reference-verification`：参考实现的验证，不算 AI 重建成功。
 - `ai-rebuild`：实际模型生成尝试，包括生成失败和验收失败。
 - 不编造 Token 数、费用、节省比例、连续成功天数或人工修改次数。
-- 默认重建与历史复验使用本地子进程；可选容器验收也不宣称能安全执行任意恶意代码。
+- 默认重建及未启用 `--container` 的复验使用本地子进程；可选容器验收也不宣称能安全执行任意恶意代码。
 - 上下文通过临时目录与提示要求分开，不宣称对抗恶意 Agent 的强隔离。
 - 文件哈希用来检查产物是否一致，不是第三方认证。
 - 通过当前验收不等于适合生产，更不等于通用模型能力排名。

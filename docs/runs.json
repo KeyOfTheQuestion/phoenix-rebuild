@@ -1,5 +1,45 @@
 [
   {
+    "id": "20261024T023201Z-51147a",
+    "kind": "ai-rebuild",
+    "status": "passed",
+    "started_at": "2026-10-24T02:32:00.456782+00:00",
+    "passed": 19,
+    "total": 19,
+    "duration_seconds": 0.734,
+    "candidate_sha256": "4b9710cda28f5272290dfd5d14967f15518684bcffb8af2a998cde4c38359476",
+    "human_interventions": 0,
+    "usage": {
+      "input_tokens": 22239,
+      "cached_input_tokens": 0,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 3002,
+      "reasoning_output_tokens": 165
+    },
+    "cost_usd": null,
+    "provenance": {
+      "generator": "codex-cli",
+      "version": "codex-cli 0.163.0",
+      "model": null,
+      "model_selection": "clean CLI default",
+      "user_configuration_loaded": false,
+      "attempt": 1,
+      "usage": {
+        "input_tokens": 22239,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3002,
+        "reasoning_output_tokens": 165
+      },
+      "observed_tool_calls": 0,
+      "generation_seconds": 58.384,
+      "context_boundary": "fresh-directory, prompt-enforced; not a hostile-agent sandbox"
+    },
+    "predecessor_sha256": "35c8091e910d57db44858879aedd4d5316f43909f4b96140c799131688cbbaba",
+    "compatibility_fixture": "database populated via predecessor HTTP API before candidate startup",
+    "generation_seconds": 58.384
+  },
+  {
     "id": "20261023T023013Z-e63562",
     "kind": "ai-rebuild",
     "status": "passed",

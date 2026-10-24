@@ -95,6 +95,23 @@ class ContainerRunnerTests(unittest.TestCase):
                 container.evaluate_in_container(self.candidate)
             run.assert_not_called()
 
+    def test_explicit_snapshot_uses_the_supplied_verifier_instead_of_the_current_one(self):
+        import hashlib
+        archived_verifier = b"# intentionally distinct, synthetic archived verifier\n"
+        with patch("phoenix.container.subprocess.run", side_effect=self.fake_docker):
+            report = container.evaluate_snapshot_in_container(
+                self.candidate.read_bytes(), archived_verifier,
+                predecessor_source=self.predecessor.read_bytes(),
+            )
+        self.assertEqual(report["verifier_sha256"], hashlib.sha256(archived_verifier).hexdigest())
+
+    def test_snapshot_inputs_must_be_immutable_bytes(self):
+        for source in ("print('source string')", bytearray(b"source"), None):
+            with self.subTest(source=type(source).__name__), patch("phoenix.container.subprocess.run") as run:
+                with self.assertRaisesRegex(container.ContainerError, "frozen source bytes"):
+                    container.evaluate_snapshot_in_container(source, b"# verifier\n")
+                run.assert_not_called()
+
     def test_timeout_requests_removal_of_the_entire_container(self):
         self.run_result = subprocess.TimeoutExpired("synthetic docker run", 90)
         with self.assertRaisesRegex(container.ContainerError, "cleanup was requested"):

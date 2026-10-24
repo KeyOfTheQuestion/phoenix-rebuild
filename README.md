@@ -41,7 +41,7 @@ python3 -m phoenix rebuild --predecessor docs/evidence/RUN_ID/server.py
 
 The adapter makes actual model calls using your CLI authentication and usage allowance. It starts with a clean CLI configuration, preserves authentication, stages **no reference source or verifier**, and requests a structured, complete Python program. Each candidate gets a new directory; retries receive only failure summaries, not the previous source. Supply `--model <available-model>` to select a model or `--use-user-config` to opt into your personal CLI configuration.
 
-Generation never deletes repository code. Only disposable temporary directories are discarded. Evidence is saved under `docs/evidence/` before cleanup. Default generation and archived replay run candidates as local child processes with a minimal environment; this is **not an adversarial-code sandbox**. See [execution boundaries](docs/setup.md) before evaluating code you do not trust.
+Generation never deletes repository code. Only disposable temporary directories are discarded. Evidence is saved under `docs/evidence/` before cleanup. Default generation and replay without `--container` run candidates as local child processes with a minimal environment; this is **not an adversarial-code sandbox**. See [execution boundaries](docs/setup.md) before evaluating code you do not trust.
 
 ## Inspect the proof
 
@@ -58,6 +58,7 @@ For current records, the verifier first starts the previous implementation, crea
 
 ```sh
 python3 -m phoenix replay <published-run-id>
+python3 -m phoenix replay <published-run-id> --container --timeout 90
 python3 -m phoenix verify --candidate path/to/trusted/server.py
 ```
 
@@ -69,7 +70,9 @@ Passing is evidence for these checks and this contract—not production certific
 
 With a Linux cgroup-v2 Docker engine, `python3 -m phoenix container-verify` runs the same HTTP checks in a disposable container with external networking disabled, a read-only root/input mount, no host credentials forwarded, and explicit CPU, memory and PID limits. An actual boundary probe must confirm the profile before a report is accepted. The image is pinned by digest, and an unavailable runtime produces an error without host fallback.
 
-This separate command emits verification JSON; daily generation and historical replay retain local execution and their original evidence. See the [container profile, limits and setup](docs/container-runner.md) and [2026-10-23 verification record](docs/maintenance/2026-10-23-container-runner.md).
+`container-verify` uses the current harness. For an archived experiment, `replay RUN_ID --container` checks the bundle first and sends the exact verified candidate, archived verifier and recorded predecessor bytes to Docker, without loading that verifier on the host. Early records retain their original SQL fixture when no predecessor was recorded. Results identify the run and hashes; they do not rewrite historical outcomes or call a model. Daily generation and replay without this flag retain local execution.
+
+See the [container profile, limits and setup](docs/container-runner.md) and [2026-10-24 archived replay verification record](docs/maintenance/2026-10-24-container-replay.md).
 
 ## Run the webhook inbox
 

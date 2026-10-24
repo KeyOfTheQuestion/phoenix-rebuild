@@ -1,4 +1,4 @@
-"""Optional Docker acceptance runner; generation and historical replay stay separate."""
+"""Optional Docker acceptance using current or verified archived source snapshots."""
 import hashlib
 import json
 from pathlib import Path
@@ -138,16 +138,26 @@ def _validate(report, sources):
 
 def evaluate_in_container(candidate, predecessor=None, timeout=90):
     """Return a separate verification result; never fall back to host execution."""
+    return evaluate_snapshot_in_container(
+        Path(candidate).read_bytes(), (ROOT / "phoenix/verify.py").read_bytes(),
+        predecessor_source=Path(predecessor).read_bytes() if predecessor else None,
+        timeout=timeout,
+    )
+
+
+def evaluate_snapshot_in_container(candidate_source, verifier_source, predecessor_source=None, timeout=90):
+    """Stage the supplied bytes without loading archived code on the host."""
     executable = shutil.which("docker")
     if executable is None:
         raise ContainerError("Docker is not installed; container verification did not run")
     if type(timeout) is not int or not 1 <= timeout <= 300:
         raise ContainerError("Container timeout must be an integer from 1 to 300 seconds")
-    sources = {"server.py": Path(candidate).read_bytes(),
-               "verifier.py": (ROOT / "phoenix/verify.py").read_bytes(),
+    sources = {"server.py": candidate_source, "verifier.py": verifier_source,
                "entrypoint.py": ENTRYPOINT.encode("utf-8")}
-    if predecessor:
-        sources["predecessor.py"] = Path(predecessor).read_bytes()
+    if predecessor_source is not None:
+        sources["predecessor.py"] = predecessor_source
+    if any(not isinstance(source, bytes) for source in sources.values()):
+        raise ContainerError("Container inputs must be frozen source bytes")
     try:
         image_id = _image_id(executable)
     except subprocess.TimeoutExpired as error:

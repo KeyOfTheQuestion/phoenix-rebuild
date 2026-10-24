@@ -61,8 +61,9 @@ or generation workflow was built without human input.
 
 ## Known limits
 
-- Default generation and archived replay execute code in a local child process, with a minimal environment,
-  but retains that user's operating-system permissions and network access.
+- Default generation and replay without `--container` execute code in a local
+  child process with a minimal environment, retaining the user's operating-system
+  permissions and network access.
 - Default CLI configuration can change across CLI versions. An unspecified model
   is reported as a selection policy, not assigned a guessed model name.
 - HTTP acceptance is intentionally bounded. It cannot establish absence of bugs.
@@ -98,25 +99,36 @@ memory, temporary storage and PIDs. Only source snapshots are mounted; host
 credentials are not forwarded. The image is pinned by digest. A runtime or
 policy failure returns an error without falling back to host execution.
 
-This is a separate verification mode with the current harness. It emits JSON
-without adding a reconstruction attempt to the ledger. Daily generation and
-archived replay retain local subprocess execution. The shared container/UID
+This is a separate verification mode with the current harness. Archived replay
+also supports `replay RUN_ID --container`: it validates the full bundle and
+supplies the checked candidate, archived verifier and recorded predecessor bytes
+without loading archived code on the host. Records without a predecessor keep
+the archived verifier's original fixture. Result metadata binds the record,
+contract, verifier and source hashes to the container check.
+
+Neither mode adds a reconstruction attempt to the ledger. Daily generation and
+replay without `--container` retain local subprocess execution. The shared container/UID
 does not protect the evaluator from a deliberately adversarial candidate, and
 Docker shares the host kernel. See the [profile and limits](container-runner.md)
-and [2026-10-23 verification record](maintenance/2026-10-23-container-runner.md).
+and [2026-10-24 archived replay verification record](maintenance/2026-10-24-container-replay.md).
 
 ## Reproduce, don't infer
 
 Run `python3 -m phoenix replay RUN_ID` for trusted records with an archived verifier.
 Replay validates the requested ledger entry, manifest, report and artifact hashes
 before loading any archived code. It rejects unlisted artifacts, symlinked files,
-unsafe record IDs and generation failures with exit code 2. It compiles the
+unsafe record IDs and generation failures with exit code 2. In local mode it compiles the
 verified verifier bytes directly and writes the checked candidate and predecessor
 bytes into a temporary directory; it neither reopens the original source files
 after validation nor writes bytecode into the archive. This guards consistency,
 not the trustworthiness of code whose manifest was also deliberately replaced.
 The [2026-10-21 maintenance record](maintenance/2026-10-21-replay-integrity.md)
 documents the original bypass, regression cases and verification.
+
+With `--container`, replay sends the same verified source bytes to the Docker
+runner and executes the archived verifier only inside the restricted container.
+`--timeout` bounds container execution (90 seconds by default); image preparation
+has separate deadlines. Missing Docker returns exit code 2 with no host fallback.
 
 For an earlier record, run `python3 -m phoenix verify --candidate
 docs/evidence/RUN_ID/server.py` with the current harness and disclose the change.

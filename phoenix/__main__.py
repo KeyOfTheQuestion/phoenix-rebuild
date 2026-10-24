@@ -27,6 +27,8 @@ def main():
     commands.add_parser("audit", help="Check published evidence hashes and ledger consistency")
     replay = commands.add_parser("replay", help="Re-run a trusted published candidate with its archived verifier")
     replay.add_argument("run_id")
+    replay.add_argument("--container", action="store_true", help="Run the verified archive inside Docker without loading its verifier on the host")
+    replay.add_argument("--timeout", type=int, default=90, help="Container execution deadline, 1..300 seconds; used only with --container")
     args = parser.parse_args()
     if args.command == "container-verify":
         from .container import evaluate_in_container
@@ -77,6 +79,21 @@ def main():
         except EvidenceError as error:
             print("Replay refused: " + str(error), file=sys.stderr)
             return 2
+        if args.container:
+            from .container import evaluate_snapshot_in_container
+            try:
+                report = evaluate_snapshot_in_container(
+                    artifacts["server.py"], artifacts["verifier.py"],
+                    predecessor_source=artifacts["predecessor.py"] if archived.get("predecessor_sha256") else None,
+                    timeout=args.timeout,
+                )
+            except (RuntimeError, OSError) as error:
+                print("Replay refused: " + str(error), file=sys.stderr)
+                return 2
+            report.update(replay_run_id=args.run_id, replay_source="verified-archive-bytes",
+                          contract_sha256=archived["contract_sha256"])
+            print(json.dumps(report, indent=2))
+            return 0 if report["status"] == "passed" else 1
         # Execute precisely the verified bytes, without importing stale bytecode
         # or reopening source files that may have changed after the audit.
         module = types.ModuleType("archived_verifier")

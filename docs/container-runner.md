@@ -13,6 +13,7 @@ generation, archived replay and the static notebook.
 
 ```sh
 python3 -m phoenix container-verify
+python3 -m phoenix replay RUN_ID --container --timeout 90
 python3 -m phoenix container-verify \
   --candidate docs/evidence/RUN_ID/server.py \
   --predecessor docs/evidence/RUN_ID/predecessor.py \
@@ -30,12 +31,25 @@ check `docker ps -a --filter name=phoenix-verify-` when it recovers.
 
 ## Inputs and policy
 
-The runner copies only `server.py`, the current independent `verifier.py`, its
+For `container-verify`, the runner copies only `server.py`, the current independent `verifier.py`, its
 small `entrypoint.py`, and optional `predecessor.py` into a temporary directory.
 That directory is the only host bind mount, mounted read-only at `/input`.
 The repository, home, Docker socket, account credentials and host environment
 variables are not mounted or forwarded. The harness creates fresh synthetic
 admin credentials inside the container for its HTTP tests.
+
+For `replay RUN_ID --container`, ledger/manifest/report validation happens first.
+Only the verified archive bytes for `server.py`, `verifier.py` and the recorded
+`predecessor.py` (when present) are supplied to the same runner. The archived
+verifier is not compiled or loaded on the host. Source files changed on disk
+after validation cannot replace the bytes being executed. Without a recorded
+predecessor, the archived verifier keeps its original fixture behavior; no
+current reference implementation or current verifier is substituted.
+
+Container replay reports include `replay_run_id`, `replay_source`, contract and
+verifier hashes as well as the container observations. A missing Docker runtime
+or an inconsistent archive is refused without host execution. Local replay
+without `--container` retains its existing behavior and does not require Docker.
 
 | Boundary | Policy |
 | --- | --- |
@@ -67,15 +81,16 @@ there. This file can name local paths and is not part of public evidence.
 
 ## How this differs from a reconstruction record
 
-This is a separate verification mode. It does not generate code, call a model,
-update `docs/runs.json`, publish a reconstruction bundle or change archived
-replay. Daily generation and historical replay retain their documented local
-subprocess execution. Container JSON is separate evidence of verification with
-the current harness; it does not retroactively change previous outcomes.
+These verification modes do not generate code, call a model, update
+`docs/runs.json`, publish a reconstruction bundle or edit historical outcomes.
+Daily generation and replay without `--container` retain local subprocess
+execution. `container-verify` checks with the current harness; container replay
+checks with the selected record's archived harness and predecessor/fixture.
 
 `python3 tests/container_smoke.py` performs real Docker integration checks in
 Linux CI and before Pages publication: reference acceptance, the latest audited
-AI candidate with its archived predecessor, and a deliberate two-second timeout
+AI candidate through `replay --container`, an early AI record with a different
+archived SQL-fixture verifier, and a deliberate two-second timeout
 followed by a check for leftover test containers. No model credentials are used
 by these CI checks. Unit tests use a fake Docker client and are labeled as such.
 

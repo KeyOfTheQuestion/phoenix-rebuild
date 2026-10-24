@@ -50,16 +50,23 @@ To repeat a trusted archived run without another model call:
 
 ```sh
 python3 -m phoenix replay PUBLISHED_RUN_ID
+python3 -m phoenix replay PUBLISHED_RUN_ID --container --timeout 90
 ```
 
 Replay validates the ledger, manifest and recorded hashes before executing
-archived code from verified bytes. It uses temporary candidate/predecessor copies
+archived code from verified bytes. Local replay uses temporary candidate/predecessor copies
 and leaves the archive unchanged. Exit code 0 means acceptance passed, 1 means
 acceptance failed, and 2 means the requested record was refused (including a
 generation failure or inconsistent evidence). Hash consistency is not a security
 sandbox or an independent signature.
 
-The default generator returns code as structured text; local verification and replay run it using a
+`replay --container` uses the archived verifier and predecessor/fixture, rather
+than the current harness used by `container-verify`. It passes only already
+verified source bytes to Docker, does not load the archived verifier on the host,
+and reports the record ID and hashes alongside its runtime observations.
+An unavailable Docker runtime returns exit code 2 without host fallback.
+
+The default generator returns code as structured text; local verification and replay without `--container` run it using a
 temporary working directory and a minimal environment. This is normal local
 execution of code, **not a security sandbox**. It can access files and network
 resources allowed to the operating-system user. Evaluate only trusted candidates,

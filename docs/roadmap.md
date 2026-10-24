@@ -12,7 +12,7 @@
 
 ## Next bounded improvements (one meaningful change per iteration)
 
-1. [Implemented 2026-10-23] Optional disposable Docker acceptance runner with resource limits, no host credentials forwarded and an actual boundary probe ([profile](container-runner.md), [verification record](maintenance/2026-10-23-container-runner.md)). Generation and historical replay remain local; integrating opt-in container execution with generation/evidence replay is a follow-up.
+1. [Implemented 2026-10-23; archive integration 2026-10-24] Optional disposable Docker acceptance runner with resource limits, no host credentials forwarded and an actual boundary probe ([profile](container-runner.md), [initial verification](maintenance/2026-10-23-container-runner.md)). `replay --container` now uses verified archived candidate/verifier/predecessor bytes ([verification record](maintenance/2026-10-24-container-replay.md)). Opt-in container execution during generation remains a follow-up; default generation and local replay are unchanged.
 2. [Done in initial release] Freeze the exact verifier source at the start of generation, even if the harness changes while a provider runs.
 3. Capture the actual resolved model identity when the CLI exposes a reliable field.
 4. [Done 2026-10-22] Add an end-to-end browser check for ledger filters, language and artifact links, including a Pages publication check ([verification record](maintenance/2026-10-22-notebook-browser-checks.md)).
