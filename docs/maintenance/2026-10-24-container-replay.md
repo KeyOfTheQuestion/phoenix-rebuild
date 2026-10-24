@@ -104,6 +104,40 @@ Linux job, separate from the local mock-based controls and local reconstruction.
 - Early archived verifier SHA-256: `b1a9886eb8da776647db536e731e87899a77c3e3b4633b73c944f8917ac48d9c`.
 - Current verifier SHA-256: `435142a64f7d62b54d58c5187973e237ca2140d25833b464d3d68279c0fdab6d`.
 
+### Observed CI result
+
+The [completed Linux container job](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/40055342501/job/120756989373)
+checked commit `5ffc931ddc72212947b5ba64bc747614a2c6aeab` and emitted its
+result at `2026-10-24T02:43:28.055483+00:00` (UTC). The complete parsed
+[`CONTAINER_EVIDENCE` record](2026-10-24-container-replay-ci.json) includes the
+job URL, checked commit, actual probe observations and check outcomes.
+
+| Subject in actual Docker execution | Result |
+| --- | --- |
+| Current reference and current verifier | 19/19 passed |
+| Today's AI archive, archived verifier and recorded predecessor | 19/19 passed |
+| Early AI archive and original SQL-fixture verifier, without a predecessor | 19/19 passed |
+
+The archived verifier hashes match their original evidence bundles. The early
+verifier hash differs from today's current verifier, confirming that this check
+did not silently substitute the current harness. The latest archive used the
+recorded October 23 AI candidate to populate the database before replacement.
+
+All three actual probes reported UID 65534, only the loopback interface,
+read-only root and input mounts, a 64 MiB restricted temporary filesystem,
+256 MiB memory with no additional swap, 128 PIDs and one CPU of quota. They
+reported no effective capabilities, no new privileges, no Docker socket and no
+host sentinel environment variable. The deliberately slow candidate hit its
+two-second deadline, and the cleanup check found no remaining Phoenix test
+containers. These observations apply to the cooperative CI checks, not to a
+claim of protection against arbitrary hostile code.
+
+The [full CI workflow](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/40055342501)
+also completed successfully, including Python 3.9/3.12/3.13 checks and the
+Chromium notebook suite. The local reconstruction remains a separate
+`local-subprocess` record; this later container replay does not relabel it or
+add another reconstruction attempt.
+
 ## Today's single bounded reconstruction
 
 One cycle allowed at most two attempts and 300 seconds per attempt. Attempt 1
