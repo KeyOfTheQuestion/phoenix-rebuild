@@ -99,8 +99,41 @@ ledger must remain byte-for-byte unchanged by these controls. The emitted
 actual Docker observations and the injected error control explicitly. These
 controls are not fresh AI reconstructions or additional model successes.
 
-Completed runtime evidence will be collected from the actual CI job rather than
-inferred from unit mocks.
+### Observed Linux result
+
+The [completed container job](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/40257715512/job/121363056856)
+checked commit `1e9672fc8b04d6e5536184bc4631d92669a1a354`. Its emitted
+evidence timestamp is `2026-10-26T02:10:05.247431+00:00` (UTC). The complete
+[parsed CI evidence](2026-10-26-container-rebuild-ci.json) retains the source
+job, checked commit, individual check outcomes and actual container probes.
+
+| Actual Docker subject | Result |
+| --- | --- |
+| Current reference and current verifier | 19/19 passed |
+| Today's archived AI candidate and its recorded predecessor | 19/19 passed |
+| Early AI candidate with its original SQL-fixture verifier | 19/19 passed |
+| Rebuild adapter using a synthetic CLI response containing today's archived source | 19/19 passed |
+
+The adapter control's candidate, contract, verifier and predecessor hashes match
+the selected archive. Its injected runtime failure retained the same source,
+recorded zero acceptance checks, and made exactly one synthetic generation call
+despite allowing two attempts. Both temporary ledgers passed audit and the
+public ledger was unchanged. Neither control called a model; the last row is
+adapter integration evidence, not a second actual AI reconstruction.
+
+All four real probes confirmed UID 65534, loopback-only networking, read-only
+root/input mounts, restricted 64 MiB temporary storage, 256 MiB memory with no
+additional swap, 128 PIDs and one CPU of quota. They observed no effective
+capabilities, no new privileges, no Docker socket and no host sentinel variable.
+The separate slow-candidate control hit its two-second deadline and left no
+Phoenix test containers. These cooperative observations retain the documented
+shared-kernel and shared-evaluator limits.
+
+The [full CI workflow](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/40257715512)
+passed, including Python 3.9/3.12/3.13 and Chromium checks. The feature commit's
+[Pages publication](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/40257715582)
+also succeeded. Today's real reconstruction remains the separate local record
+below; later container verification does not change its execution method.
 
 ## Today's one actual reconstruction
 
