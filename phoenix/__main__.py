@@ -23,6 +23,8 @@ def main():
     generate.add_argument("--model", help="Optional; otherwise use the clean CLI default")
     generate.add_argument("--use-user-config", action="store_true", help="Opt into your user config, including model selection and MCP servers")
     generate.add_argument("--predecessor", help="Trusted previous implementation used to create the continuity database")
+    generate.add_argument("--container", action="store_true", help="Verify generated code inside Docker; generation still uses the host CLI")
+    generate.add_argument("--verification-timeout", type=int, default=90, help="Container execution deadline, 1..300 seconds; used only with --container")
     commands.add_parser("serve", help="Serve the public experiment notebook locally")
     commands.add_parser("audit", help="Check published evidence hashes and ledger consistency")
     replay = commands.add_parser("replay", help="Re-run a trusted published candidate with its archived verifier")
@@ -48,9 +50,12 @@ def main():
     if args.command == "rebuild":
         from .rebuild import rebuild
         try:
-            reports = rebuild(args.attempts, args.timeout, args.model, args.use_user_config, args.predecessor)
+            reports = rebuild(args.attempts, args.timeout, args.model, args.use_user_config, args.predecessor,
+                              use_container=args.container, verification_timeout=args.verification_timeout)
         except (RuntimeError, OSError) as error:
             print(str(error), file=sys.stderr)
+            return 2
+        if reports and reports[-1]["status"] == "verification-error":
             return 2
         return 0 if reports and reports[-1]["status"] == "passed" else 1
     if args.command == "serve":

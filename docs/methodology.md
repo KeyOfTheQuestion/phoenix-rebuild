@@ -28,6 +28,22 @@ Acceptance failure summaries may be passed to a new attempt; no previous source
 is copied. This makes subsequent attempts feedback-assisted, not independent
 one-shot samples. Do not interpret the pass ratio as a benchmark score.
 
+`rebuild --container` explicitly selects Docker for acceptance after the host CLI
+returns generated source. Runtime/image preparation happens before any model
+call. The contract, verifier and predecessor are frozen before generation; only
+the contract/schema are staged during generation. The frozen verifier is loaded
+inside Docker in this mode, not on the host. Generation still uses the existing
+authenticated host CLI and its configured usage allowance.
+
+An acceptance failure can supply check feedback to the bounded next attempt.
+A container runtime, timeout or report-validation error instead preserves the
+generated source, prompt, provenance and predecessor as `verification-error`,
+with zero checks and no acceptance verdict, and stops without another model
+call or host fallback. Preflight refusal before generation creates no attempt.
+Reports record the requested verification mode separately from actual execution;
+generation failure still means `not-executed`. Existing archived reports are not
+relabelled. The notebook distinguishes runtime errors and actual execution modes.
+
 ## Data continuity
 
 For current runs, the verifier first starts the chosen predecessor and creates
@@ -111,6 +127,16 @@ replay without `--container` retain local subprocess execution. The shared conta
 does not protect the evaluator from a deliberately adversarial candidate, and
 Docker shares the host kernel. See the [profile and limits](container-runner.md)
 and [2026-10-24 archived replay verification record](maintenance/2026-10-24-container-replay.md).
+
+`rebuild --container` does publish a reconstruction bundle, because it calls the
+real generator before acceptance. It retains the same container policy and
+limitations. `--verification-timeout` bounds container execution separately from
+the generator's `--timeout`. The daily reconstruction on the current host
+continues to use local execution because Docker is unavailable. Linux CI tests
+the adapter with a clearly labelled synthetic CLI fixture returning existing
+archived source, plus real Docker acceptance; those fixtures are temporary, make
+no model calls and are never added to the public ledger. See the
+[2026-10-26 verification record](maintenance/2026-10-26-container-rebuild.md).
 
 ## Reproduce, don't infer
 

@@ -14,6 +14,7 @@ generation, archived replay and the static notebook.
 ```sh
 python3 -m phoenix container-verify
 python3 -m phoenix replay RUN_ID --container --timeout 90
+python3 -m phoenix rebuild --container --verification-timeout 90
 python3 -m phoenix container-verify \
   --candidate docs/evidence/RUN_ID/server.py \
   --predecessor docs/evidence/RUN_ID/predecessor.py \
@@ -83,16 +84,38 @@ there. This file can name local paths and is not part of public evidence.
 
 These verification modes do not generate code, call a model, update
 `docs/runs.json`, publish a reconstruction bundle or edit historical outcomes.
-Daily generation and replay without `--container` retain local subprocess
+Rebuild and replay without `--container` retain local subprocess
 execution. `container-verify` checks with the current harness; container replay
 checks with the selected record's archived harness and predecessor/fixture.
+
+`rebuild --container` is different: it calls the authenticated host generator and
+publishes the resulting candidate with its actual Docker acceptance report.
+The runtime and pinned image must be available before a model call. Verifier,
+contract and predecessor snapshots are frozen before generation, and the latter
+two code inputs are staged only after generation exits. The verifier is loaded
+only inside Docker. `--timeout` limits generation; `--verification-timeout`
+limits container execution (default 90, range 1..300 seconds). It does not move
+the generator or its authentication inside the container.
+
+A preflight refusal exits 2 without generating or publishing an attempt. If
+container verification fails after generation, the source, prompt, provenance
+and predecessor are preserved as `verification-error`, with zero checks and no
+acceptance verdict. The cycle stops and exits 2 without host fallback or another
+model call. A genuine HTTP acceptance failure remains `failed` and may supply
+feedback to a bounded retry. The daily run on this host stays local while Docker
+is unavailable; no historical execution mode is rewritten.
 
 `python3 tests/container_smoke.py` performs real Docker integration checks in
 Linux CI and before Pages publication: reference acceptance, the latest audited
 AI candidate through `replay --container`, an early AI record with a different
 archived SQL-fixture verifier, and a deliberate two-second timeout
 followed by a check for leftover test containers. No model credentials are used
-by these CI checks. Unit tests use a fake Docker client and are labeled as such.
+by these CI checks. It also exercises `rebuild --container` through a synthetic
+CLI fixture returning an existing AI archive, with real Docker acceptance and
+a separate injected runtime-failure control. Its temporary ledger is audited
+and discarded; the public ledger is unchanged and no new AI success is claimed.
+Unit tests use a fake Docker client and are labeled as such. See the
+[2026-10-26 adapter verification record](maintenance/2026-10-26-container-rebuild.md).
 
 ## Limits
 

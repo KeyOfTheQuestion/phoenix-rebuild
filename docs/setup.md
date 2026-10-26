@@ -23,6 +23,8 @@ authenticate it with `codex login`, and run:
 python3 -m phoenix rebuild --attempts 2 --timeout 300
 # Optional explicit selection; replace with a model available to your account:
 python3 -m phoenix rebuild --model YOUR_AVAILABLE_MODEL
+# Optional Docker acceptance after host-CLI generation:
+python3 -m phoenix rebuild --container --verification-timeout 90
 ```
 
 No API key is embedded in Phoenix. The CLI uses your existing authentication.
@@ -36,6 +38,17 @@ the run. Authentication is still resolved by the CLI. To explicitly use your
 personal provider/configuration, pass `--use-user-config`. No global configuration
 is modified. Inspect ignored `.phoenix/generator-errors/latest.log` locally when
 the generator fails. It is not automatically published.
+
+With `--container`, Docker/image preparation must succeed before calling the
+generator. `--timeout` bounds each generation attempt; `--verification-timeout`
+bounds container execution separately (1..300 seconds, default 90). Generation
+still uses the authenticated host CLI; only subsequent acceptance runs inside
+Docker. Verifier and predecessor bytes are frozen before generation and are not
+staged until it exits. A later runtime failure preserves the generated source,
+prompt and provenance as `verification-error`, stops the cycle without another
+model attempt, and exits 2. This means no acceptance verdict, rather than a failed
+contract check. The notebook displays that distinction. Preflight refusal before
+generation creates no reconstruction record. Default generation stays local.
 
 ## Execution boundary
 

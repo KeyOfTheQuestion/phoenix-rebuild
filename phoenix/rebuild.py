@@ -1,4 +1,5 @@
 """A real generator adapter. The reference implementation is never copied in."""
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -15,7 +16,11 @@ OUTPUT_SCHEMA = {
 }
 
 
-def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predecessor=None):
+def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predecessor=None,
+            use_container=False, verification_timeout=90):
+    if use_container:
+        from .container import ContainerError, evaluate_snapshot_in_container, prepare_container
+        prepare_container(verification_timeout)
     executable = shutil.which("codex")
     if executable is None:
         raise RuntimeError("Install and authenticate the Codex CLI first; see docs/setup.md")
@@ -24,8 +29,9 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
     verifier_source = (ROOT / "phoenix" / "verify.py").read_bytes()
     predecessor_path = Path(predecessor) if predecessor else ROOT / "examples" / "reference" / "server.py"
     predecessor_source = predecessor_path.read_bytes()
-    frozen_verifier = types.ModuleType("phoenix_frozen_verifier")
-    exec(compile(verifier_source, "phoenix-verifier-snapshot.py", "exec"), frozen_verifier.__dict__)
+    if not use_container:
+        frozen_verifier = types.ModuleType("phoenix_frozen_verifier")
+        exec(compile(verifier_source, "phoenix-verifier-snapshot.py", "exec"), frozen_verifier.__dict__)
 
     def record(report, candidate, prompt, provenance, predecessor=None):
         return publish(report, candidate, prompt, provenance, predecessor=predecessor,
@@ -59,14 +65,20 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
                 command += ["--model", model]
             command += ["-"]
             print("Generating from the contract: attempt %s/%s" % (attempt, attempts), flush=True)
+            provenance = {"generator": "codex-cli", "version": version, "model": model,
+                          "model_selection": "explicit" if model else ("local CLI configuration" if use_user_config else "clean CLI default"),
+                          "user_configuration_loaded": use_user_config,
+                          "attempt": attempt, "usage": None,
+                          "requested_verification": "docker-container" if use_container else "local-subprocess"}
+            if use_container:
+                provenance["verification_timeout_seconds"] = verification_timeout
             start = time.monotonic()
             try:
                 completed = subprocess.run(command, input=prompt, capture_output=True, text=True, timeout=timeout)
             except subprocess.TimeoutExpired:
                 report = generation_error("Generation exceeded its %ss time limit" % timeout, start)
                 reports.append(record(report, ROOT / "phoenix" / "empty_candidate.py", prompt,
-                                       {"generator": "codex-cli", "version": version, "model": model,
-                                        "attempt": attempt, "usage": None}))
+                                       provenance))
                 break
             usage = None
             tool_calls = 0
@@ -80,12 +92,9 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
                         tool_calls += 1
                 except ValueError:
                     continue
-            provenance = {"generator": "codex-cli", "version": version, "model": model,
-                          "model_selection": "explicit" if model else ("local CLI configuration" if use_user_config else "clean CLI default"),
-                          "user_configuration_loaded": use_user_config,
-                          "attempt": attempt, "usage": usage, "observed_tool_calls": tool_calls,
-                          "generation_seconds": round(time.monotonic() - start, 3),
-                          "context_boundary": "fresh-directory, prompt-enforced; not a hostile-agent sandbox"}
+            provenance.update(usage=usage, observed_tool_calls=tool_calls,
+                              generation_seconds=round(time.monotonic() - start, 3),
+                              context_boundary="fresh-directory, prompt-enforced; not a hostile-agent sandbox")
             if completed.returncode or not answer.exists():
                 # Raw stderr can contain machine paths and account context. Keep it local.
                 logs = ROOT / ".phoenix" / "generator-errors"
@@ -113,16 +122,43 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
             # Stage the predecessor only after the generator has exited.
             predecessor = workspace / "predecessor.py"
             predecessor.write_bytes(predecessor_source)
-            report = frozen_verifier.evaluate(candidate, kind="ai-rebuild", predecessor=predecessor)
+            if use_container:
+                verification_start = time.monotonic()
+                try:
+                    report = evaluate_snapshot_in_container(
+                        candidate.read_bytes(), verifier_source, predecessor_source=predecessor_source,
+                        timeout=verification_timeout,
+                    )
+                    report.update(kind="ai-rebuild", human_interventions=0)
+                except (ContainerError, OSError) as error:
+                    # A runtime failure is not acceptance feedback. Retain the generated
+                    # source and stop instead of spending another model attempt.
+                    report = verification_error(verification_start, predecessor_source,
+                                                str(error) if isinstance(error, ContainerError) else type(error).__name__)
+            else:
+                report = frozen_verifier.evaluate(candidate, kind="ai-rebuild", predecessor=predecessor)
             report["generation_seconds"] = provenance["generation_seconds"]
             published = record(report, candidate, prompt, provenance, predecessor=predecessor)
             reports.append(published)
             print("%s: %s/%s checks — %s" % (published["id"], published["passed"], published["total"], published["status"]), flush=True)
             if report["status"] == "passed":
                 break
+            if report["status"] == "verification-error":
+                break
             failed = [{"id": c["id"], "title": c["title"], "error": c.get("error")} for c in report["checks"] if not c["passed"]]
             feedback = "\n\nA previous independent attempt failed these checks. Reimplement from the contract, addressing this feedback:\n" + json.dumps(failed)
     return reports
+
+
+def verification_error(start, predecessor_source, reason):
+    from datetime import datetime, timezone
+    return {"schema_version": 1, "kind": "ai-rebuild", "status": "verification-error",
+            "started_at": datetime.now(timezone.utc).isoformat(), "passed": 0, "total": 0,
+            "duration_seconds": round(time.monotonic() - start, 3), "human_interventions": 0,
+            "execution": "docker-container-attempted", "checks": [],
+            "predecessor_sha256": hashlib.sha256(predecessor_source).hexdigest(),
+            "error": "Container verification could not produce a validated report (" + reason + "); no acceptance verdict. "
+                     "No host fallback or generation retry. Check Docker and local .phoenix/container-errors/latest.log when present."}
 
 
 def generation_error(message, start):

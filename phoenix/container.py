@@ -147,23 +147,13 @@ def evaluate_in_container(candidate, predecessor=None, timeout=90):
 
 def evaluate_snapshot_in_container(candidate_source, verifier_source, predecessor_source=None, timeout=90):
     """Stage the supplied bytes without loading archived code on the host."""
-    executable = shutil.which("docker")
-    if executable is None:
-        raise ContainerError("Docker is not installed; container verification did not run")
-    if type(timeout) is not int or not 1 <= timeout <= 300:
-        raise ContainerError("Container timeout must be an integer from 1 to 300 seconds")
     sources = {"server.py": candidate_source, "verifier.py": verifier_source,
                "entrypoint.py": ENTRYPOINT.encode("utf-8")}
     if predecessor_source is not None:
         sources["predecessor.py"] = predecessor_source
     if any(not isinstance(source, bytes) for source in sources.values()):
         raise ContainerError("Container inputs must be frozen source bytes")
-    try:
-        image_id = _image_id(executable)
-    except subprocess.TimeoutExpired as error:
-        raise ContainerError("Docker image preparation exceeded its time limit; no container was started") from error
-    except OSError as error:
-        raise ContainerError("Docker could not be executed; no container was started") from error
+    executable, image_id = prepare_container(timeout)
     try:
         with tempfile.TemporaryDirectory(prefix="phoenix-container-") as temporary:
             stage = Path(temporary)
@@ -207,3 +197,18 @@ def evaluate_snapshot_in_container(candidate_source, verifier_source, predecesso
                   container_image=IMAGE, container_image_id=image_id, container_policy=dict(POLICY),
                   container_entrypoint_sha256=hashlib.sha256(sources["entrypoint.py"]).hexdigest())
     return report
+
+
+def prepare_container(timeout=90):
+    """Check the requested deadline and image before spending generation usage."""
+    if type(timeout) is not int or not 1 <= timeout <= 300:
+        raise ContainerError("Container timeout must be an integer from 1 to 300 seconds")
+    executable = shutil.which("docker")
+    if executable is None:
+        raise ContainerError("Docker is not installed; container verification did not run")
+    try:
+        return executable, _image_id(executable)
+    except subprocess.TimeoutExpired as error:
+        raise ContainerError("Docker image preparation exceeded its time limit; no container was started") from error
+    except OSError as error:
+        raise ContainerError("Docker could not be executed; no container was started") from error

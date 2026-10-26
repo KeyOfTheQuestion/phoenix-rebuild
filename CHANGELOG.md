@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-26 · Opt-in Docker acceptance during rebuild
+
+- Added `rebuild --container --verification-timeout 90`: prepare Docker/image before model use, then verify generated source with frozen verifier/predecessor bytes inside the existing restricted container. Generation remains on the host CLI; local acceptance is still the default.
+- Preserve generated source and provenance as `verification-error` when container execution cannot provide a validated report. Stop without host fallback or another model call, and distinguish this from acceptance failure in the audit, CLI exit code and bilingual notebook.
+- Added eight adapter unit controls and one browser test covering execution labels/runtime errors. Extended existing Linux CI with a synthetic CLI fixture and real Docker acceptance; temporary fixture records never enter the public ledger or count as new AI rebuilds.
+- Record the single actual daily reconstruction, unchanged contract/harness and local verification in the [verification record](docs/maintenance/2026-10-26-container-rebuild.md).
+
 ## 2026-10-24 · Archived verifier replay inside Docker
 
 - Added `replay RUN_ID --container --timeout 90`, using the exact verified archive bytes for the candidate, archived verifier and recorded predecessor. Archived code is not loaded on the host in this mode; unavailable Docker never triggers host fallback.

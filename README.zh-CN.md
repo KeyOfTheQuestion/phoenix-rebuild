@@ -30,6 +30,8 @@ python3 -m phoenix serve
 python3 -m phoenix rebuild --attempts 2 --timeout 300
 # 指定一份可信的历史 AI 实现，验证跨实现的数据兼容：
 python3 -m phoenix rebuild --predecessor docs/evidence/记录编号/server.py
+# 可选：主机 CLI 生成代码，随后在 Docker 中验收：
+python3 -m phoenix rebuild --container --verification-timeout 90
 ```
 
 这会使用你的 CLI 登录态和用量额度，进行真实的模型调用。默认不加载个人 CLI 配置和其中的 MCP 服务，避免个人设置干扰实验；身份认证保持可用。可以使用 `--model` 指定你有权限使用的模型，或使用 `--use-user-config` 主动加载个人设置。
@@ -51,9 +53,11 @@ python3 -m phoenix replay <记录编号> --container --timeout 90
 
 使用支持 Linux cgroup v2 的 Docker 引擎时，执行 `python3 -m phoenix container-verify`，可在一次性容器中运行同一套 HTTP 验收。外部网络关闭，根文件系统和输入只读，不透传主机凭据，并限制 CPU、内存与进程数。验收报告必须通过实际边界探测；镜像使用固定摘要，运行环境不可用时会报错，不自动退回主机执行。
 
-`container-verify` 使用当前验收器。复验历史实验时，可用 `replay 记录编号 --container`：先校验证据包，再把校验过的候选源码、归档验收器和已记录的上一实现源码字节交给 Docker，不在主机加载归档验收器。没有记录上一实现的早期实验会保留原来的 SQL 测试样本。结果附带记录编号和文件指纹，不改写历史结果，也不调用模型。每日重建及未启用此选项的复验仍在本地执行。
+`container-verify` 使用当前验收器。复验历史实验时，可用 `replay 记录编号 --container`：先校验证据包，再把校验过的候选源码、归档验收器和已记录的上一实现源码字节交给 Docker，不在主机加载归档验收器。没有记录上一实现的早期实验会保留原来的 SQL 测试样本。这些验证命令不改写历史结果，也不调用模型。
 
-详见[容器配置、限制与安装说明](docs/container-runner.md)及 [2026-10-24 历史复验验证记录](docs/maintenance/2026-10-24-container-replay.md)。
+`rebuild --container` 会通过主机 CLI 真实调用模型，再把生成源码与生成前冻结的验收器、上一实现交给 Docker 验收。调用模型前先检查 Docker 和固定镜像；若生成后运行环境出错，会以 `verification-error` 保留生成源码，不产生验收结论、不退回主机执行，也不再生成重试，退出码为 2。`--timeout` 仍限制生成耗时，`--verification-timeout` 单独限制容器执行。默认仍为本地执行；本机没有 Docker，因此定时重建仍使用本地模式。
+
+详见[容器配置、限制与安装说明](docs/container-runner.md)及 [2026-10-26 容器重建验证记录](docs/maintenance/2026-10-26-container-rebuild.md)。
 
 ## 浏览器端验证记录页
 

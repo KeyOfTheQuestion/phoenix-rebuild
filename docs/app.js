@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-10-24 维护：历史复验现可在 Docker 中使用校验过的原始归档验收器和上一实现。每日重建仍在本地执行。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-10-24-container-replay.md">查看验证记录 ↗</a>',
+  maintenanceNote:'2026-10-26 维护：重建可选择使用冻结输入在 Docker 中验收，并保留运行环境故障。生成仍使用主机 CLI；今日重建使用本地验收。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-10-26-container-rebuild.md">查看验证记录 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',
@@ -37,7 +37,7 @@ function render(){
     const isAI=r.kind==='ai-rebuild';
     const date=new Date(r.started_at);
     const dateText=Number.isNaN(date.getTime())?r.started_at:date.toISOString().replace('T',' ').slice(0,19);
-    return `<tr><td><span class="run-name">${escapeHtml(r.id.slice(-6).toUpperCase())}</span><small>${escapeHtml(dateText)}</small></td><td><span class="badge ${isAI?'ai':''}">${isAI?text('AI REBUILD','AI 重建'):text('REFERENCE','参考实现')}</span></td><td><span class="verdict ${r.status==='passed'?'pass':'fail'}">${r.status==='passed'?text('PASSED','通过'):r.status==='generation-failed'?text('GENERATION FAILED','生成失败'):text('FAILED','未通过')}</span></td><td><span style="font-family:var(--mono)">${Number(r.passed)} / ${Number(r.total)}</span></td><td>${r.status==='generation-failed'?'—':Number(r.duration_seconds).toFixed(2)+'s'}</td><td><button class="evidence-button" data-run="${escapeHtml(r.id)}">${text('Open evidence ↗','查看证据 ↗')}</button></td></tr>`;
+    return `<tr><td><span class="run-name">${escapeHtml(r.id.slice(-6).toUpperCase())}</span><small>${escapeHtml(dateText)}</small></td><td><span class="badge ${isAI?'ai':''}">${isAI?text('AI REBUILD','AI 重建'):text('REFERENCE','参考实现')}</span></td><td><span class="verdict ${r.status==='passed'?'pass':'fail'}">${r.status==='passed'?text('PASSED','通过'):r.status==='generation-failed'?text('GENERATION FAILED','生成失败'):r.status==='verification-error'?text('VERIFICATION ERROR','验收环境错误'):text('FAILED','未通过')}</span></td><td><span style="font-family:var(--mono)">${Number(r.passed)} / ${Number(r.total)}</span></td><td>${['generation-failed','verification-error'].includes(r.status)?'—':Number(r.duration_seconds).toFixed(2)+'s'}</td><td><button class="evidence-button" data-run="${escapeHtml(r.id)}">${text('Open evidence ↗','查看证据 ↗')}</button></td></tr>`;
   }).join('') : `<tr><td class="empty" colspan="6">${text('No records in this category yet.','当前分类还没有记录。')}</td></tr>`;
 }
 
@@ -67,7 +67,8 @@ document.getElementById('runs').addEventListener('click',async e=>{
     document.getElementById('artifact-links').innerHTML=[['server.py',text('Source code','源码')],['contract.md',text('Contract','规格')],['verifier.py',text('Verifier','验收器')],['report.json',text('Raw report','原始报告')],['manifest.json',text('SHA-256 manifest','文件指纹')],...(r.predecessor_sha256?[['predecessor.py',text('Previous implementation','上一实现')]]:[]),...(r.kind==='ai-rebuild'?[['prompt.md',text('Generation prompt','生成输入')]]:[])].map(([file,label])=>`<a href="evidence/${encodeURIComponent(id)}/${file}" target="_blank" rel="noopener">${label} ↗</a>`).join('');
     document.getElementById('checks-list').innerHTML=r.checks.length?r.checks.map(c=>`<div class="check-row ${c.passed?'':'failed'}"><span class="check-id">${escapeHtml(c.id)}</span><div>${escapeHtml(c.title)}${c.error?`<div class="check-error">${escapeHtml(c.error)}</div>`:''}</div><span class="result">${c.passed?'PASS':'FAIL'}</span></div>`).join(''):`<p class="notice">${escapeHtml(r.error||'No candidate was executed.')}</p>`;
     const tokens=r.usage ? JSON.stringify(r.usage) : text('Not reported','未提供');
-    document.getElementById('dialog-provenance').textContent=`SHA-256: ${r.candidate_sha256} · ${text('Usage','用量')}: ${tokens} · ${text('Cost: unknown. Local subprocess, procedural context separation.','费用未知。本地子进程执行，上下文通过流程分开。')}`;
+    const execution=r.execution==='docker-container'?text('Docker container; cooperative evaluator.','Docker 容器；协作式验收。'):r.execution==='docker-container-attempted'?text('Container verification error; no acceptance verdict.','容器验收环境错误；未产生验收结论。'):r.execution==='not-executed'?text('Candidate not executed.','未执行候选代码。'):text('Local subprocess.','本地子进程。');
+    document.getElementById('dialog-provenance').textContent=`SHA-256: ${r.candidate_sha256} · ${text('Usage','用量')}: ${tokens} · ${text('Cost: unknown.','费用未知。')} ${execution} ${text('Procedural generation context separation.','生成上下文通过流程分开。')}`;
     dialog.showModal();
   }catch(error){const status=document.getElementById('load-error');status.hidden=false;status.textContent=text('Could not load this report. Please retry or open the GitHub evidence directory.','报告读取失败，请重试或到 GitHub 的证据目录查看。');}finally{button.disabled=false;}
 });

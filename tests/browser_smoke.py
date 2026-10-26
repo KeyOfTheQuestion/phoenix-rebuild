@@ -157,6 +157,42 @@ class NotebookBrowserTests(unittest.TestCase):
         self.page.get_by_role("link", name="← Back to the notebook", exact=True).click()
         expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
 
+    def test_container_results_and_runtime_errors_do_not_claim_local_execution(self):
+        # Synthetic responses exercise modes without inventing a published run.
+        row = next(r for r in self.ai if r["status"] == "passed")
+        original = json.loads((SITE / "evidence" / row["id"] / "report.json").read_text())
+        for failed in (False, True):
+            with self.subTest(runtime_error=failed):
+                report = dict(original, execution="docker-container-attempted" if failed else "docker-container")
+                summary = dict(row)
+                if failed:
+                    report.update(status="verification-error", passed=0, total=0, checks=[],
+                                  error="Synthetic runtime control; no acceptance verdict")
+                    summary.update(status="verification-error", passed=0, total=0)
+                self.page.route("**/runs.json", lambda route: route.fulfill(json=[summary]))
+                pattern = "**/evidence/%s/report.json" % row["id"]
+                self.page.route(pattern, lambda route: route.fulfill(json=report))
+                self.page.goto(self.base, wait_until="networkidle")
+                if failed:
+                    expect(self.page.locator("#runs .verdict")).to_have_text("VERIFICATION ERROR")
+                self.page.locator("#runs [data-run]").click()
+                expect(self.page.locator("#dialog-provenance")).not_to_contain_text("Local subprocess")
+                expect(self.page.locator("#dialog-provenance")).to_contain_text(
+                    "no acceptance verdict" if failed else "Docker container")
+                if failed:
+                    expect(self.page.locator("#checks-list")).to_contain_text(report["error"])
+                self.page.locator("#close-dialog").click()
+                self.page.locator("#language").click()
+                if failed:
+                    expect(self.page.locator("#runs .verdict")).to_have_text("验收环境错误")
+                self.page.locator("#runs [data-run]").click()
+                expect(self.page.locator("#dialog-provenance")).to_contain_text(
+                    "未产生验收结论" if failed else "Docker 容器")
+                self.page.locator("#close-dialog").click()
+                self.page.locator("#language").click()
+                self.page.unroute(pattern)
+                self.page.unroute("**/runs.json")
+
     def test_unavailable_ledger_shows_an_actionable_error(self):
         self.page.route("**/runs.json", lambda route: route.fulfill(status=503, body="Unavailable"))
         self.page.goto(self.base, wait_until="networkidle")

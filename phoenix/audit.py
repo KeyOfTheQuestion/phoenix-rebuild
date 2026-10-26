@@ -90,8 +90,14 @@ def inspect_bundle(directory, summary):
             raise EvidenceError("Check counts must be integers")
         if report["passed"] != sum(c["passed"] for c in checks) or report["total"] != len(checks):
             raise EvidenceError("Incorrect check counts")
-        if report["status"] not in ("passed", "failed", "generation-failed"):
+        if report["status"] not in ("passed", "failed", "generation-failed", "verification-error"):
             raise EvidenceError("Unknown verdict")
+        if report["status"] == "verification-error" and not (
+            checks == [] and report["passed"] == report["total"] == 0
+            and report.get("execution") == "docker-container-attempted"
+            and isinstance(report.get("error"), str) and report["error"]
+        ):
+            raise EvidenceError("Invalid verification error; it must not claim an acceptance verdict")
         if report["status"] == "passed" and not (
             len(checks) == len(CHECK_IDS) and all(c["passed"] for c in checks)
             and {c.get("id") for c in checks} == CHECK_IDS
