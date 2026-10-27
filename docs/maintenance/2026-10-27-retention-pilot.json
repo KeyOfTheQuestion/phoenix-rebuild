@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "collected_at": "2026-10-27T02:49:59.369272+00:00",
+  "scope": "Contract 002 AI-assisted reference pilot; not an AI reconstruction attempt or public ledger entry",
+  "python_version": "3.9.6",
+  "current_ai_predecessor_record": "20261027T023955Z-76bf63",
+  "reports": {
+    "reference_predecessor": {
+      "schema_version": 1,
+      "kind": "retention-reference-verification",
+      "contract_id": "002",
+      "contract_version": "2.0.0",
+      "verification_scope": "focused migration/retention pilot; not full v2 reconstruction acceptance",
+      "started_at": "2026-10-27T02:47:37.487464+00:00",
+      "checks": [
+        {
+          "id": "M01",
+          "title": "Boot a v1 predecessor and migrate its real HTTP-created database",
+          "passed": true,
+          "duration_ms": 449.95
+        },
+        {
+          "id": "M02",
+          "title": "Preserve every v1 row and its live token/idempotency behavior",
+          "passed": true,
+          "duration_ms": 2.54
+        },
+        {
+          "id": "M03",
+          "title": "Migration leaves retention disabled and events visible",
+          "passed": true,
+          "duration_ms": 1.58
+        },
+        {
+          "id": "M04",
+          "title": "Repeated startup preserves migration data and version",
+          "passed": true,
+          "duration_ms": 227.01
+        },
+        {
+          "id": "S01",
+          "title": "New routes authenticate before lookup and reject unsupported methods",
+          "passed": true,
+          "duration_ms": 4.35
+        },
+        {
+          "id": "P01",
+          "title": "Reject malformed policies and invalid expiry limits without changing policy",
+          "passed": true,
+          "duration_ms": 10.32
+        },
+        {
+          "id": "P02",
+          "title": "Accept policy bounds, persist configuration and never delete implicitly",
+          "passed": true,
+          "duration_ms": 223.99
+        },
+        {
+          "id": "F01",
+          "title": "Age only disclosed synthetic v2 fixtures; restart and GET do not expire them",
+          "passed": true,
+          "duration_ms": 244.43
+        },
+        {
+          "id": "E01",
+          "title": "Delete only the oldest eligible event within the requested batch limit",
+          "passed": true,
+          "duration_ms": 3.84
+        },
+        {
+          "id": "E02",
+          "title": "Concurrent expiry batches serialize without double-counting",
+          "passed": true,
+          "duration_ms": 4.5
+        },
+        {
+          "id": "E03",
+          "title": "Keep recent, disabled-policy, other-inbox and longer-policy events",
+          "passed": true,
+          "duration_ms": 3.67
+        },
+        {
+          "id": "E04",
+          "title": "Release expired idempotency keys and deduplicate their replacement",
+          "passed": true,
+          "duration_ms": 2.04
+        },
+        {
+          "id": "P03",
+          "title": "Disabling retention survives restart and protects eligible data",
+          "passed": true,
+          "duration_ms": 274.22
+        }
+      ],
+      "execution": "local-subprocess",
+      "human_interventions": null,
+      "candidate_sha256": "10ecaa50408ecc618224bca8ee26af4840869bc1c3ae1d24ca91cd4bffecbf95",
+      "predecessor_sha256": "857cb24936ce6e0a7a941466b57b01fb8125748a1eb197306a62d664616cf142",
+      "contract_sha256": "5d423414bb1b47b60a7fa7297d672657b5502cf9cf6c9f524495ae4c18a36aab",
+      "verifier_sha256": "b7a564c2b183301cf6a631050a4ba6e98a7cb324bd0ea913abaadee703cf05dc",
+      "shared_subject_sha256": "435142a64f7d62b54d58c5187973e237ca2140d25833b464d3d68279c0fdab6d",
+      "migration_fixture": "v1 predecessor creates data through HTTP; logical rows compared before fixture aging",
+      "expiry_fixture": "only synthetic v2 events are backdated via SQLite while stopped; no elapsed-time claim",
+      "duration_seconds": 1.458,
+      "passed": 13,
+      "total": 13,
+      "status": "passed"
+    },
+    "current_ai_predecessor": {
+      "schema_version": 1,
+      "kind": "retention-reference-verification",
+      "contract_id": "002",
+      "contract_version": "2.0.0",
+      "verification_scope": "focused migration/retention pilot; not full v2 reconstruction acceptance",
+      "started_at": "2026-10-27T02:49:57.528161+00:00",
+      "checks": [
+        {
+          "id": "M01",
+          "title": "Boot a v1 predecessor and migrate its real HTTP-created database",
+          "passed": true,
+          "duration_ms": 490.09
+        },
+        {
+          "id": "M02",
+          "title": "Preserve every v1 row and its live token/idempotency behavior",
+          "passed": true,
+          "duration_ms": 2.6
+        },
+        {
+          "id": "M03",
+          "title": "Migration leaves retention disabled and events visible",
+          "passed": true,
+          "duration_ms": 1.71
+        },
+        {
+          "id": "M04",
+          "title": "Repeated startup preserves migration data and version",
+          "passed": true,
+          "duration_ms": 276.47
+        },
+        {
+          "id": "S01",
+          "title": "New routes authenticate before lookup and reject unsupported methods",
+          "passed": true,
+          "duration_ms": 6.19
+        },
+        {
+          "id": "P01",
+          "title": "Reject malformed policies and invalid expiry limits without changing policy",
+          "passed": true,
+          "duration_ms": 15.31
+        },
+        {
+          "id": "P02",
+          "title": "Accept policy bounds, persist configuration and never delete implicitly",
+          "passed": true,
+          "duration_ms": 334.86
+        },
+        {
+          "id": "F01",
+          "title": "Age only disclosed synthetic v2 fixtures; restart and GET do not expire them",
+          "passed": true,
+          "duration_ms": 238.99
+        },
+        {
+          "id": "E01",
+          "title": "Delete only the oldest eligible event within the requested batch limit",
+          "passed": true,
+          "duration_ms": 3.21
+        },
+        {
+          "id": "E02",
+          "title": "Concurrent expiry batches serialize without double-counting",
+          "passed": true,
+          "duration_ms": 4.41
+        },
+        {
+          "id": "E03",
+          "title": "Keep recent, disabled-policy, other-inbox and longer-policy events",
+          "passed": true,
+          "duration_ms": 3.69
+        },
+        {
+          "id": "E04",
+          "title": "Release expired idempotency keys and deduplicate their replacement",
+          "passed": true,
+          "duration_ms": 1.99
+        },
+        {
+          "id": "P03",
+          "title": "Disabling retention survives restart and protects eligible data",
+          "passed": true,
+          "duration_ms": 347.62
+        }
+      ],
+      "execution": "local-subprocess",
+      "human_interventions": null,
+      "candidate_sha256": "10ecaa50408ecc618224bca8ee26af4840869bc1c3ae1d24ca91cd4bffecbf95",
+      "predecessor_sha256": "9f148de136d44219ebce207764364b2ccba7d0f0291c271f0d3a72adbce851af",
+      "contract_sha256": "5d423414bb1b47b60a7fa7297d672657b5502cf9cf6c9f524495ae4c18a36aab",
+      "verifier_sha256": "b7a564c2b183301cf6a631050a4ba6e98a7cb324bd0ea913abaadee703cf05dc",
+      "shared_subject_sha256": "435142a64f7d62b54d58c5187973e237ca2140d25833b464d3d68279c0fdab6d",
+      "migration_fixture": "v1 predecessor creates data through HTTP; logical rows compared before fixture aging",
+      "expiry_fixture": "only synthetic v2 events are backdated via SQLite while stopped; no elapsed-time claim",
+      "duration_seconds": 1.735,
+      "passed": 13,
+      "total": 13,
+      "status": "passed"
+    }
+  }
+}

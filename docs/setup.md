@@ -89,6 +89,26 @@ Do not treat a Git worktree, a subprocess, or a prompt instruction as isolation.
 The notebook is a static site. It runs no candidate code in visitors' browsers
 and has no model API calls, registration, tracking, or server secret.
 
+## Contract 002 reference pilot
+
+The separate AI-assisted retention reference supports explicit per-inbox expiry
+and atomic, opt-in migration from v1. It is not connected to `rebuild`, the
+Docker runner, or the public AI ledger yet. To run its focused 13-check pilot:
+
+```sh
+python3 -m phoenix verify-retention
+python3 -m phoenix verify-retention --predecessor docs/evidence/RUN_ID/server.py
+```
+
+These are local subprocess checks of trusted code, not a hostile-code sandbox.
+Migration data comes from the predecessor's HTTP API. After migration has been
+checked, only synthetic v2 events are backdated directly in SQLite while stopped
+to exercise expiry deterministically. The pilot reports this method explicitly,
+does not call a model and does not publish AI attempts. Existing verification,
+reconstruction and replay remain on contract 001. See the
+[complete pilot contract](../specs/webhook-inbox-retention.md) and
+[verification record](maintenance/2026-10-27-retention-pilot.md).
+
 ## Publish the notebook with GitHub Pages
 
 The included Pages workflow publishes `docs/` on pushes to `main`. Enable Pages

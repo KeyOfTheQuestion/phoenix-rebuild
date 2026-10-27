@@ -41,10 +41,12 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Compile the maintained implementation
-        run: python -m compileall -q phoenix examples/reference
+        run: python -m compileall -q phoenix examples/reference examples/retention
       - name: Check the harness itself
         run: python -m unittest discover -s tests -v
       - name: Run independent HTTP acceptance
         run: python -m phoenix verify
+      - name: Verify the separate retention and v1 migration pilot
+        run: python -m phoenix verify-retention
       - name: Audit historical evidence
         run: python -m phoenix audit

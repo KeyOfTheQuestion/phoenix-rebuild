@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-10-26 维护：重建可选择使用冻结输入在 Docker 中验收，并保留运行环境故障。生成仍使用主机 CLI；今日重建使用本地验收。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-10-26-container-rebuild.md">查看验证记录 ↗</a>',
+  maintenanceNote:'2026-10-27 维护：独立的保留策略参考试验验证 v1 迁移和限量过期清理。AI 重建记录仍使用第一份契约及其 19 项验收。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-10-27-retention-pilot.md">查看验证记录 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',

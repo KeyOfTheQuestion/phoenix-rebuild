@@ -13,6 +13,9 @@ def main():
     verify.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     verify.add_argument("--publish", action="store_true", help="Save a public reference-verification record")
     verify.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"), help="Previous implementation used to create a real database via HTTP")
+    retention = commands.add_parser("verify-retention", help="Run the focused contract-002 reference/migration pilot; does not publish AI records")
+    retention.add_argument("--candidate", default=str(ROOT / "examples/retention/server.py"))
+    retention.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"), help="Trusted v1 program used to create migration data through HTTP")
     container = commands.add_parser("container-verify", help="Run HTTP acceptance inside an optional, restricted Docker container")
     container.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     container.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"))
@@ -32,6 +35,15 @@ def main():
     replay.add_argument("--container", action="store_true", help="Run the verified archive inside Docker without loading its verifier on the host")
     replay.add_argument("--timeout", type=int, default=90, help="Container execution deadline, 1..300 seconds; used only with --container")
     args = parser.parse_args()
+    if args.command == "verify-retention":
+        from .retention import evaluate_retention
+        try:
+            report = evaluate_retention(args.candidate, args.predecessor)
+        except (OSError, RuntimeError) as error:
+            print(str(error), file=sys.stderr)
+            return 2
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0 if report["status"] == "passed" else 1
     if args.command == "container-verify":
         from .container import evaluate_in_container
         try:

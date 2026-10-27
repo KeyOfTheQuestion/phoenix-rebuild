@@ -138,6 +138,26 @@ archived source, plus real Docker acceptance; those fixtures are temporary, make
 no model calls and are never added to the public ledger. See the
 [2026-10-26 verification record](maintenance/2026-10-26-container-rebuild.md).
 
+## Contract 002 migration/retention pilot
+
+The separate `verify-retention` command checks an AI-assisted development
+reference against the second contract's migration and retention behavior. It
+uses a v1 predecessor to create an inbox/event through HTTP, compares all v1
+logical rows before and after migration, then checks original token and
+idempotency behavior. Repeated startup and default-disabled retention must
+preserve those rows. Only later does it backdate synthetic v2 fixture events via
+SQLite while the service is stopped, explicitly distinguishing fixture aging
+from elapsed real-world time and from migration evidence.
+
+Thirteen focused checks cover policy validation/persistence, explicit bounded
+expiry, concurrent batch accounting, preservation of recent and other-inbox
+events, and idempotency-key reuse after deletion. The pilot runs local trusted
+code and makes no model call. Its reports are separate maintenance evidence,
+with source/contract/verifier/shared-client hashes; they do not enter the AI
+ledger, count as AI successes, or replace the frozen 19-check contract-001
+verifier. Full v2 reconstruction acceptance and archive integration remain
+follow-ups. See the [2026-10-27 pilot record](maintenance/2026-10-27-retention-pilot.md).
+
 ## Reproduce, don't infer
 
 Run `python3 -m phoenix replay RUN_ID` for trusted records with an archived verifier.

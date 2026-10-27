@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-27 · Retention and migration reference pilot
+
+- Added standalone contract 002 and an AI-assisted reference with atomic additive migration, per-inbox opt-in policies and explicit expiry batches of at most 100 events. Keep v1 rows and column layouts, reject unsupported future versions and preserve recent/other-inbox events.
+- Added `verify-retention`, a separate 13-check HTTP pilot covering real v1 predecessor data, policy persistence, deterministic disclosed fixture aging, concurrent expiry and idempotency-key reuse. It makes no model call and does not publish AI attempts or change the contract-001 reconstruction verifier.
+- Added nine focused unit controls, including false-green/destructive/no-op/over-eager negative candidates, mid-migration rollback, future-version refusal and reordered-column compatibility. The existing CI and Pages workflows now require the pilot.
+- Published today's bounded contract-001 AI reconstruction and separate reference verification in the [maintenance record](docs/maintenance/2026-10-27-retention-pilot.md). Full v2 reconstruction integration remains a follow-up.
+
 ## 2026-10-26 · Opt-in Docker acceptance during rebuild
 
 - Added `rebuild --container --verification-timeout 90`: prepare Docker/image before model use, then verify generated source with frozen verifier/predecessor bytes inside the existing restricted container. Generation remains on the host CLI; local acceptance is still the default.

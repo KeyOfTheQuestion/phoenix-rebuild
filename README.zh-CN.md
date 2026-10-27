@@ -59,6 +59,18 @@ python3 -m phoenix replay <记录编号> --container --timeout 90
 
 详见[容器配置、限制与安装说明](docs/container-runner.md)及 [2026-10-26 容器重建验证记录](docs/maintenance/2026-10-26-container-rebuild.md)。
 
+## 试验：保留期限与 v1 数据迁移
+
+[第二份契约](specs/webhook-inbox-retention.md)增加按收件箱配置保留期限、每批最多删除 100 条过期事件，以及从 v1 原子迁移。迁移保留旧事件、令牌和幂等状态，默认不开启清理。[AI 辅助开发的参考试验](examples/retention/server.py)保留原有表结构，只新增策略表；读取或修改策略不自动删除事件。
+
+```sh
+python3 -m phoenix verify-retention
+# 从可信的历史 v1 AI 实现创建数据后验证迁移：
+python3 -m phoenix verify-retention --predecessor docs/evidence/记录编号/server.py
+```
+
+独立的 13 项试验检查真实的上一实现 HTTP 数据、迁移、策略持久化、限量及并发清理、收件箱隔离和幂等键重用。完成迁移验证后，验收器仅通过 SQLite 回填合成 v2 事件的时间，用于确定性测试，不声称真实等待过保留期限。该命令执行可信本地代码，不调用模型、不写 AI 台账。重建、历史复验和网页中的 19 项 AI 验收仍使用第一份契约；完整 v2 重建接入留待后续。详见 [2026-10-27 验证与证据](docs/maintenance/2026-10-27-retention-pilot.md)。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

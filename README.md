@@ -78,6 +78,18 @@ With a Linux cgroup-v2 Docker engine, `python3 -m phoenix container-verify` runs
 
 See the [container profile, limits and setup](docs/container-runner.md) and [2026-10-26 container rebuild verification record](docs/maintenance/2026-10-26-container-rebuild.md).
 
+## Pilot: retention and v1 migration
+
+[Contract 002](specs/webhook-inbox-retention.md) adds per-inbox retention, explicit batches of at most 100 expired-event deletions, and atomic migration from v1. Existing events, tokens and idempotency survive migration; retention starts disabled. The AI-assisted [reference pilot](examples/retention/server.py) keeps the original tables and adds a policy table. Policy updates and reads never delete events implicitly.
+
+```sh
+python3 -m phoenix verify-retention
+# Exercise migration from a trusted archived v1 AI implementation:
+python3 -m phoenix verify-retention --predecessor docs/evidence/RUN_ID/server.py
+```
+
+The separate 13-check pilot uses real predecessor HTTP data and checks migration, policy persistence, bounded/concurrent expiry, isolation and key reuse. It explicitly backdates only synthetic v2 fixture events through SQLite after migration checks, rather than claiming that time actually elapsed. It runs local trusted code, calls no model and adds nothing to the AI ledger. Reconstruction, archived replay and the displayed 19-check AI results remain contract 001; full v2 reconstruction integration is a follow-up. See the [2026-10-27 checks and evidence](docs/maintenance/2026-10-27-retention-pilot.md).
+
 ## Run the webhook inbox
 
 ```sh
