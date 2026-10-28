@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-28 · Composed retention acceptance
+
+- Added `verify-retention --full`, composing 19 schema-v2 baseline HTTP checks with the 13 retention/migration checks. Both phases use captured candidate/predecessor bytes and separate fixture databases; all 32 distinct checks must pass.
+- Parameterized only the baseline's expected health schema, retaining version 1 and the original 19 checks by default. Expose the expectation in new reports and reject explicitly schema-v2 baseline reports from the contract-001 ledger; historical verifier archives remain unchanged.
+- Added nine controls for the 32-check pass, a body-limit regression missed by the focused pilot, captured bytes, missing checks, inconsistent bindings, unchanged v1 checks, input validation, CLI selection and ledger mislabelling. Existing CI/Pages run both retention modes.
+- Preserve today's single real contract-001 reconstruction separately from the reference checks; disclose the harness source change and actual negative control in the [verification record](docs/maintenance/2026-10-28-retention-composed.md).
+
 ## 2026-10-27 · Retention and migration reference pilot
 
 - Added standalone contract 002 and an AI-assisted reference with atomic additive migration, per-inbox opt-in policies and explicit expiry batches of at most 100 events. Keep v1 rows and column layouts, reject unsupported future versions and preserve recent/other-inbox events.

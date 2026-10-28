@@ -8,10 +8,63 @@ import tempfile
 import time
 
 from .records import ROOT
-from .verify import Subject, require
+from .verify import Subject, require, evaluate as evaluate_base
+from .audit import CHECK_IDS as BASE_CHECK_IDS
 
 CHECK_IDS = {"M01", "M02", "M03", "M04", "S01", "P01", "P02", "F01",
              "E01", "E02", "E03", "E04", "P03"}
+COMPOSED_CHECK_IDS = {"B-" + key for key in BASE_CHECK_IDS} | CHECK_IDS
+
+
+def evaluate_retention_full(candidate, predecessor):
+    """Compose baseline and retention checks using the same captured source bytes."""
+    started = time.monotonic()
+    timestamp = datetime.now(timezone.utc).isoformat()
+    candidate_source = Path(candidate).read_bytes()
+    predecessor_source = Path(predecessor).read_bytes()
+    bindings = {field: hashlib.sha256(path.read_bytes()).hexdigest() for field, path in (
+        ("verifier_sha256", Path(__file__)),
+        ("shared_subject_sha256", ROOT / "phoenix/verify.py"),
+        ("contract_sha256", ROOT / "specs/webhook-inbox-retention.md"),
+    )}
+    with tempfile.TemporaryDirectory(prefix="phoenix-retention-full-") as temporary:
+        directory = Path(temporary)
+        subject = directory / "server.py"
+        prior = directory / "predecessor.py"
+        subject.write_bytes(candidate_source)
+        prior.write_bytes(predecessor_source)
+        baseline = evaluate_base(subject, kind="reference-verification", predecessor=prior,
+                                 expected_schema_version=2)
+        # The two phases have separate fixture databases, but identical source bytes.
+        focused = evaluate_retention(subject, prior)
+        for report in (baseline, focused):
+            if report["candidate_sha256"] != hashlib.sha256(candidate_source).hexdigest() \
+                    or report["predecessor_sha256"] != hashlib.sha256(predecessor_source).hexdigest():
+                raise RuntimeError("Composed acceptance source changed between phases; no combined verdict")
+        if any(focused[field] != expected for field, expected in bindings.items()):
+            raise RuntimeError("Composed verification inputs changed between phases; no combined verdict")
+    report = dict(focused)
+    report.update(
+        started_at=timestamp,
+        verification_scope="contract-002 composed acceptance; 19 baseline plus 13 retention checks",
+        source_selection="candidate and predecessor bytes captured once before either phase",
+        fixture_separation="independent baseline and retention databases; both populated via predecessor HTTP",
+        baseline_expected_schema_version=2,
+        expected_total=len(COMPOSED_CHECK_IDS),
+        checks=[dict(check, id="B-" + check["id"], phase="baseline") for check in baseline["checks"]]
+               + [dict(check, phase="retention") for check in focused["checks"]],
+        phases={key: {field: value[field] for field in ("status", "passed", "total", "duration_seconds")}
+                for key, value in (("baseline", baseline), ("retention", focused))},
+        duration_seconds=round(time.monotonic() - started, 3),
+    )
+    report["passed"] = sum(check["passed"] for check in report["checks"])
+    report["total"] = len(report["checks"])
+    report["status"] = "passed" if (
+        baseline["status"] == focused["status"] == "passed"
+        and report["passed"] == report["total"] == len(COMPOSED_CHECK_IDS)
+        and {check["id"] for check in report["checks"]} == COMPOSED_CHECK_IDS
+    ) else "failed"
+    return report
 
 
 def evaluate_retention(candidate, predecessor):

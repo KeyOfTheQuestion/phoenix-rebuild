@@ -47,6 +47,8 @@ jobs:
       - name: Run independent HTTP acceptance
         run: python -m phoenix verify
       - name: Verify the separate retention and v1 migration pilot
-        run: python -m phoenix verify-retention
+        run: |
+          python -m phoenix verify-retention
+          python -m phoenix verify-retention --full
       - name: Audit historical evidence
         run: python -m phoenix audit

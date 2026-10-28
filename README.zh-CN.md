@@ -65,11 +65,16 @@ python3 -m phoenix replay <记录编号> --container --timeout 90
 
 ```sh
 python3 -m phoenix verify-retention
+python3 -m phoenix verify-retention --full
 # 从可信的历史 v1 AI 实现创建数据后验证迁移：
 python3 -m phoenix verify-retention --predecessor docs/evidence/记录编号/server.py
 ```
 
-独立的 13 项试验检查真实的上一实现 HTTP 数据、迁移、策略持久化、限量及并发清理、收件箱隔离和幂等键重用。完成迁移验证后，验收器仅通过 SQLite 回填合成 v2 事件的时间，用于确定性测试，不声称真实等待过保留期限。该命令执行可信本地代码，不调用模型、不写 AI 台账。重建、历史复验和网页中的 19 项 AI 验收仍使用第一份契约；完整 v2 重建接入留待后续。详见 [2026-10-27 验证与证据](docs/maintenance/2026-10-27-retention-pilot.md)。
+默认的 13 项试验检查真实的上一实现 HTTP 数据、迁移、策略持久化、限量及并发清理、收件箱隔离和幂等键重用。完成迁移验证后，验收器仅通过 SQLite 回填合成 v2 事件的时间，用于确定性测试，不声称真实等待过保留期限。
+
+`--full` 再加入原有 19 项后端 HTTP 检查，并明确要求健康接口返回结构版本 2，合计 32 项。两个阶段使用一次性捕获的同一份候选及上一实现源码，测试数据库各自独立。报告保留分阶段结果，拒绝缺少检查的“通过”结果或变化的源码绑定。v1 默认仍要求结构版本 1，保留原有 19 个检查编号；验收器源码变化详见 [2026-10-28 验证及反向测试](docs/maintenance/2026-10-28-retention-composed.md)。
+
+这些参考检查执行可信本地代码，不调用模型、不写 AI 台账。重建、历史复验和网页中的 19 项 AI 验收仍使用第一份契约；v2 重建及归档接入留待后续。台账审计会拒绝把明确要求结构版本 2 的基础验收结果标为第一份契约。[原有试验记录](docs/maintenance/2026-10-27-retention-pilot.md)保持不变。
 
 ## 浏览器端验证记录页
 

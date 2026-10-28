@@ -84,11 +84,16 @@ See the [container profile, limits and setup](docs/container-runner.md) and [202
 
 ```sh
 python3 -m phoenix verify-retention
+python3 -m phoenix verify-retention --full
 # Exercise migration from a trusted archived v1 AI implementation:
 python3 -m phoenix verify-retention --predecessor docs/evidence/RUN_ID/server.py
 ```
 
-The separate 13-check pilot uses real predecessor HTTP data and checks migration, policy persistence, bounded/concurrent expiry, isolation and key reuse. It explicitly backdates only synthetic v2 fixture events through SQLite after migration checks, rather than claiming that time actually elapsed. It runs local trusted code, calls no model and adds nothing to the AI ledger. Reconstruction, archived replay and the displayed 19-check AI results remain contract 001; full v2 reconstruction integration is a follow-up. See the [2026-10-27 checks and evidence](docs/maintenance/2026-10-27-retention-pilot.md).
+The default 13-check pilot uses real predecessor HTTP data and checks migration, policy persistence, bounded/concurrent expiry, isolation and key reuse. It explicitly backdates only synthetic v2 fixture events through SQLite after migration checks, rather than claiming that time actually elapsed.
+
+`--full` adds the 19 baseline HTTP checks with an explicit schema-version-2 health expectation, giving 32 distinct checks. Both phases use candidate/predecessor bytes captured once, with separate fixture databases. Reports retain each phase and reject incomplete passing results or changed source bindings. The v1 baseline still defaults to schema version 1 and its original 19 check IDs; the verifier source change is disclosed in the [2026-10-28 verification record and negative control](docs/maintenance/2026-10-28-retention-composed.md).
+
+These reference checks run local trusted code, call no model and add nothing to the AI ledger. Reconstruction, archived replay and the displayed 19-check AI results remain contract 001; v2 reconstruction/archive integration is a follow-up. The ledger audit refuses an explicitly schema-v2 baseline labelled as a contract-001 record. The [original pilot record](docs/maintenance/2026-10-27-retention-pilot.md) remains unchanged.
 
 ## Run the webhook inbox
 

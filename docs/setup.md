@@ -97,8 +97,17 @@ Docker runner, or the public AI ledger yet. To run its focused 13-check pilot:
 
 ```sh
 python3 -m phoenix verify-retention
+python3 -m phoenix verify-retention --full
 python3 -m phoenix verify-retention --predecessor docs/evidence/RUN_ID/server.py
 ```
+
+The default is the original 13-check pilot. `--full` composes it with 19 baseline
+checks that explicitly expect schema version 2. The result needs all 32 distinct
+check IDs to pass. Candidate/predecessor bytes are captured once for both phases;
+each phase creates its own predecessor-populated database. Incomplete checks or
+changed source bindings cannot produce a combined pass. The generator, archive
+format and ledger stay on contract 001. See the
+[composed verification and method change](maintenance/2026-10-28-retention-composed.md).
 
 These are local subprocess checks of trusted code, not a hostile-code sandbox.
 Migration data comes from the predecessor's HTTP API. After migration has been

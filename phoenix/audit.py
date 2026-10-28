@@ -72,6 +72,10 @@ def inspect_bundle(directory, summary):
         report = json.loads(artifacts["report.json"])
         if not isinstance(report, dict):
             raise EvidenceError("Report must be an object")
+        if "expected_schema_version" in report and (
+            type(report["expected_schema_version"]) is not int or report["expected_schema_version"] != 1
+        ):
+            raise EvidenceError("The published ledger only supports contract-001 schema expectation 1")
         for key, value in summary.items():
             if report.get(key) != value:
                 raise EvidenceError("ledger differs from report: " + key)

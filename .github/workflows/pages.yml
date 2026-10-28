@@ -27,6 +27,7 @@ jobs:
           python -m unittest discover -s tests -v
           python -m phoenix verify
           python -m phoenix verify-retention
+          python -m phoenix verify-retention --full
           python -m phoenix audit
       - name: Verify the optional container runner before publishing
         run: python tests/container_smoke.py

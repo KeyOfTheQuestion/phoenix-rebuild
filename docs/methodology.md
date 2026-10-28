@@ -155,8 +155,26 @@ events, and idempotency-key reuse after deletion. The pilot runs local trusted
 code and makes no model call. Its reports are separate maintenance evidence,
 with source/contract/verifier/shared-client hashes; they do not enter the AI
 ledger, count as AI successes, or replace the frozen 19-check contract-001
-verifier. Full v2 reconstruction acceptance and archive integration remain
-follow-ups. See the [2026-10-27 pilot record](maintenance/2026-10-27-retention-pilot.md).
+verifier. See the [2026-10-27 pilot record](maintenance/2026-10-27-retention-pilot.md).
+
+`verify-retention --full` now composes those 13 checks with the 19 baseline HTTP
+checks using an explicit schema-version-2 expectation. The shared baseline has
+a keyword-only health expectation; its default remains version 1, with the same
+19 identifiers and pass rule. Its source hash changes, and new reports expose
+`expected_schema_version`; archived verifier files and historical outcomes are
+not modified. A schema-v2 baseline cannot enter the contract-001 ledger: the
+audit rejects explicit schema expectations other than 1, while permitting old
+records without that newer field.
+
+Composed mode captures candidate/predecessor bytes before either phase and
+checks their returned hashes. Each phase uses a separate synthetic database
+populated through predecessor HTTP. Baseline IDs receive `B-` prefixes, yielding
+32 distinct checks; both phase verdicts and the complete check set must pass.
+The focused phase's contract/verifier/shared-client hashes must match the values
+captured before composition or the combined verdict is refused. These checks retain local process permissions; this is consistency
+control for cooperative subjects, not protection against malicious processes.
+V2 reconstruction/archive integration remains a follow-up. See the
+[2026-10-28 method and negative-control evidence](maintenance/2026-10-28-retention-composed.md).
 
 ## Reproduce, don't infer
 

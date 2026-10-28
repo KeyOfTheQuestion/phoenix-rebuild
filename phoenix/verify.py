@@ -88,13 +88,16 @@ def require(condition, message):
         raise AssertionError(message)
 
 
-def evaluate(candidate, kind="reference-verification", predecessor=None):
+def evaluate(candidate, kind="reference-verification", predecessor=None, *, expected_schema_version=1):
     """Run on trusted, local candidate code; a process is NOT a security sandbox."""
+    if type(expected_schema_version) is not int or expected_schema_version not in (1, 2):
+        raise ValueError("Expected schema version must be 1 or 2")
     source = Path(candidate).read_bytes()
     started = time.monotonic()
     report = {"schema_version": 1, "kind": kind,
               "started_at": datetime.now(timezone.utc).isoformat(),
               "candidate_sha256": hashlib.sha256(source).hexdigest(), "checks": [],
+              "expected_schema_version": expected_schema_version,
               "execution": "local-subprocess", "evaluation_isolation": "procedural",
               "human_interventions": None if kind == "reference-verification" else 0}
     if predecessor:
@@ -276,7 +279,7 @@ def evaluate(candidate, kind="reference-verification", predecessor=None):
             if not report["checks"][-1]["passed"]:
                 return finish(report, started)
             check("C02", "Health exposes the schema version", "contract", lambda: require(
-                expect("GET", "/health", 200, admin=False) == {"status": "ok", "schema_version": 1}, "Incorrect health payload"))
+                expect("GET", "/health", 200, admin=False) == {"status": "ok", "schema_version": expected_schema_version}, "Incorrect health payload"))
             check("S01", "Administrative routes reject missing and wrong credentials", "security", auth)
             check("C03", "Create a named inbox with an unpredictable token", "contract", create)
             if "inbox" not in context:

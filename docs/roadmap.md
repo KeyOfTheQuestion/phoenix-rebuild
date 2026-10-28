@@ -16,7 +16,7 @@
 2. [Done in initial release] Freeze the exact verifier source at the start of generation, even if the harness changes while a provider runs.
 3. Capture the actual resolved model identity when the CLI exposes a reliable field.
 4. [Done 2026-10-22] Add an end-to-end browser check for ledger filters, language and artifact links, including a Pages publication check ([verification record](maintenance/2026-10-22-notebook-browser-checks.md)).
-5. [Pilot 2026-10-27] Added contract 002, an AI-assisted retention reference, atomic additive migration from v1 and a separate 13-check HTTP pilot ([verification](maintenance/2026-10-27-retention-pilot.md)). Expiry is explicit and bounded to 100 events per request; default policies do not delete existing data. Full v2 reconstruction acceptance and evidence/archive integration remain follow-ups; the published AI ledger stays on contract 001.
+5. [Pilot 2026-10-27; composed acceptance 2026-10-28] Added contract 002, an AI-assisted retention reference, atomic additive migration from v1 and a separate 13-check HTTP pilot. `verify-retention --full` now adds 19 schema-v2 baseline checks using captured source bytes and independent fixture databases ([verification and negative control](maintenance/2026-10-28-retention-composed.md)). Expiry is explicit and bounded to 100 events per request. V2 reconstruction/evidence/archive integration remains a follow-up; the published AI ledger stays on contract 001.
 6. [Done in initial release] Exercise continuity between two different successful AI rebuilds (use `rebuild --predecessor docs/evidence/RUN/server.py`).
 7. Add another provider adapter with the same evidence format.
 8. Add reproducible, bounded outbound delivery before considering webhook replay.
