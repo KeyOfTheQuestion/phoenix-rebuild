@@ -17,6 +17,7 @@ def main():
     retention.add_argument("--candidate", default=str(ROOT / "examples/retention/server.py"))
     retention.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"), help="Trusted v1 program used to create migration data through HTTP")
     retention.add_argument("--full", action="store_true", help="Compose 19 schema-v2 baseline checks with the 13 focused retention checks; no model call")
+    retention.add_argument("--publish", action="store_true", help="With --full, publish a frozen contract-002 reference bundle; no model call")
     container = commands.add_parser("container-verify", help="Run HTTP acceptance inside an optional, restricted Docker container")
     container.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     container.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"))
@@ -38,8 +39,14 @@ def main():
     args = parser.parse_args()
     if args.command == "verify-retention":
         from .retention import evaluate_retention, evaluate_retention_full
+        if args.publish and not args.full:
+            parser.error("verify-retention --publish requires --full")
         try:
-            report = (evaluate_retention_full if args.full else evaluate_retention)(args.candidate, args.predecessor)
+            if args.publish:
+                from .retention_archive import publish_retention
+                report = publish_retention(args.candidate, args.predecessor)
+            else:
+                report = (evaluate_retention_full if args.full else evaluate_retention)(args.candidate, args.predecessor)
         except (OSError, RuntimeError) as error:
             print(str(error), file=sys.stderr)
             return 2
@@ -97,6 +104,15 @@ def main():
         except EvidenceError as error:
             print("Replay refused: " + str(error), file=sys.stderr)
             return 2
+        if archived.get("verifier_profile") == "retention-composed-v1":
+            if args.container:
+                print("Replay refused: contract-002 archives currently support trusted local replay only; no host fallback", file=sys.stderr)
+                return 2
+            from .retention_archive import replay_frozen_retention
+            report = replay_frozen_retention(artifacts)
+            report.update(replay_run_id=args.run_id, replay_source="verified-archive-bytes")
+            print(json.dumps(report, indent=2))
+            return 0 if report["status"] == "passed" else 1
         if args.container:
             from .container import evaluate_snapshot_in_container
             try:

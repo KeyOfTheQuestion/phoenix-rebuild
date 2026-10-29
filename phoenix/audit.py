@@ -9,6 +9,10 @@ CHECK_IDS = {
     "C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08",
     "S01", "S02", "S03", "S04", "S05", "R01", "R02", "R03", "R04", "D01", "D02",
 }
+RETENTION_PROFILE = "retention-composed-v1"
+RETENTION_CHECK_IDS = {"B-" + key for key in CHECK_IDS} | {
+    "M01", "M02", "M03", "M04", "S01", "P01", "P02", "F01", "E01", "E02", "E03", "E04", "P03",
+}
 
 
 class EvidenceError(ValueError):
@@ -72,10 +76,33 @@ def inspect_bundle(directory, summary):
         report = json.loads(artifacts["report.json"])
         if not isinstance(report, dict):
             raise EvidenceError("Report must be an object")
-        if "expected_schema_version" in report and (
-            type(report["expected_schema_version"]) is not int or report["expected_schema_version"] != 1
-        ):
-            raise EvidenceError("The published ledger only supports contract-001 schema expectation 1")
+        contract = report.get("contract_id", "001")
+        profile = report.get("verifier_profile", "contract-001")
+        expected_ids = CHECK_IDS
+        if contract == "001":
+            if profile != "contract-001" or report.get("contract_version", "1.0.0") != "1.0.0":
+                raise EvidenceError("Unknown contract-001 verifier profile or version")
+            if "expected_schema_version" in report and (
+                type(report["expected_schema_version"]) is not int or report["expected_schema_version"] != 1
+            ):
+                raise EvidenceError("The published ledger only supports contract-001 schema expectation 1 for contract 001")
+        elif contract == "002":
+            if profile != RETENTION_PROFILE or report.get("contract_version") != "2.0.0":
+                raise EvidenceError("Unknown contract-002 verifier profile or version")
+            if report.get("kind") != "retention-reference-verification":
+                raise EvidenceError("Contract 002 currently supports reference verification only")
+            if type(report.get("baseline_expected_schema_version")) is not int or report["baseline_expected_schema_version"] != 2 \
+                    or type(report.get("expected_total")) is not int or report["expected_total"] != 32:
+                raise EvidenceError("Invalid contract-002 schema expectation or check coverage")
+            if report.get("status") not in ("passed", "failed"):
+                raise EvidenceError("Contract-002 reference archives require an acceptance verdict")
+            required = {"server.py", "verifier.py", "predecessor.py", "contract.md", "report.json",
+                        "baseline.py", "retention.py", "records.py", "audit.py"}
+            if set(artifacts) != required or not report.get("predecessor_sha256"):
+                raise EvidenceError("Contract-002 archives require the complete frozen dependency set and predecessor")
+            expected_ids = RETENTION_CHECK_IDS
+        else:
+            raise EvidenceError("Unknown evidence contract")
         for key, value in summary.items():
             if report.get(key) != value:
                 raise EvidenceError("ledger differs from report: " + key)
@@ -84,6 +111,9 @@ def inspect_bundle(directory, summary):
             bound["verifier.py"] = "verifier_sha256"
         if report.get("predecessor_sha256"):
             bound["predecessor.py"] = "predecessor_sha256"
+        if contract == "002":
+            bound.update({"baseline.py": "shared_subject_sha256", "retention.py": "retention_verifier_sha256",
+                          "records.py": "records_support_sha256", "audit.py": "audit_support_sha256"})
         for filename, field in bound.items():
             if filename not in artifacts or hashlib.sha256(artifacts[filename]).hexdigest() != report.get(field):
                 raise EvidenceError("Report digest mismatch or missing artifact: " + filename)
@@ -103,8 +133,8 @@ def inspect_bundle(directory, summary):
         ):
             raise EvidenceError("Invalid verification error; it must not claim an acceptance verdict")
         if report["status"] == "passed" and not (
-            len(checks) == len(CHECK_IDS) and all(c["passed"] for c in checks)
-            and {c.get("id") for c in checks} == CHECK_IDS
+            len(checks) == len(expected_ids) and all(c["passed"] for c in checks)
+            and {c.get("id") for c in checks} == expected_ids
         ):
             raise EvidenceError("Invalid passing verdict or check identifiers")
     except EvidenceError:

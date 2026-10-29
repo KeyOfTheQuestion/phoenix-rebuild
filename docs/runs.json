@@ -1,5 +1,70 @@
 [
   {
+    "id": "20261029T023917Z-bce8be",
+    "kind": "retention-reference-verification",
+    "status": "passed",
+    "started_at": "2026-10-29T02:39:15.820763+00:00",
+    "passed": 32,
+    "total": 32,
+    "duration_seconds": 2.112,
+    "candidate_sha256": "10ecaa50408ecc618224bca8ee26af4840869bc1c3ae1d24ca91cd4bffecbf95",
+    "human_interventions": null,
+    "usage": null,
+    "cost_usd": null,
+    "provenance": {
+      "generator": "reference-verification",
+      "model": null,
+      "verification": "frozen contract-002 composed source package; no model call"
+    },
+    "predecessor_sha256": "626254c065586ec92e991959156d7b187cfa7038b103360f6a577c9a66105afc",
+    "compatibility_fixture": null,
+    "generation_seconds": null,
+    "contract_id": "002",
+    "contract_version": "2.0.0",
+    "verifier_profile": "retention-composed-v1"
+  },
+  {
+    "id": "20261029T023202Z-360ada",
+    "kind": "ai-rebuild",
+    "status": "passed",
+    "started_at": "2026-10-29T02:32:02.111846+00:00",
+    "passed": 19,
+    "total": 19,
+    "duration_seconds": 0.614,
+    "candidate_sha256": "626254c065586ec92e991959156d7b187cfa7038b103360f6a577c9a66105afc",
+    "human_interventions": 0,
+    "usage": {
+      "input_tokens": 22990,
+      "cached_input_tokens": 0,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 3270,
+      "reasoning_output_tokens": 230
+    },
+    "cost_usd": null,
+    "provenance": {
+      "generator": "codex-cli",
+      "version": "codex-cli 0.163.0",
+      "model": null,
+      "model_selection": "clean CLI default",
+      "user_configuration_loaded": false,
+      "attempt": 1,
+      "usage": {
+        "input_tokens": 22990,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3270,
+        "reasoning_output_tokens": 230
+      },
+      "requested_verification": "local-subprocess",
+      "observed_tool_calls": 0,
+      "generation_seconds": 52.572,
+      "context_boundary": "fresh-directory, prompt-enforced; not a hostile-agent sandbox"
+    },
+    "predecessor_sha256": "7c258e2fcaa928a0f1452b8cb590440bf75bcfdc7ce12d084f03024b186cc822",
+    "compatibility_fixture": "database populated via predecessor HTTP API before candidate startup",
+    "generation_seconds": 52.572
+  },
+  {
     "id": "20261028T023142Z-5f1624",
     "kind": "ai-rebuild",
     "status": "passed",

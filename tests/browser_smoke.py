@@ -157,6 +157,27 @@ class NotebookBrowserTests(unittest.TestCase):
         self.page.get_by_role("link", name="← Back to the notebook", exact=True).click()
         expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
 
+    def test_contract_002_is_labelled_reference_and_excluded_from_ai_filter(self):
+        record = next(row for row in self.ledger if row.get("contract_id") == "002")
+        self.assertEqual(record["kind"], "retention-reference-verification")
+        self.open_notebook()
+        button = self.page.locator('[data-run="%s"]' % record["id"])
+        row = self.page.locator("#runs tr").filter(has=button)
+        expect(row).to_contain_text("Contract 002")
+        expect(row.locator(".badge")).to_have_text("REFERENCE")
+        button.click()
+        expect(self.page.locator("#dialog-summary")).to_contain_text("Contract 002")
+        expect(self.page.locator("#dialog-provenance")).to_contain_text("Reference verification; no model call")
+        expect(self.page.locator('#artifact-links a[href$="/baseline.py"]')).to_be_visible()
+        expect(self.page.locator('#artifact-links a[href$="/retention.py"]')).to_be_visible()
+        self.page.locator("#close-dialog").click()
+        self.page.get_by_role("button", name="AI rebuilds", exact=True).click()
+        expect(self.page.locator('[data-run="%s"]' % record["id"])).to_have_count(0)
+        self.page.get_by_role("button", name="All records", exact=True).click()
+        self.page.locator("#language").click()
+        expect(self.page.locator("#runs tr").filter(has=self.page.locator('[data-run="%s"]' % record["id"]))
+               ).to_contain_text("契约 002")
+
     def test_container_results_and_runtime_errors_do_not_claim_local_execution(self):
         # Synthetic responses exercise modes without inventing a published run.
         row = next(r for r in self.ai if r["status"] == "passed")

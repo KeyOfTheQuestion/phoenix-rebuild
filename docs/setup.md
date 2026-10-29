@@ -92,12 +92,13 @@ and has no model API calls, registration, tracking, or server secret.
 ## Contract 002 reference pilot
 
 The separate AI-assisted retention reference supports explicit per-inbox expiry
-and atomic, opt-in migration from v1. It is not connected to `rebuild`, the
-Docker runner, or the public AI ledger yet. To run its focused 13-check pilot:
+and atomic, opt-in migration from v1. It is not connected to AI generation or the
+Docker runner. To run its focused/composed reference checks:
 
 ```sh
 python3 -m phoenix verify-retention
 python3 -m phoenix verify-retention --full
+python3 -m phoenix verify-retention --full --publish
 python3 -m phoenix verify-retention --predecessor docs/evidence/RUN_ID/server.py
 ```
 
@@ -105,8 +106,8 @@ The default is the original 13-check pilot. `--full` composes it with 19 baselin
 checks that explicitly expect schema version 2. The result needs all 32 distinct
 check IDs to pass. Candidate/predecessor bytes are captured once for both phases;
 each phase creates its own predecessor-populated database. Incomplete checks or
-changed source bindings cannot produce a combined pass. The generator, archive
-format and ledger stay on contract 001. See the
+changed source bindings cannot produce a combined pass. AI generation and its
+metrics stay on contract 001. See the
 [composed verification and method change](maintenance/2026-10-28-retention-composed.md).
 
 These are local subprocess checks of trusted code, not a hostile-code sandbox.
@@ -114,9 +115,19 @@ Migration data comes from the predecessor's HTTP API. After migration has been
 checked, only synthetic v2 events are backdated directly in SQLite while stopped
 to exercise expiry deterministically. The pilot reports this method explicitly,
 does not call a model and does not publish AI attempts. Existing verification,
-reconstruction and replay remain on contract 001. See the
+reconstruction remains on contract 001. See the
 [complete pilot contract](../specs/webhook-inbox-retention.md) and
 [verification record](maintenance/2026-10-27-retention-pilot.md).
+
+`--full --publish` archives the exact entrypoint, all four project-module
+dependencies, candidate, predecessor and contract used by the reference check.
+It publishes a contract-002 reference row, not an AI attempt. Only full 32-check
+mode supports publication. `python3 -m phoenix replay RUN_ID` verifies every
+artifact and binding, then loads the frozen modules from temporary verified
+copies. The current workspace verifier is not imported and the archive is not
+written to. This currently requires trusted local execution; requesting
+`--container` for a contract-002 archive exits 2 without host fallback.
+See the [archive profile and verification](maintenance/2026-10-29-retention-archive.md).
 
 ## Publish the notebook with GitHub Pages
 

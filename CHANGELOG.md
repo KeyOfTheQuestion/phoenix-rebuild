@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-29 · Frozen retention reference archives
+
+- Added `verify-retention --full --publish`, capturing the exact entrypoint, four project-module dependencies, candidate, predecessor and contract before execution. Publish the resulting 32-check record as contract-002 reference verification, without a model call.
+- Added contract-aware audit profiles and trusted local replay from verified source copies in a private temporary package. Refuse incomplete dependency sets, incorrect bindings, unsupported v2 AI labels and contract-002 container requests without host fallback. Preserve legacy contract-001 bundles unchanged.
+- Label contracts in the bilingual notebook, expose frozen dependency links, and keep reference rows outside AI metrics. Add nine archive unit controls, a browser classification check and real frozen-reference replay in existing CI/Pages workflows.
+- Preserve today's one actual contract-001 reconstruction separately; see the [source/profile/verification record](docs/maintenance/2026-10-29-retention-archive.md).
+
 ## 2026-10-28 · Composed retention acceptance
 
 - Added `verify-retention --full`, composing 19 schema-v2 baseline HTTP checks with the 13 retention/migration checks. Both phases use captured candidate/predecessor bytes and separate fixture databases; all 32 distinct checks must pass.

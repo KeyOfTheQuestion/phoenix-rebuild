@@ -85,6 +85,7 @@ See the [container profile, limits and setup](docs/container-runner.md) and [202
 ```sh
 python3 -m phoenix verify-retention
 python3 -m phoenix verify-retention --full
+python3 -m phoenix verify-retention --full --publish
 # Exercise migration from a trusted archived v1 AI implementation:
 python3 -m phoenix verify-retention --predecessor docs/evidence/RUN_ID/server.py
 ```
@@ -93,7 +94,9 @@ The default 13-check pilot uses real predecessor HTTP data and checks migration,
 
 `--full` adds the 19 baseline HTTP checks with an explicit schema-version-2 health expectation, giving 32 distinct checks. Both phases use candidate/predecessor bytes captured once, with separate fixture databases. Reports retain each phase and reject incomplete passing results or changed source bindings. The v1 baseline still defaults to schema version 1 and its original 19 check IDs; the verifier source change is disclosed in the [2026-10-28 verification record and negative control](docs/maintenance/2026-10-28-retention-composed.md).
 
-These reference checks run local trusted code, call no model and add nothing to the AI ledger. Reconstruction, archived replay and the displayed 19-check AI results remain contract 001; v2 reconstruction/archive integration is a follow-up. The ledger audit refuses an explicitly schema-v2 baseline labelled as a contract-001 record. The [original pilot record](docs/maintenance/2026-10-27-retention-pilot.md) remains unchanged.
+Without `--publish`, these commands only print results. `--full --publish` captures the candidate, predecessor, contract, entrypoint and all four project-module dependencies before evaluation, then publishes those same bytes as a **contract-002 reference verification**. `python3 -m phoenix replay RUN_ID` validates the complete bundle and runs its frozen modules in a temporary private package. It does not import the current workspace verifier or modify the archive. Contract-002 archive replay is currently local only; `--container` refuses it without host fallback.
+
+Reference checks call no model. Public rows identify the contract; contract-002 reference rows do not enter AI-attempt/success metrics. AI reconstruction and its 19-check results remain contract 001, and v2 AI generation remains a follow-up. The audit selects strict 19/32-check profiles, preserves legacy records and refuses unsupported v2 AI labels. See the [2026-10-29 archive and replay evidence](docs/maintenance/2026-10-29-retention-archive.md). Earlier dated records remain unchanged.
 
 ## Run the webhook inbox
 

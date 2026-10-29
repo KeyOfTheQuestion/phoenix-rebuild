@@ -1,0 +1,295 @@
+{
+  "archive_unchanged": true,
+  "result": {
+    "audit_support_sha256": "d0d30ad68d18a777d8ff7612bfe6e3463620d418f9f13a3d19817ae2fe1ea4a2",
+    "baseline_expected_schema_version": 2,
+    "candidate_sha256": "10ecaa50408ecc618224bca8ee26af4840869bc1c3ae1d24ca91cd4bffecbf95",
+    "checks": [
+      {
+        "category": "contract",
+        "duration_ms": 565.83,
+        "id": "B-C01",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Service boots from its documented interface"
+      },
+      {
+        "category": "contract",
+        "duration_ms": 9.24,
+        "id": "B-C02",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Health exposes the schema version"
+      },
+      {
+        "category": "security",
+        "duration_ms": 3.87,
+        "id": "B-S01",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Administrative routes reject missing and wrong credentials"
+      },
+      {
+        "category": "contract",
+        "duration_ms": 1.44,
+        "id": "B-C03",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Create a named inbox with an unpredictable token"
+      },
+      {
+        "category": "contract",
+        "duration_ms": 1.46,
+        "id": "B-C04",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Capture a real UTF-8 webhook request"
+      },
+      {
+        "category": "contract",
+        "duration_ms": 0.88,
+        "id": "B-C05",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Preserve body, metadata, and safe headers"
+      },
+      {
+        "category": "reliability",
+        "duration_ms": 2.3,
+        "id": "B-R01",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Deduplicate deliveries and reject body conflicts"
+      },
+      {
+        "category": "reliability",
+        "duration_ms": 12.42,
+        "id": "B-R02",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Concurrent retries create one logical event"
+      },
+      {
+        "category": "reliability",
+        "duration_ms": 1.8,
+        "id": "B-R03",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Unkeyed deliveries remain independent"
+      },
+      {
+        "category": "reliability",
+        "duration_ms": 1.71,
+        "id": "B-R04",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Idempotency keys are scoped to an inbox"
+      },
+      {
+        "category": "contract",
+        "duration_ms": 3.99,
+        "id": "B-C06",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Bound pagination and list newest events first"
+      },
+      {
+        "category": "security",
+        "duration_ms": 2.56,
+        "id": "B-S02",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Reject malformed inbox input"
+      },
+      {
+        "category": "security",
+        "duration_ms": 2.23,
+        "id": "B-S03",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Reject oversized and malformed request bodies"
+      },
+      {
+        "category": "contract",
+        "duration_ms": 4.0,
+        "id": "B-C07",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Accept non-JSON and empty webhook bodies"
+      },
+      {
+        "category": "security",
+        "duration_ms": 7.23,
+        "id": "B-S04",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Keep credentials out of storage responses and logs"
+      },
+      {
+        "category": "security",
+        "duration_ms": 1.3,
+        "id": "B-S05",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Reject incorrect hook tokens without revealing inboxes"
+      },
+      {
+        "category": "contract",
+        "duration_ms": 1.94,
+        "id": "B-C08",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Unknown resources and unsupported methods return JSON"
+      },
+      {
+        "category": "compatibility",
+        "duration_ms": 233.58,
+        "id": "B-D01",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Events and idempotency survive process restart"
+      },
+      {
+        "category": "compatibility",
+        "duration_ms": 1.11,
+        "id": "B-D02",
+        "passed": true,
+        "phase": "baseline",
+        "title": "Read old events and preserve their idempotency state"
+      },
+      {
+        "duration_ms": 477.4,
+        "id": "M01",
+        "passed": true,
+        "phase": "retention",
+        "title": "Boot a v1 predecessor and migrate its real HTTP-created database"
+      },
+      {
+        "duration_ms": 2.09,
+        "id": "M02",
+        "passed": true,
+        "phase": "retention",
+        "title": "Preserve every v1 row and its live token/idempotency behavior"
+      },
+      {
+        "duration_ms": 1.26,
+        "id": "M03",
+        "passed": true,
+        "phase": "retention",
+        "title": "Migration leaves retention disabled and events visible"
+      },
+      {
+        "duration_ms": 231.14,
+        "id": "M04",
+        "passed": true,
+        "phase": "retention",
+        "title": "Repeated startup preserves migration data and version"
+      },
+      {
+        "duration_ms": 4.93,
+        "id": "S01",
+        "passed": true,
+        "phase": "retention",
+        "title": "New routes authenticate before lookup and reject unsupported methods"
+      },
+      {
+        "duration_ms": 10.99,
+        "id": "P01",
+        "passed": true,
+        "phase": "retention",
+        "title": "Reject malformed policies and invalid expiry limits without changing policy"
+      },
+      {
+        "duration_ms": 277.06,
+        "id": "P02",
+        "passed": true,
+        "phase": "retention",
+        "title": "Accept policy bounds, persist configuration and never delete implicitly"
+      },
+      {
+        "duration_ms": 207.31,
+        "id": "F01",
+        "passed": true,
+        "phase": "retention",
+        "title": "Age only disclosed synthetic v2 fixtures; restart and GET do not expire them"
+      },
+      {
+        "duration_ms": 3.17,
+        "id": "E01",
+        "passed": true,
+        "phase": "retention",
+        "title": "Delete only the oldest eligible event within the requested batch limit"
+      },
+      {
+        "duration_ms": 5.38,
+        "id": "E02",
+        "passed": true,
+        "phase": "retention",
+        "title": "Concurrent expiry batches serialize without double-counting"
+      },
+      {
+        "duration_ms": 3.66,
+        "id": "E03",
+        "passed": true,
+        "phase": "retention",
+        "title": "Keep recent, disabled-policy, other-inbox and longer-policy events"
+      },
+      {
+        "duration_ms": 2.14,
+        "id": "E04",
+        "passed": true,
+        "phase": "retention",
+        "title": "Release expired idempotency keys and deduplicate their replacement"
+      },
+      {
+        "duration_ms": 179.29,
+        "id": "P03",
+        "passed": true,
+        "phase": "retention",
+        "title": "Disabling retention survives restart and protects eligible data"
+      }
+    ],
+    "contract_id": "002",
+    "contract_sha256": "5d423414bb1b47b60a7fa7297d672657b5502cf9cf6c9f524495ae4c18a36aab",
+    "contract_version": "2.0.0",
+    "duration_seconds": 2.271,
+    "execution": "local-subprocess",
+    "expected_total": 32,
+    "expiry_fixture": "only synthetic v2 events are backdated via SQLite while stopped; no elapsed-time claim",
+    "fixture_separation": "independent baseline and retention databases; both populated via predecessor HTTP",
+    "human_interventions": null,
+    "kind": "retention-reference-verification",
+    "migration_fixture": "v1 predecessor creates data through HTTP; logical rows compared before fixture aging",
+    "passed": 32,
+    "phases": {
+      "baseline": {
+        "duration_seconds": 0.862,
+        "passed": 19,
+        "status": "passed",
+        "total": 19
+      },
+      "retention": {
+        "duration_seconds": 1.408,
+        "passed": 13,
+        "status": "passed",
+        "total": 13
+      }
+    },
+    "predecessor_sha256": "626254c065586ec92e991959156d7b187cfa7038b103360f6a577c9a66105afc",
+    "records_support_sha256": "6437d184581fd55845550166b21ddfae5dfd522eaef052b676c78fc1f7777632",
+    "replay_run_id": "20261029T023917Z-bce8be",
+    "replay_source": "verified-archive-bytes",
+    "retention_verifier_sha256": "cd2662e8a84ebe1b5e040b7c7a3605c74630ddbd2dd49614c76996ffcd17c9f4",
+    "schema_version": 1,
+    "shared_subject_sha256": "ae420dcbc20b8599253a9af43dd31c6162a2acc2ca240a046e03148186482f8e",
+    "source_selection": "candidate and predecessor bytes captured once before either phase",
+    "started_at": "2026-10-29T02:41:02.510857+00:00",
+    "status": "passed",
+    "total": 32,
+    "verification_scope": "contract-002 composed acceptance; 19 baseline plus 13 retention checks",
+    "verifier_profile": "retention-composed-v1",
+    "verifier_sha256": "9ffaa870607f90823ee73eb8645bc9be5b00b6823ea9922d560d85f138d1c4a7"
+  },
+  "run_id": "20261029T023917Z-bce8be",
+  "scope": "frozen contract-002 reference replay; no model call"
+}

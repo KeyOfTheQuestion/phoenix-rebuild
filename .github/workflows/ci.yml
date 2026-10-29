@@ -50,5 +50,7 @@ jobs:
         run: |
           python -m phoenix verify-retention
           python -m phoenix verify-retention --full
+      - name: Replay the frozen contract-002 reference archive
+        run: python tests/retention_archive_smoke.py
       - name: Audit historical evidence
         run: python -m phoenix audit

@@ -4,7 +4,7 @@
 
 The unit of observation is an attempt: one complete generated candidate for a
 versioned contract. The current subject is a Python/SQLite webhook inbox. A pass
-requires all 19 independent HTTP checks, including concurrent idempotency,
+for contract-001 AI reconstruction requires all 19 independent HTTP checks, including concurrent idempotency,
 credential handling, restart persistence, and old-data compatibility. Tests
 exercise the service as a client; they do not import its implementation.
 
@@ -66,6 +66,15 @@ Actual generation runs include the exact `prompt.md`. The report contains:
 - generator version, requested model or default-selection policy, and attempt;
 - usage returned by the generator (otherwise null);
 - monetary cost, always null until a trustworthy billing source is integrated.
+
+Contract-002 reference archives additionally freeze `baseline.py`, `retention.py`,
+`records.py` and `audit.py`, plus a standalone `verifier.py` package entrypoint.
+The profile is `retention-composed-v1` (archive-format version 1, contract 002).
+The same public ledger can contain these 32-check reference records, explicitly
+labelled by contract and kind; AI metrics still count only `ai-rebuild` rows.
+Legacy records without contract/profile fields retain their original contract-001
+interpretation and are never rewritten. The audit selects strict check sets and
+dependency bindings; contract 002 currently accepts reference verification only.
 
 SHA-256 detects mismatched artifacts; the maintainer controls both artifacts and
 hashes. These are not signed, independently attested credentials. The raw provider
@@ -163,7 +172,7 @@ a keyword-only health expectation; its default remains version 1, with the same
 19 identifiers and pass rule. Its source hash changes, and new reports expose
 `expected_schema_version`; archived verifier files and historical outcomes are
 not modified. A schema-v2 baseline cannot enter the contract-001 ledger: the
-audit rejects explicit schema expectations other than 1, while permitting old
+audit rejects explicit schema expectations other than 1 for contract 001, while permitting old
 records without that newer field.
 
 Composed mode captures candidate/predecessor bytes before either phase and
@@ -173,8 +182,20 @@ populated through predecessor HTTP. Baseline IDs receive `B-` prefixes, yielding
 The focused phase's contract/verifier/shared-client hashes must match the values
 captured before composition or the combined verdict is refused. These checks retain local process permissions; this is consistency
 control for cooperative subjects, not protection against malicious processes.
-V2 reconstruction/archive integration remains a follow-up. See the
+V2 AI reconstruction remains a follow-up. See the
 [2026-10-28 method and negative-control evidence](maintenance/2026-10-28-retention-composed.md).
+
+`verify-retention --full --publish` now captures the complete verifier package
+before evaluation, runs those captured modules and publishes the same byte
+snapshots. Replay verifies the ledger, complete artifact set and all source
+bindings before loading anything. It stages only captured verified bytes and
+loads a uniquely named temporary package, without importing current workspace
+modules. Package modules are removed from the host's module registry afterward;
+bytecode and database files stay in disposable directories. This freezes project
+source dependencies, not the operating system or Python/SQLite runtime.
+It retains normal local process permissions and is not a hostile-code sandbox.
+Contract-002 `--container` replay is refused before archived code is loaded,
+without host fallback. See the [2026-10-29 archive verification](maintenance/2026-10-29-retention-archive.md).
 
 ## Reproduce, don't infer
 
