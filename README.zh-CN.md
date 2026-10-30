@@ -79,6 +79,8 @@ python3 -m phoenix verify-retention --predecessor docs/evidence/记录编号/ser
 
 参考验证不调用模型。公开记录会标明契约，契约 002 的参考记录不计入 AI 尝试与成功数。AI 重建及其 19 项验收仍使用第一份契约，v2 AI 生成接入留待后续。审计按契约严格检查 19/32 项配置，兼容旧记录，并拒绝尚不支持的 v2 AI 标签。详见 [2026-10-29 归档与复验证据](docs/maintenance/2026-10-29-retention-archive.md)；此前的历史记录保持不变。
 
+运行时会影响结果：10 月 30 日的 AI 候选在 Python 3.14 上通过 19/19，但在 Python 3.9 的补充复验中，因空查询字符串的解析差异失败了 2 项。两次实际观察及未经修改的候选源码均保留在[跨版本失败记录](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)中。一次归档通过不代表已覆盖所有受支持的 Python 版本。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

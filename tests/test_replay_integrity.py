@@ -120,9 +120,24 @@ class ReplayIntegrityTests(unittest.TestCase):
     def test_valid_archive_replays_without_writing_into_evidence(self):
         before = {p.name: p.read_bytes() for p in self.directory.iterdir()}
         result, output, errors = self.replay()
-        self.assertEqual(result, 0, errors)
-        self.assertEqual(json.loads(output)["passed"], 19)
+        self.assert_executed_checked_candidate(result, output, errors, before["server.py"])
         self.assertEqual(before, {p.name: p.read_bytes() for p in self.directory.iterdir()})
+
+    def assert_executed_checked_candidate(self, result, output, errors, source):
+        # A historical pass describes its original runtime. Replay may discover
+        # acceptance failures on another Python version; that is not an integrity
+        # failure. Require the exact source, successful startup, all 19 outcomes,
+        # and an exit code that truthfully forwards the fresh acceptance verdict.
+        report = json.loads(output)
+        self.assertEqual(report["candidate_sha256"], hashlib.sha256(source).hexdigest())
+        self.assertEqual(report["predecessor_sha256"], self.row["predecessor_sha256"])
+        from phoenix.audit import CHECK_IDS
+        self.assertEqual(len(report["checks"]), 19)
+        self.assertEqual({check["id"] for check in report["checks"]}, CHECK_IDS)
+        self.assertTrue(next(check for check in report["checks"] if check["id"] == "C01")["passed"])
+        self.assertEqual(report["passed"], sum(check["passed"] for check in report["checks"]))
+        self.assertEqual(report["status"], "passed" if report["passed"] == 19 else "failed")
+        self.assertEqual(result, 0 if report["status"] == "passed" else 1, errors)
 
     def test_modified_verifier_is_refused_before_execution(self):
         marker = self.root / "unverified-verifier-ran.txt"
@@ -198,6 +213,7 @@ class ReplayIntegrityTests(unittest.TestCase):
         self.assertIn("no executable candidate", errors)
 
     def test_replay_uses_verified_snapshot_if_disk_files_change_after_inspection(self):
+        source = (self.directory / "server.py").read_bytes()
         def inspect_then_change(site, run_id):
             result = verified_run(site, run_id)
             (self.directory / "verifier.py").write_text("raise RuntimeError('changed after audit')\n")
@@ -206,8 +222,7 @@ class ReplayIntegrityTests(unittest.TestCase):
 
         with patch("phoenix.audit.verified_run", side_effect=inspect_then_change):
             result, output, errors = self.replay()
-        self.assertEqual(result, 0, errors)
-        self.assertEqual(json.loads(output)["status"], "passed")
+        self.assert_executed_checked_candidate(result, output, errors, source)
 
 
 if __name__ == "__main__":

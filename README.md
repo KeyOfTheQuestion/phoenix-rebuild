@@ -98,6 +98,8 @@ Without `--publish`, these commands only print results. `--full --publish` captu
 
 Reference checks call no model. Public rows identify the contract; contract-002 reference rows do not enter AI-attempt/success metrics. AI reconstruction and its 19-check results remain contract 001, and v2 AI generation remains a follow-up. The audit selects strict 19/32-check profiles, preserves legacy records and refuses unsupported v2 AI labels. See the [2026-10-29 archive and replay evidence](docs/maintenance/2026-10-29-retention-archive.md). Earlier dated records remain unchanged.
 
+Runtime matters: the October 30 AI candidate passed 19/19 on Python 3.14, but an additional replay on Python 3.9 failed 2 checks because of empty-query parsing. Both observations and the unedited candidate remain public in the [cross-runtime failure record](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci). A passing archived observation does not establish compatibility with every supported Python version.
+
 ## Run the webhook inbox
 
 ```sh

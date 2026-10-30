@@ -6,6 +6,7 @@
 - Validate the exact frozen helper set, all eight source/contract hashes, the 32-check profile and the actual boundary probe. Refuse inconsistent inputs/results and unavailable runtimes without host fallback.
 - Extend existing Linux CI and Pages container checks to replay a real published v2 reference bundle and assert archive immutability. Default local verification and historical evidence stay unchanged.
 - Preserve today's single real contract-001 reconstruction and disclose the changed host/CLI environment in the [verification record](docs/maintenance/2026-10-30-retention-container.md).
+- Preserve an additional 17/19 Python 3.9 replay failure for the same unedited AI candidate that passed on Python 3.14. Correct integrity tests to require checked bytes and truthful fresh verdicts, without assuming cross-runtime acceptance or changing historical results.
 
 ## 2026-10-29 · Frozen retention reference archives
 

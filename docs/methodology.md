@@ -92,6 +92,11 @@ or generation workflow was built without human input.
 - Default CLI configuration can change across CLI versions. An unspecified model
   is reported as a selection policy, not assigned a guessed model name.
 - HTTP acceptance is intentionally bounded. It cannot establish absence of bugs.
+- An archived pass describes the runtime used for that observation. Replaying the
+  same checked bytes on another Python/SQLite version can fail acceptance while
+  the archive remains internally consistent. The [October 30 cross-runtime
+  failure](maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)
+  preserves such a result; it does not overwrite the original passing record.
 - Tests are public and are not protected against an agent deliberately searching
   for them. The experiment measures cooperative reconstruction, not adversarial
   benchmark integrity.

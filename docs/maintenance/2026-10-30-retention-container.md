@@ -42,12 +42,14 @@ fixtures; no real retention interval is claimed to have elapsed.
 
 | Local observation | Result |
 | --- | --- |
-| Dependency-free unit suite | 71 passed in 8.758 seconds |
+| Final dependency-free unit suite, Python 3.14.6 | 71 passed in 9.715 seconds |
+| Final dependency-free unit suite, Python 3.9.6 | 71 passed in 28.577 seconds |
 | [Independent contract-001 reference HTTP acceptance](2026-10-30-reference-v1.json) | 19/19 passed |
 | [Existing frozen contract-002 local replay](2026-10-30-retention-local-replay.json) | 32/32 passed |
 | Evidence audit | Passed |
 | Python compilation | Passed |
 | Explicit contract-002 Docker request on this host | Exit 2: Docker unavailable; no host execution |
+| Additional Python 3.9.6 replay of today's AI candidate | **17/19 passed; overall failed**; C06 and C08 failed; preserved below |
 
 Five new unit controls use a synthetic Docker client and the actual published
 reference bundle. They check complete staging, absence of host verifier loading,
@@ -67,13 +69,47 @@ it now replays the real v2 reference alongside the existing v1/legacy fixtures,
 requires 32/32, checks all eight hashes and unchanged archive bytes/directory
 entries, and prints the actual report under `CONTAINER_EVIDENCE=` as
 `retention_reference`. The existing Chromium suite still runs in both workflows.
-Consult the workflow outcome for actual remote Docker/browser results; local
-synthetic controls are not a substitute for them.
+The [actual Linux container job](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/40994339565/job/123863850052)
+passed, including contract-002 replay at 32/32, all eight bindings and unchanged
+archive contents. Its [captured result](2026-10-30-retention-container-result.json)
+includes the actual probe, pinned image and hashes. The separate Chromium job
+also passed all 9 checks. The overall first CI run failed in two Python 3.9
+integrity tests; the cause and correction are disclosed next. Successful jobs
+are not represented as a successful overall workflow.
+
+## Cross-runtime failure discovered by CI
+
+The first [CI run](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/40994339565)
+failed `test_valid_archive_replays_without_writing_into_evidence` and
+`test_replay_uses_verified_snapshot_if_disk_files_change_after_inspection` on
+Python 3.9. Those integrity controls selected the newest AI record and assumed
+its original passing verdict must still hold on every Python runtime.
+
+Today's generated candidate calls `parse_qs(query, keep_blank_values=True,
+strict_parsing=True)` even for an empty query. Python 3.9 rejects that empty
+query with `ValueError`; Python 3.14 returns an empty mapping. On Python 3.9,
+the candidate consequently returns HTTP 400 for default event-list requests,
+including the missing-inbox case. This violates contract 001's Python 3.9+
+requirement. The same frozen candidate/verifier/predecessor reproduced **17/19**
+locally on Python 3.9.6, failing C06 and C08. The
+[actual failed replay](2026-10-30-python39-ai-replay.json) is retained separately;
+the original 19/19 observation on Python 3.14 and every candidate byte remain
+unchanged. No extra model attempt or manual candidate repair was made.
+
+Integrity tests now require the exact checked candidate/predecessor hashes,
+successful startup, all 19 check IDs/counts, an internally correct fresh verdict
+and the matching exit code, plus unchanged archive contents where applicable.
+They allow a truthful acceptance-failure verdict when runtime behavior differs;
+they do not force it to pass or skip the failing checks. All 15 integrity controls
+passed locally on Python 3.9.6 after this correction. This correction distinguishes
+archive integrity from runtime acceptance and does not fix the archived candidate's
+Python 3.9 defect. Runtime identity and explicit candidate coverage at the supported
+Python floor are a follow-up in the roadmap.
 
 ## Today's single real reconstruction
 
 The real model cycle used the latest successful AI candidate from October 29
-as predecessor. Attempt 1 passed 19/19; no second attempt was made. Generation
+as predecessor. Attempt 1 passed 19/19 on Python 3.14.6; no second attempt was made. Generation
 remained bounded to two attempts and 300 seconds each, using the existing
 authenticated Codex CLI with clean default configuration and no model override.
 
