@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "kind": "ai-rebuild",
+  "started_at": "2026-10-30T02:49:35.448178+00:00",
+  "candidate_sha256": "ef206e5d9870e14533307b799330a97c12278953919b7e22470704e4c11e6ad6",
+  "checks": [
+    {
+      "id": "C01",
+      "title": "Service boots from its documented interface",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 3752.48
+    },
+    {
+      "id": "C02",
+      "title": "Health exposes the schema version",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 0.84
+    },
+    {
+      "id": "S01",
+      "title": "Administrative routes reject missing and wrong credentials",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 3.62
+    },
+    {
+      "id": "C03",
+      "title": "Create a named inbox with an unpredictable token",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 1.31
+    },
+    {
+      "id": "C04",
+      "title": "Capture a real UTF-8 webhook request",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 1.14
+    },
+    {
+      "id": "C05",
+      "title": "Preserve body, metadata, and safe headers",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 0.62
+    },
+    {
+      "id": "R01",
+      "title": "Deduplicate deliveries and reject body conflicts",
+      "category": "reliability",
+      "passed": true,
+      "duration_ms": 0.98
+    },
+    {
+      "id": "R02",
+      "title": "Concurrent retries create one logical event",
+      "category": "reliability",
+      "passed": true,
+      "duration_ms": 25.27
+    },
+    {
+      "id": "R03",
+      "title": "Unkeyed deliveries remain independent",
+      "category": "reliability",
+      "passed": true,
+      "duration_ms": 3.29
+    },
+    {
+      "id": "R04",
+      "title": "Idempotency keys are scoped to an inbox",
+      "category": "reliability",
+      "passed": true,
+      "duration_ms": 2.15
+    },
+    {
+      "id": "C06",
+      "title": "Bound pagination and list newest events first",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 2.6
+    },
+    {
+      "id": "S02",
+      "title": "Reject malformed inbox input",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 2.3
+    },
+    {
+      "id": "S03",
+      "title": "Reject oversized and malformed request bodies",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 1.4
+    },
+    {
+      "id": "C07",
+      "title": "Accept non-JSON and empty webhook bodies",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 2.88
+    },
+    {
+      "id": "S04",
+      "title": "Keep credentials out of storage responses and logs",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 0.79
+    },
+    {
+      "id": "S05",
+      "title": "Reject incorrect hook tokens without revealing inboxes",
+      "category": "security",
+      "passed": true,
+      "duration_ms": 0.89
+    },
+    {
+      "id": "C08",
+      "title": "Unknown resources and unsupported methods return JSON",
+      "category": "contract",
+      "passed": true,
+      "duration_ms": 2.34
+    },
+    {
+      "id": "D01",
+      "title": "Events and idempotency survive process restart",
+      "category": "compatibility",
+      "passed": true,
+      "duration_ms": 60.32
+    },
+    {
+      "id": "D02",
+      "title": "Read old events and preserve their idempotency state",
+      "category": "compatibility",
+      "passed": true,
+      "duration_ms": 0.92
+    }
+  ],
+  "expected_schema_version": 1,
+  "execution": "local-subprocess",
+  "evaluation_isolation": "procedural",
+  "human_interventions": 0,
+  "predecessor_sha256": "626254c065586ec92e991959156d7b187cfa7038b103360f6a577c9a66105afc",
+  "compatibility_fixture": "database populated via predecessor HTTP API before candidate startup",
+  "duration_seconds": 3.869,
+  "passed": 19,
+  "total": 19,
+  "status": "passed",
+  "generation_seconds": 61.716,
+  "id": "20261030T024939Z-60a62e",
+  "contract_sha256": "a248f3a66113b668153d127542f97deb8344dcc52033919efd92f69f00fd5269",
+  "verifier_sha256": "ae420dcbc20b8599253a9af43dd31c6162a2acc2ca240a046e03148186482f8e",
+  "provenance": {
+    "generator": "codex-cli",
+    "version": "codex-cli 0.145.0",
+    "model": null,
+    "model_selection": "clean CLI default",
+    "user_configuration_loaded": false,
+    "attempt": 1,
+    "usage": {
+      "input_tokens": 17849,
+      "cached_input_tokens": 0,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 4803,
+      "reasoning_output_tokens": 930
+    },
+    "requested_verification": "local-subprocess",
+    "observed_tool_calls": 0,
+    "generation_seconds": 61.716,
+    "context_boundary": "fresh-directory, prompt-enforced; not a hostile-agent sandbox"
+  },
+  "usage": {
+    "input_tokens": 17849,
+    "cached_input_tokens": 0,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 4803,
+    "reasoning_output_tokens": 930
+  },
+  "cost_usd": null,
+  "contract_id": "001",
+  "contract_version": "1.0.0",
+  "verifier_profile": "contract-001"
+}

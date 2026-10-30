@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-10-29 维护：契约 002 的参考验收现可发布完整的冻结验收器包，供本地复验。参考记录不计入 AI 尝试数。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-10-29-retention-archive.md">查看验证记录 ↗</a>',
+  maintenanceNote:'2026-10-30 维护：契约 002 的完整冻结证据包现支持容器复验，核对 32 项验收及全部依赖指纹；运行环境出错时不回退到主机执行。参考复验不计入 AI 尝试数。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-10-30-retention-container.md">查看验证记录 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',

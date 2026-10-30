@@ -194,8 +194,15 @@ modules. Package modules are removed from the host's module registry afterward;
 bytecode and database files stay in disposable directories. This freezes project
 source dependencies, not the operating system or Python/SQLite runtime.
 It retains normal local process permissions and is not a hostile-code sandbox.
-Contract-002 `--container` replay is refused before archived code is loaded,
-without host fallback. See the [2026-10-29 archive verification](maintenance/2026-10-29-retention-archive.md).
+Contract-002 `--container` replay now stages the complete verified dependency
+package and loads it only inside Docker. The host checks all eight source/contract
+hashes, reference-only contract/profile metadata, the full 32-check passing set,
+and the actual container boundary probe. It never substitutes current workspace
+modules. Runtime or validation errors return exit code 2 without host fallback;
+replay neither changes historical records nor calls a model. The container policy
+and shared-kernel/cooperative-evaluator limitations remain the same. See the
+[2026-10-29 archive verification](maintenance/2026-10-29-retention-archive.md)
+and [2026-10-30 container integration](maintenance/2026-10-30-retention-container.md).
 
 ## Reproduce, don't infer
 

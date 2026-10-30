@@ -104,22 +104,23 @@ def main():
         except EvidenceError as error:
             print("Replay refused: " + str(error), file=sys.stderr)
             return 2
-        if archived.get("verifier_profile") == "retention-composed-v1":
-            if args.container:
-                print("Replay refused: contract-002 archives currently support trusted local replay only; no host fallback", file=sys.stderr)
-                return 2
+        if archived.get("verifier_profile") == "retention-composed-v1" and not args.container:
             from .retention_archive import replay_frozen_retention
             report = replay_frozen_retention(artifacts)
             report.update(replay_run_id=args.run_id, replay_source="verified-archive-bytes")
             print(json.dumps(report, indent=2))
             return 0 if report["status"] == "passed" else 1
         if args.container:
-            from .container import evaluate_snapshot_in_container
+            from .container import RETENTION_SUPPORT, evaluate_snapshot_in_container
+            options = {}
+            if archived.get("verifier_profile") == "retention-composed-v1":
+                options = {"verifier_profile": "retention-composed-v1",
+                           "support_sources": {name: artifacts[name] for name in RETENTION_SUPPORT}}
             try:
                 report = evaluate_snapshot_in_container(
                     artifacts["server.py"], artifacts["verifier.py"],
                     predecessor_source=artifacts["predecessor.py"] if archived.get("predecessor_sha256") else None,
-                    timeout=args.timeout,
+                    timeout=args.timeout, **options,
                 )
             except (RuntimeError, OSError) as error:
                 print("Replay refused: " + str(error), file=sys.stderr)

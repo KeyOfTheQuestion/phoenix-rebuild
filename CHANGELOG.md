@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-30 · Container replay for frozen retention archives
+
+- Replay complete contract-002 reference archives inside the existing restricted Docker profile, loading archived code only in the container.
+- Validate the exact frozen helper set, all eight source/contract hashes, the 32-check profile and the actual boundary probe. Refuse inconsistent inputs/results and unavailable runtimes without host fallback.
+- Extend existing Linux CI and Pages container checks to replay a real published v2 reference bundle and assert archive immutability. Default local verification and historical evidence stay unchanged.
+- Preserve today's single real contract-001 reconstruction and disclose the changed host/CLI environment in the [verification record](docs/maintenance/2026-10-30-retention-container.md).
+
 ## 2026-10-29 · Frozen retention reference archives
 
 - Added `verify-retention --full --publish`, capturing the exact entrypoint, four project-module dependencies, candidate, predecessor and contract before execution. Publish the resulting 32-check record as contract-002 reference verification, without a model call.

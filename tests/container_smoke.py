@@ -91,15 +91,25 @@ def main():
 
     def replay_in_container(record):
         original, _ = verified_run(ROOT / "docs", record["id"])
+        directory = ROOT / "docs/evidence" / record["id"]
+        before = {p.name: p.read_bytes() for p in directory.iterdir() if p.is_file()}
+        names = sorted(p.name for p in directory.iterdir())
         completed = subprocess.run([sys.executable, "-m", "phoenix", "replay", record["id"], "--container"],
                                    capture_output=True, text=True, timeout=180)
         assert completed.returncode == 0, completed.stderr
         report = json.loads(completed.stdout)
-        assert report["passed"] == report["total"] == 19, report
+        assert report["passed"] == report["total"] == (32 if original.get("contract_id") == "002" else 19), report
         assert report["replay_source"] == "verified-archive-bytes"
         assert report["replay_run_id"] == record["id"]
         for field in ("candidate_sha256", "verifier_sha256", "predecessor_sha256", "contract_sha256"):
             assert report.get(field) == original.get(field), field
+        if original.get("contract_id") == "002":
+            assert report["kind"] == "retention-reference-verification"
+            assert report["verifier_profile"] == "retention-composed-v1"
+            for field in ("shared_subject_sha256", "retention_verifier_sha256", "records_support_sha256", "audit_support_sha256"):
+                assert report[field] == original[field], field
+        assert {p.name: p.read_bytes() for p in directory.iterdir() if p.is_file()} == before
+        assert sorted(p.name for p in directory.iterdir()) == names
         return report
 
     with patch.dict(os.environ, {"PHOENIX_HOST_SENTINEL": "synthetic-host-only"}):
@@ -110,6 +120,8 @@ def main():
                           and not r.get("predecessor_sha256"))
         legacy = replay_in_container(legacy_row)
         assert legacy["verifier_sha256"] != baseline["verifier_sha256"]
+        retention_row = next(r for r in ledger if r.get("contract_id") == "002" and r["status"] == "passed")
+        retention = replay_in_container(retention_row)
         adapter_control = check_rebuild_adapter(row)
         with tempfile.TemporaryDirectory(prefix="phoenix-container-ci-") as temporary:
             directory = Path(temporary)
@@ -130,6 +142,7 @@ def main():
         "schema_version": 1, "checked_at": datetime.now(timezone.utc).isoformat(),
         "archived_run_id": row["id"], "reference": baseline, "archived_ai": ai,
         "legacy_sql_fixture_run_id": legacy_row["id"], "legacy_sql_fixture": legacy,
+        "retention_reference_run_id": retention_row["id"], "retention_reference": retention,
         "rebuild_adapter_control": adapter_control,
         "timeout_control": "deadline refused the slow candidate; no Phoenix containers remained",
     }, sort_keys=True))

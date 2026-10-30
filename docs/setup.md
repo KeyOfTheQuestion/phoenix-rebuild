@@ -92,8 +92,8 @@ and has no model API calls, registration, tracking, or server secret.
 ## Contract 002 reference pilot
 
 The separate AI-assisted retention reference supports explicit per-inbox expiry
-and atomic, opt-in migration from v1. It is not connected to AI generation or the
-Docker runner. To run its focused/composed reference checks:
+and atomic, opt-in migration from v1. It is not connected to AI generation.
+Its published full archives support Docker replay. To run its focused/composed reference checks:
 
 ```sh
 python3 -m phoenix verify-retention
@@ -125,9 +125,12 @@ It publishes a contract-002 reference row, not an AI attempt. Only full 32-check
 mode supports publication. `python3 -m phoenix replay RUN_ID` verifies every
 artifact and binding, then loads the frozen modules from temporary verified
 copies. The current workspace verifier is not imported and the archive is not
-written to. This currently requires trusted local execution; requesting
-`--container` for a contract-002 archive exits 2 without host fallback.
-See the [archive profile and verification](maintenance/2026-10-29-retention-archive.md).
+written to. Add `--container --timeout 90` for a contract-002 archive to execute
+its full verified dependency package inside Docker, with no archived code loaded
+on the host. All eight source/contract hashes, the 32-check profile and boundary
+observations must match. Docker remains optional; runtime failures exit 2 without
+host fallback. See the [archive profile](maintenance/2026-10-29-retention-archive.md)
+and [container replay checks](maintenance/2026-10-30-retention-container.md).
 
 ## Publish the notebook with GitHub Pages
 

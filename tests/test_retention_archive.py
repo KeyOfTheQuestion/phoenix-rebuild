@@ -103,7 +103,7 @@ class RetentionArchiveTests(unittest.TestCase):
         self.assertEqual(result, 0, errors)
         self.assertEqual(json.loads(output)["passed"], 32)
 
-    def test_container_request_refuses_before_loading_a_consistent_host_marker(self):
+    def test_missing_container_runtime_refuses_before_loading_a_consistent_host_marker(self):
         marker = self.root / "must-not-load.txt"
         entrypoint = self.directory / "verifier.py"
         entrypoint.write_text("from pathlib import Path\nPath(%r).write_text('executed')\n" % str(marker)
@@ -115,11 +115,12 @@ class RetentionArchiveTests(unittest.TestCase):
         report = dict(self.report, verifier_sha256=manifest["verifier.py"])
         self.write_report(report)
         verified_run(self.site, self.row["id"])
-        with patch("phoenix.retention_archive.replay_frozen_retention") as run:
+        with patch("phoenix.retention_archive.replay_frozen_retention") as run, \
+                patch("phoenix.container.shutil.which", return_value=None):
             result, output, errors = self.replay(container=True)
         self.assertEqual(result, 2)
         self.assertEqual(output, "")
-        self.assertIn("local replay only", errors)
+        self.assertIn("Docker is not installed", errors)
         self.assertFalse(marker.exists())
         run.assert_not_called()
 

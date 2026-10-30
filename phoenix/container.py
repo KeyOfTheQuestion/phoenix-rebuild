@@ -15,6 +15,9 @@ from .records import ROOT
 IMAGE = "python:3.12-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70"
 POLICY = {"memory_bytes": 268435456, "swap_bytes": 0, "cpus": 1, "pids": 128,
           "tmpfs_bytes": 67108864, "uid": 65534, "network": "none"}
+RETENTION_SUPPORT = {"baseline.py": "shared_subject_sha256", "retention.py": "retention_verifier_sha256",
+                     "records.py": "records_support_sha256", "audit.py": "audit_support_sha256",
+                     "contract.md": "contract_sha256"}
 
 # The unchanged HTTP verifier and its subject share this container's loopback.
 # Only source snapshots are mounted; the repository, home and Docker socket are not.
@@ -58,9 +61,12 @@ assert not probe['docker_socket_present'] and not probe['host_sentinel_present']
 expected = ['entrypoint.py', 'server.py', 'verifier.py']
 if Path('/input/predecessor.py').exists():
     expected.append('predecessor.py')
+if Path('/input/baseline.py').exists():
+    expected.extend(['baseline.py', 'retention.py', 'records.py', 'audit.py', 'contract.md'])
 assert probe['input_files'] == sorted(expected)
 verifier_bytes = Path('/input/verifier.py').read_bytes()
 module = types.ModuleType('container_verifier')
+module.__file__ = '/input/verifier.py'
 exec(compile(verifier_bytes, 'container-verifier.py', 'exec'), module.__dict__)
 kwargs = {'predecessor': '/input/predecessor.py'} if Path('/input/predecessor.py').exists() else {}
 report = module.evaluate('/input/server.py', **kwargs)
@@ -95,12 +101,23 @@ def _image_id(executable):
     return inspected.stdout.strip()
 
 
-def _validate(report, sources):
+def _validate(report, sources, verifier_profile="contract-001"):
     if not isinstance(report, dict) or report.get("status") not in ("passed", "failed"):
         raise ContainerError("Container did not return an acceptance report")
     bindings = {"server.py": "candidate_sha256", "verifier.py": "verifier_sha256"}
     if "predecessor.py" in sources:
         bindings["predecessor.py"] = "predecessor_sha256"
+    from .audit import CHECK_IDS, RETENTION_CHECK_IDS
+    expected_ids = CHECK_IDS
+    if verifier_profile == "retention-composed-v1":
+        bindings.update(RETENTION_SUPPORT)
+        expected = {"contract_id": "002", "contract_version": "2.0.0",
+                    "verifier_profile": verifier_profile, "kind": "retention-reference-verification",
+                    "baseline_expected_schema_version": 2, "expected_total": 32}
+        if any(type(report.get(key)) is not type(value) or report[key] != value
+               for key, value in expected.items()):
+            raise ContainerError("Container returned an incorrect contract-002 verification profile")
+        expected_ids = RETENTION_CHECK_IDS
     for name, field in bindings.items():
         if report.get(field) != hashlib.sha256(sources[name]).hexdigest():
             raise ContainerError("Container report does not match its input snapshot: " + name)
@@ -112,10 +129,9 @@ def _validate(report, sources):
         raise ContainerError("Invalid container check counts")
     if report["passed"] != sum(c["passed"] for c in checks) or report["total"] != len(checks):
         raise ContainerError("Inconsistent container check counts")
-    from .audit import CHECK_IDS
     if report["status"] == "passed" and not (
-        len(checks) == len(CHECK_IDS) and report["passed"] == len(CHECK_IDS)
-        and {c.get("id") for c in checks} == CHECK_IDS
+        len(checks) == len(expected_ids) and report["passed"] == len(expected_ids)
+        and {c.get("id") for c in checks} == expected_ids
     ):
         raise ContainerError("Incomplete passing container verdict")
     probe = report.get("container_probe", {})
@@ -145,12 +161,20 @@ def evaluate_in_container(candidate, predecessor=None, timeout=90):
     )
 
 
-def evaluate_snapshot_in_container(candidate_source, verifier_source, predecessor_source=None, timeout=90):
+def evaluate_snapshot_in_container(candidate_source, verifier_source, predecessor_source=None, timeout=90,
+                                   *, verifier_profile="contract-001", support_sources=None):
     """Stage the supplied bytes without loading archived code on the host."""
     sources = {"server.py": candidate_source, "verifier.py": verifier_source,
                "entrypoint.py": ENTRYPOINT.encode("utf-8")}
     if predecessor_source is not None:
         sources["predecessor.py"] = predecessor_source
+    if verifier_profile == "retention-composed-v1":
+        if not isinstance(support_sources, dict) or set(support_sources) != set(RETENTION_SUPPORT) \
+                or predecessor_source is None:
+            raise ContainerError("Container contract-002 replay requires its exact frozen dependency set and predecessor")
+        sources.update(support_sources)
+    elif verifier_profile != "contract-001" or support_sources is not None:
+        raise ContainerError("Container verifier profile or dependency set is unsupported")
     if any(not isinstance(source, bytes) for source in sources.values()):
         raise ContainerError("Container inputs must be frozen source bytes")
     executable, image_id = prepare_container(timeout)
@@ -184,7 +208,7 @@ def evaluate_snapshot_in_container(candidate_source, verifier_source, predecesso
                     report = json.loads(completed.stdout)
                 except ValueError as error:
                     raise ContainerError("Container returned invalid JSON") from error
-                _validate(report, sources)
+                _validate(report, sources, verifier_profile)
             finally:
                 # Remove this invocation's container, including its entire process tree.
                 # It may already have been removed by --rm after a normal exit.
