@@ -42,6 +42,8 @@ class RetentionContainerTests(unittest.TestCase):
         stage = Path(command[command.index("--mount") + 1].split("source=", 1)[1].split(",target=", 1)[0])
         self.staged = {p.name: p.read_bytes() for p in stage.iterdir()}
         result = copy.deepcopy(self.original)
+        result["execution_runtime"] = {"python_implementation": "CPython", "python_version": "3.12.0",
+                                       "sqlite_version": "3.45.0"}
         result["container_probe"] = {
             "uid": 65534, "interfaces": ["lo"], "root_read_only": True,
             "input_read_only": True, "effective_capabilities": 0, "no_new_privileges": True,

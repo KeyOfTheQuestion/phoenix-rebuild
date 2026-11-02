@@ -60,7 +60,9 @@ class ContainerRunnerTests(unittest.TestCase):
         if self.boundary_change:
             probe.update(self.boundary_change)
         report = {"status": "passed", "checks": [{"id": key, "passed": True} for key in sorted(CHECK_IDS)],
-                  "passed": 19, "total": 19, "container_probe": probe}
+                  "passed": 19, "total": 19, "container_probe": probe,
+                  "execution_runtime": {"python_implementation": "CPython", "python_version": "3.12.0",
+                                        "sqlite_version": "3.45.0"}}
         import hashlib
         for name, field in (("server.py", "candidate_sha256"), ("predecessor.py", "predecessor_sha256"),
                             ("verifier.py", "verifier_sha256")):
@@ -94,6 +96,14 @@ class ContainerRunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(container.ContainerError, "did not run"):
                 container.evaluate_in_container(self.candidate)
             run.assert_not_called()
+
+    def test_missing_or_malformed_container_runtime_cannot_be_accepted(self):
+        for runtime in (None, {}, {"python_version": "3.12"}):
+            with self.subTest(runtime=runtime):
+                self.candidate.write_text("# synthetic candidate snapshot\n")
+                self.payload = {"execution_runtime": runtime}
+                with self.assertRaisesRegex(container.ContainerError, "runtime"):
+                    self.evaluate()
 
     def test_explicit_snapshot_uses_the_supplied_verifier_instead_of_the_current_one(self):
         import hashlib

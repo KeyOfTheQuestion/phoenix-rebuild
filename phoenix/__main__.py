@@ -3,7 +3,7 @@ import json
 import sys
 
 from .records import ROOT, publish
-from .verify import evaluate
+from .verify import evaluate, runtime_identity
 
 
 def main():
@@ -107,6 +107,7 @@ def main():
         if archived.get("verifier_profile") == "retention-composed-v1" and not args.container:
             from .retention_archive import replay_frozen_retention
             report = replay_frozen_retention(artifacts)
+            report["execution_runtime"] = runtime_identity()
             report.update(replay_run_id=args.run_id, replay_source="verified-archive-bytes")
             print(json.dumps(report, indent=2))
             return 0 if report["status"] == "passed" else 1
@@ -143,6 +144,7 @@ def main():
                 predecessor.write_bytes(artifacts["predecessor.py"])
                 kwargs["predecessor"] = predecessor
             report = module.evaluate(candidate, **kwargs)
+        report["execution_runtime"] = runtime_identity()
         print(json.dumps(report, indent=2))
         return 0 if report["status"] == "passed" else 1
 

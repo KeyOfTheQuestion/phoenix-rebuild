@@ -81,6 +81,8 @@ python3 -m phoenix verify-retention --predecessor docs/evidence/记录编号/ser
 
 运行时会影响结果：10 月 30 日的 AI 候选在 Python 3.14 上通过 19/19，但在 Python 3.9 的补充复验中，因空查询字符串的解析差异失败了 2 项。两次实际观察及未经修改的候选源码均保留在[跨版本失败记录](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)中。一次归档通过不代表已覆盖所有受支持的 Python 版本。
 
+新的验收与复验结果包含 `execution_runtime`，记录实际 Python 实现／版本和 SQLite 库版本。网页显示这些版本；旧报告缺少信息时明确显示“未记录”。复验测量本次运行时，保留原始报告。要检查 Python 最低支持版本，可用已安装的 Python 3.9 解释器执行完整命令，例如 `python3.9 -m phoenix rebuild --attempts 2 --timeout 300`。候选及上一实现使用同一解释器；Codex CLI 的默认模型策略不变。详见[运行时证据及范围](docs/maintenance/2026-11-02-runtime-evidence.md)。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

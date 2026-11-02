@@ -19,6 +19,11 @@ class EvidenceError(ValueError):
     """The requested record cannot be verified as a complete published bundle."""
 
 
+def valid_execution_runtime(value):
+    return isinstance(value, dict) and set(value) == {"python_implementation", "python_version", "sqlite_version"} \
+        and all(isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9_.+-]{1,80}", v) for v in value.values())
+
+
 def valid_run_id(value):
     return isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", value) is not None
 
@@ -76,6 +81,8 @@ def inspect_bundle(directory, summary):
         report = json.loads(artifacts["report.json"])
         if not isinstance(report, dict):
             raise EvidenceError("Report must be an object")
+        if report.get("execution_runtime") is not None and not valid_execution_runtime(report["execution_runtime"]):
+            raise EvidenceError("Invalid execution runtime observation")
         contract = report.get("contract_id", "001")
         profile = report.get("verifier_profile", "contract-001")
         expected_ids = CHECK_IDS

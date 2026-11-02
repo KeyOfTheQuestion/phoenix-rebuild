@@ -20,8 +20,11 @@
 6. [Done in initial release] Exercise continuity between two different successful AI rebuilds (use `rebuild --predecessor docs/evidence/RUN/server.py`).
 7. Add another provider adapter with the same evidence format.
 8. Add reproducible, bounded outbound delivery before considering webhook replay.
-9. Record Python/SQLite runtime identity and explicitly check generated candidates
-   at the supported Python floor. The [October 30 failure](maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)
+9. [Runtime observations implemented 2026-11-02; today's generation checked on
+   Python 3.9.6] New acceptance/replay results and evidence dialogs record actual
+   Python/SQLite runtime identity ([verification](maintenance/2026-11-02-runtime-evidence.md)).
+   Daily instructions prefer an already-installed Python 3.9; a repeatable candidate
+   compatibility matrix across runtimes remains a follow-up. The [October 30 failure](maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)
    demonstrates why a 19/19 pass on Python 3.14 is insufficient to establish
    Python 3.9 compatibility. Preserve both runtime observations and candidate bytes.
 

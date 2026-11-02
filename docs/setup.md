@@ -32,6 +32,16 @@ Generation consumes your provider's usage allowance and may incur charges under
 your account's terms. Phoenix does not purchase credits or change subscriptions.
 Each run is bounded to at most five attempts and has a per-attempt timeout.
 
+The Python interpreter running Phoenix also launches its candidate/predecessor.
+Use `python3.9 -m phoenix rebuild --attempts 2 --timeout 300` with an already
+installed Python 3.9 to check the minimum supported version. No interpreter is
+installed or silently substituted by Phoenix. New acceptance/replay JSON and
+evidence dialogs show `execution_runtime` (Python implementation/version and
+SQLite version); old missing metadata remains unknown. Replay measures the
+current run and leaves the archived report intact. Inside Docker the observation
+is measured in the container, not on the client. A single runtime pass is not
+a compatibility matrix; see the [scope and verification](maintenance/2026-11-02-runtime-evidence.md).
+
 By default the adapter passes `--ignore-user-config`. This prevents unrelated
 MCP servers, settings, and unsupported configured model aliases from disrupting
 the run. Authentication is still resolved by the CLI. To explicitly use your

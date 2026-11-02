@@ -98,6 +98,9 @@ def main():
                                    capture_output=True, text=True, timeout=180)
         assert completed.returncode == 0, completed.stderr
         report = json.loads(completed.stdout)
+        assert report["execution_runtime"]["python_implementation"] == "CPython"
+        assert report["execution_runtime"]["python_version"].startswith("3.12.")
+        assert report["execution_runtime"]["sqlite_version"]
         assert report["passed"] == report["total"] == (32 if original.get("contract_id") == "002" else 19), report
         assert report["replay_source"] == "verified-archive-bytes"
         assert report["replay_run_id"] == record["id"]

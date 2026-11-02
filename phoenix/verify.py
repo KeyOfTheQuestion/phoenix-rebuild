@@ -3,6 +3,7 @@ import hashlib
 import http.client
 import json
 import os
+import platform
 from pathlib import Path
 import secrets
 import socket
@@ -88,6 +89,12 @@ def require(condition, message):
         raise AssertionError(message)
 
 
+def runtime_identity():
+    """Versions of the evaluator; Subject uses this same Python executable."""
+    return {"python_implementation": platform.python_implementation(),
+            "python_version": platform.python_version(), "sqlite_version": sqlite3.sqlite_version}
+
+
 def evaluate(candidate, kind="reference-verification", predecessor=None, *, expected_schema_version=1):
     """Run on trusted, local candidate code; a process is NOT a security sandbox."""
     if type(expected_schema_version) is not int or expected_schema_version not in (1, 2):
@@ -99,6 +106,7 @@ def evaluate(candidate, kind="reference-verification", predecessor=None, *, expe
               "candidate_sha256": hashlib.sha256(source).hexdigest(), "checks": [],
               "expected_schema_version": expected_schema_version,
               "execution": "local-subprocess", "evaluation_isolation": "procedural",
+              "execution_runtime": runtime_identity(),
               "human_interventions": None if kind == "reference-verification" else 0}
     if predecessor:
         report["predecessor_sha256"] = hashlib.sha256(Path(predecessor).read_bytes()).hexdigest()

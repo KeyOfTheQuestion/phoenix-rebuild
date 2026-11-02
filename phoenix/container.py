@@ -21,7 +21,7 @@ RETENTION_SUPPORT = {"baseline.py": "shared_subject_sha256", "retention.py": "re
 
 # The unchanged HTTP verifier and its subject share this container's loopback.
 # Only source snapshots are mounted; the repository, home and Docker socket are not.
-ENTRYPOINT = '''import hashlib,json,os
+ENTRYPOINT = '''import hashlib,json,os,platform,sqlite3
 from pathlib import Path
 import types
 
@@ -70,6 +70,8 @@ module.__file__ = '/input/verifier.py'
 exec(compile(verifier_bytes, 'container-verifier.py', 'exec'), module.__dict__)
 kwargs = {'predecessor': '/input/predecessor.py'} if Path('/input/predecessor.py').exists() else {}
 report = module.evaluate('/input/server.py', **kwargs)
+report['execution_runtime'] = {'python_implementation': platform.python_implementation(),
+    'python_version': platform.python_version(), 'sqlite_version': sqlite3.sqlite_version}
 report['container_probe'] = probe
 report['verifier_sha256'] = hashlib.sha256(verifier_bytes).hexdigest()
 print(json.dumps(report))
@@ -107,7 +109,9 @@ def _validate(report, sources, verifier_profile="contract-001"):
     bindings = {"server.py": "candidate_sha256", "verifier.py": "verifier_sha256"}
     if "predecessor.py" in sources:
         bindings["predecessor.py"] = "predecessor_sha256"
-    from .audit import CHECK_IDS, RETENTION_CHECK_IDS
+    from .audit import CHECK_IDS, RETENTION_CHECK_IDS, valid_execution_runtime
+    if not valid_execution_runtime(report.get("execution_runtime")):
+        raise ContainerError("Container did not report a valid execution runtime")
     expected_ids = CHECK_IDS
     if verifier_profile == "retention-composed-v1":
         bindings.update(RETENTION_SUPPORT)

@@ -8,7 +8,7 @@ import tempfile
 import time
 
 from .records import ROOT
-from .verify import Subject, require, evaluate as evaluate_base
+from .verify import Subject, require, runtime_identity, evaluate as evaluate_base
 from .audit import CHECK_IDS as BASE_CHECK_IDS
 
 CHECK_IDS = {"M01", "M02", "M03", "M04", "S01", "P01", "P02", "F01",
@@ -76,6 +76,7 @@ def evaluate_retention(candidate, predecessor):
         "verification_scope": "focused migration/retention pilot; not full v2 reconstruction acceptance",
         "started_at": datetime.now(timezone.utc).isoformat(), "checks": [],
         "execution": "local-subprocess", "human_interventions": None,
+        "execution_runtime": runtime_identity(),
         "candidate_sha256": hashlib.sha256(Path(candidate).read_bytes()).hexdigest(),
         "predecessor_sha256": hashlib.sha256(Path(predecessor).read_bytes()).hexdigest(),
         "contract_sha256": hashlib.sha256((ROOT / "specs/webhook-inbox-retention.md").read_bytes()).hexdigest(),

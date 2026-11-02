@@ -1,7 +1,9 @@
 """Replay a real published reference bundle in CI; never call a model."""
 import json
+import platform
 from pathlib import Path
 import subprocess
+import sqlite3
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -22,6 +24,8 @@ def main():
     assert result["status"] == "passed" and result["passed"] == result["total"] == 32
     assert result["kind"] == "retention-reference-verification" and result["contract_id"] == "002"
     assert result["replay_source"] == "verified-archive-bytes" and result["replay_run_id"] == row["id"]
+    assert result["execution_runtime"] == {"python_implementation": platform.python_implementation(),
+        "python_version": platform.python_version(), "sqlite_version": sqlite3.sqlite_version}
     for field in ("candidate_sha256", "predecessor_sha256", "contract_sha256", "verifier_sha256",
                   "shared_subject_sha256", "retention_verifier_sha256", "records_support_sha256", "audit_support_sha256"):
         assert result[field] == report[field], field

@@ -53,7 +53,7 @@ def publish(report, candidate, prompt=None, provenance=None, predecessor=None, v
         "id", "kind", "status", "started_at", "passed", "total", "duration_seconds",
         "candidate_sha256", "human_interventions", "usage", "cost_usd", "provenance",
         "predecessor_sha256", "compatibility_fixture", "generation_seconds",
-        "contract_id", "contract_version", "verifier_profile")}
+        "contract_id", "contract_version", "verifier_profile", "execution_runtime")}
     index.insert(0, summary)
     index_path.write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return report

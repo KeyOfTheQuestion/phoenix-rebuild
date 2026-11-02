@@ -11,6 +11,9 @@
   evidence, examples, screenshots or commits. Public payloads must be synthetic.
 - A subprocess is not a hostile-code sandbox. Do not broaden isolation claims.
 - Maintain Python 3.9+ and zero runtime dependencies for the baseline and harness.
+- For daily reconstruction, prefer an already-installed Python 3.9 interpreter
+  to check the supported floor. Record its actual execution runtime; if unavailable,
+  disclose the limitation rather than claiming a floor check or silently installing Python.
 - The English and Chinese README must agree about implemented functionality.
 - For substantive changes, run `python3 -m unittest discover -s tests -v`,
   `python3 -m phoenix verify`, and `python3 -m phoenix audit` before committing.

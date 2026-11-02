@@ -67,6 +67,23 @@ Actual generation runs include the exact `prompt.md`. The report contains:
 - usage returned by the generator (otherwise null);
 - monetary cost, always null until a trustworthy billing source is integrated.
 
+New acceptance reports also contain `execution_runtime`, measured in the
+evaluator: Python implementation/version and the loaded SQLite library version.
+The candidate and predecessor are started with that evaluator's `sys.executable`.
+No interpreter path, machine name, account name or environment-variable dump is
+published. The same observation is included in new ledger summaries. The audit
+checks its shape when present, while legacy missing/null observations remain
+unknown. Versions describe the evaluator and its ordinary subjects, not an
+independently attested process or protection against a malicious candidate.
+
+Fresh replay results measure the current runtime; they do not copy the original
+run's version as a new observation or edit its report. Local replay adds this
+client observation after the frozen evaluator returns. Docker measures versions
+inside the actual container after evaluation; host validation requires a complete
+observation and never substitutes the host Python/SQLite versions. Older frozen
+verifiers retain their exact code and receive this wrapper observation only in
+the new replay output. See the [runtime verification record](maintenance/2026-11-02-runtime-evidence.md).
+
 Contract-002 reference archives additionally freeze `baseline.py`, `retention.py`,
 `records.py` and `audit.py`, plus a standalone `verifier.py` package entrypoint.
 The profile is `retention-composed-v1` (archive-format version 1, contract 002).

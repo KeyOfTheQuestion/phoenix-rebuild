@@ -100,6 +100,8 @@ Reference checks call no model. Public rows identify the contract; contract-002 
 
 Runtime matters: the October 30 AI candidate passed 19/19 on Python 3.14, but an additional replay on Python 3.9 failed 2 checks because of empty-query parsing. Both observations and the unedited candidate remain public in the [cross-runtime failure record](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci). A passing archived observation does not establish compatibility with every supported Python version.
 
+New acceptance and replay results include `execution_runtime`: the measured Python implementation/version and SQLite library version. The notebook shows these versions or explicitly says “Not recorded” for older reports. Replay measures its own execution runtime and keeps the original report unchanged. To exercise the Python floor, run the whole command with an installed Python 3.9 interpreter, for example `python3.9 -m phoenix rebuild --attempts 2 --timeout 300`. The candidate and predecessor use that same interpreter; the Codex CLI's default model policy is unchanged. See the [runtime evidence and scope](docs/maintenance/2026-11-02-runtime-evidence.md).
+
 ## Run the webhook inbox
 
 ```sh

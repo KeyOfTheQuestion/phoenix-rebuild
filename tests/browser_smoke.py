@@ -157,6 +157,30 @@ class NotebookBrowserTests(unittest.TestCase):
         self.page.get_by_role("link", name="← Back to the notebook", exact=True).click()
         expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
 
+    def test_runtime_observations_and_missing_legacy_metadata_are_explicit_in_both_languages(self):
+        row = self.ai[0]
+        original = json.loads((SITE / "evidence" / row["id"] / "report.json").read_text())
+        pattern = "**/evidence/%s/report.json" % row["id"]
+        for recorded in (False, True):
+            report = dict(original)
+            report.pop("execution_runtime", None)
+            if recorded:
+                report["execution_runtime"] = {"python_implementation": "CPython", "python_version": "3.9.6",
+                                               "sqlite_version": "3.43.2"}
+            self.page.route(pattern, lambda route: route.fulfill(json=report))
+            self.open_notebook()
+            self.page.locator('[data-run="%s"]' % row["id"]).click()
+            expect(self.page.locator("#dialog-provenance")).to_contain_text(
+                "Runtime: CPython 3.9.6; SQLite 3.43.2" if recorded else "Runtime: Not recorded")
+            self.page.locator("#close-dialog").click()
+            self.page.locator("#language").click()
+            self.page.locator('[data-run="%s"]' % row["id"]).click()
+            expect(self.page.locator("#dialog-provenance")).to_contain_text(
+                "运行时：CPython 3.9.6; SQLite 3.43.2" if recorded else "运行时：未记录")
+            self.page.locator("#close-dialog").click()
+            self.page.locator("#language").click()
+            self.page.unroute(pattern)
+
     def test_contract_002_is_labelled_reference_and_excluded_from_ai_filter(self):
         record = next(row for row in self.ledger if row.get("contract_id") == "002")
         self.assertEqual(record["kind"], "retention-reference-verification")

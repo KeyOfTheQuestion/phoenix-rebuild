@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-02 · Measured execution runtime
+
+- Record actual Python implementation/version and SQLite version in new acceptance reports and ledger summaries. Validate metadata shape while preserving unknown legacy observations.
+- Measure fresh local replay versions and container versions inside Docker, without rewriting archived reports or substituting host versions for container observations. Evidence dialogs show measured versions or explicitly missing metadata in both languages.
+- Keep the 19/32 check sets and service contracts unchanged; disclose the evaluator source change. Run today's single real reconstruction on installed Python 3.9 and preserve its actual evidence in the [verification record](docs/maintenance/2026-11-02-runtime-evidence.md).
+
 ## 2026-10-30 · Container replay for frozen retention archives
 
 - Replay complete contract-002 reference archives inside the existing restricted Docker profile, loading archived code only in the container.
