@@ -1,5 +1,103 @@
 [
   {
+    "id": "20261103T023452Z-4ec8a9",
+    "kind": "ai-rebuild",
+    "status": "passed",
+    "started_at": "2026-11-03T02:34:52.286416+00:00",
+    "passed": 19,
+    "total": 19,
+    "duration_seconds": 0.641,
+    "candidate_sha256": "e2b2f0485fd8ebccee134abe2aea93c35046bfb5e25d75ac287ad16442da22d3",
+    "human_interventions": 0,
+    "usage": {
+      "input_tokens": 17640,
+      "cached_input_tokens": 10752,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 4143,
+      "reasoning_output_tokens": 457
+    },
+    "cost_usd": null,
+    "provenance": {
+      "generator": "codex-cli",
+      "version": "codex-cli 0.145.0",
+      "model": null,
+      "model_selection": "clean CLI default",
+      "user_configuration_loaded": false,
+      "attempt": 2,
+      "usage": {
+        "input_tokens": 17640,
+        "cached_input_tokens": 10752,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4143,
+        "reasoning_output_tokens": 457
+      },
+      "requested_verification": "local-subprocess",
+      "observed_tool_calls": 0,
+      "generation_seconds": 36.657,
+      "context_boundary": "fresh-directory, prompt-enforced; not a hostile-agent sandbox"
+    },
+    "predecessor_sha256": "9302b4710f7381addb3905ac7d9ba8806e27a6a294cf902137bce4b48e42e3f3",
+    "compatibility_fixture": "database populated via predecessor HTTP API before candidate startup",
+    "generation_seconds": 36.657,
+    "contract_id": "001",
+    "contract_version": "1.0.0",
+    "verifier_profile": "contract-001",
+    "execution_runtime": {
+      "python_implementation": "CPython",
+      "python_version": "3.9.6",
+      "sqlite_version": "3.43.2"
+    }
+  },
+  {
+    "id": "20261103T023415Z-9c296c",
+    "kind": "ai-rebuild",
+    "status": "failed",
+    "started_at": "2026-11-03T02:34:14.983116+00:00",
+    "passed": 17,
+    "total": 19,
+    "duration_seconds": 0.638,
+    "candidate_sha256": "d9eba954a6ae86292793fc04af808392bca38513ce53865890329c38d23c7514",
+    "human_interventions": 0,
+    "usage": {
+      "input_tokens": 17812,
+      "cached_input_tokens": 0,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 4447,
+      "reasoning_output_tokens": 516
+    },
+    "cost_usd": null,
+    "provenance": {
+      "generator": "codex-cli",
+      "version": "codex-cli 0.145.0",
+      "model": null,
+      "model_selection": "clean CLI default",
+      "user_configuration_loaded": false,
+      "attempt": 1,
+      "usage": {
+        "input_tokens": 17812,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4447,
+        "reasoning_output_tokens": 516
+      },
+      "requested_verification": "local-subprocess",
+      "observed_tool_calls": 0,
+      "generation_seconds": 39.254,
+      "context_boundary": "fresh-directory, prompt-enforced; not a hostile-agent sandbox"
+    },
+    "predecessor_sha256": "9302b4710f7381addb3905ac7d9ba8806e27a6a294cf902137bce4b48e42e3f3",
+    "compatibility_fixture": "database populated via predecessor HTTP API before candidate startup",
+    "generation_seconds": 39.254,
+    "contract_id": "001",
+    "contract_version": "1.0.0",
+    "verifier_profile": "contract-001",
+    "execution_runtime": {
+      "python_implementation": "CPython",
+      "python_version": "3.9.6",
+      "sqlite_version": "3.43.2"
+    }
+  },
+  {
     "id": "20261102T020351Z-0ba772",
     "kind": "ai-rebuild",
     "status": "passed",

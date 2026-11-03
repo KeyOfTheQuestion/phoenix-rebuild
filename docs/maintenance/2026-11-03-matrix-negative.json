@@ -1,0 +1,347 @@
+{
+  "schema_version": 1,
+  "kind": "archive-runtime-matrix",
+  "source_run_id": "20261030T024939Z-60a62e",
+  "started_at": "2026-11-03T02:40:53.396394+00:00",
+  "execution": "local-runtime-matrix",
+  "scope": "verified frozen archive; explicit installed runtimes; no model call or ledger publication",
+  "timeout_per_runtime_seconds": 30,
+  "matrix_worker_sha256": "2c8ffac1df2cebc0cf0c7cddc1ed67b14153d5f9c8ee816fff084001bfe41a37",
+  "source_sha256": {
+    "contract.md": "a248f3a66113b668153d127542f97deb8344dcc52033919efd92f69f00fd5269",
+    "predecessor.py": "626254c065586ec92e991959156d7b187cfa7038b103360f6a577c9a66105afc",
+    "server.py": "ef206e5d9870e14533307b799330a97c12278953919b7e22470704e4c11e6ad6",
+    "verifier.py": "ae420dcbc20b8599253a9af43dd31c6162a2acc2ca240a046e03148186482f8e"
+  },
+  "results": [
+    {
+      "runtime_index": 1,
+      "status": "failed",
+      "report": {
+        "schema_version": 1,
+        "kind": "reference-verification",
+        "started_at": "2026-11-03T02:40:53.587215+00:00",
+        "candidate_sha256": "ef206e5d9870e14533307b799330a97c12278953919b7e22470704e4c11e6ad6",
+        "checks": [
+          {
+            "id": "C01",
+            "title": "Service boots from its documented interface",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 448.16
+          },
+          {
+            "id": "C02",
+            "title": "Health exposes the schema version",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 0.79
+          },
+          {
+            "id": "S01",
+            "title": "Administrative routes reject missing and wrong credentials",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 2.57
+          },
+          {
+            "id": "C03",
+            "title": "Create a named inbox with an unpredictable token",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 1.09
+          },
+          {
+            "id": "C04",
+            "title": "Capture a real UTF-8 webhook request",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 0.96
+          },
+          {
+            "id": "C05",
+            "title": "Preserve body, metadata, and safe headers",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 0.53
+          },
+          {
+            "id": "R01",
+            "title": "Deduplicate deliveries and reject body conflicts",
+            "category": "reliability",
+            "passed": true,
+            "duration_ms": 0.97
+          },
+          {
+            "id": "R02",
+            "title": "Concurrent retries create one logical event",
+            "category": "reliability",
+            "passed": true,
+            "duration_ms": 25.63
+          },
+          {
+            "id": "R03",
+            "title": "Unkeyed deliveries remain independent",
+            "category": "reliability",
+            "passed": true,
+            "duration_ms": 3.5
+          },
+          {
+            "id": "R04",
+            "title": "Idempotency keys are scoped to an inbox",
+            "category": "reliability",
+            "passed": true,
+            "duration_ms": 2.2
+          },
+          {
+            "id": "C06",
+            "title": "Bound pagination and list newest events first",
+            "category": "contract",
+            "passed": false,
+            "error": "GET /api/inboxes/ZPOnltjoZrC62oAt9AYidI2K-aoQQKVz/events: expected HTTP 200, got 400",
+            "duration_ms": 1.15
+          },
+          {
+            "id": "S02",
+            "title": "Reject malformed inbox input",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 3.47
+          },
+          {
+            "id": "S03",
+            "title": "Reject oversized and malformed request bodies",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 2.08
+          },
+          {
+            "id": "C07",
+            "title": "Accept non-JSON and empty webhook bodies",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 3.69
+          },
+          {
+            "id": "S04",
+            "title": "Keep credentials out of storage responses and logs",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 1.43
+          },
+          {
+            "id": "S05",
+            "title": "Reject incorrect hook tokens without revealing inboxes",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 1.2
+          },
+          {
+            "id": "C08",
+            "title": "Unknown resources and unsupported methods return JSON",
+            "category": "contract",
+            "passed": false,
+            "error": "GET /api/inboxes/missing/events: expected HTTP 404, got 400",
+            "duration_ms": 2.47
+          },
+          {
+            "id": "D01",
+            "title": "Events and idempotency survive process restart",
+            "category": "compatibility",
+            "passed": true,
+            "duration_ms": 325.31
+          },
+          {
+            "id": "D02",
+            "title": "Read old events and preserve their idempotency state",
+            "category": "compatibility",
+            "passed": true,
+            "duration_ms": 2.37
+          }
+        ],
+        "expected_schema_version": 1,
+        "execution": "local-subprocess",
+        "evaluation_isolation": "procedural",
+        "human_interventions": null,
+        "predecessor_sha256": "626254c065586ec92e991959156d7b187cfa7038b103360f6a577c9a66105afc",
+        "compatibility_fixture": "database populated via predecessor HTTP API before candidate startup",
+        "duration_seconds": 0.835,
+        "passed": 17,
+        "total": 19,
+        "status": "failed",
+        "execution_runtime": {
+          "python_implementation": "CPython",
+          "python_version": "3.9.6",
+          "sqlite_version": "3.43.2"
+        },
+        "verifier_sha256": "ae420dcbc20b8599253a9af43dd31c6162a2acc2ca240a046e03148186482f8e",
+        "contract_sha256": "a248f3a66113b668153d127542f97deb8344dcc52033919efd92f69f00fd5269"
+      }
+    },
+    {
+      "runtime_index": 2,
+      "status": "passed",
+      "report": {
+        "schema_version": 1,
+        "kind": "reference-verification",
+        "started_at": "2026-11-03T02:40:54.510333+00:00",
+        "candidate_sha256": "ef206e5d9870e14533307b799330a97c12278953919b7e22470704e4c11e6ad6",
+        "checks": [
+          {
+            "id": "C01",
+            "title": "Service boots from its documented interface",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 120.03
+          },
+          {
+            "id": "C02",
+            "title": "Health exposes the schema version",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 0.49
+          },
+          {
+            "id": "S01",
+            "title": "Administrative routes reject missing and wrong credentials",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 2.6
+          },
+          {
+            "id": "C03",
+            "title": "Create a named inbox with an unpredictable token",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 1.06
+          },
+          {
+            "id": "C04",
+            "title": "Capture a real UTF-8 webhook request",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 0.9
+          },
+          {
+            "id": "C05",
+            "title": "Preserve body, metadata, and safe headers",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 0.55
+          },
+          {
+            "id": "R01",
+            "title": "Deduplicate deliveries and reject body conflicts",
+            "category": "reliability",
+            "passed": true,
+            "duration_ms": 0.87
+          },
+          {
+            "id": "R02",
+            "title": "Concurrent retries create one logical event",
+            "category": "reliability",
+            "passed": true,
+            "duration_ms": 25.06
+          },
+          {
+            "id": "R03",
+            "title": "Unkeyed deliveries remain independent",
+            "category": "reliability",
+            "passed": true,
+            "duration_ms": 2.13
+          },
+          {
+            "id": "R04",
+            "title": "Idempotency keys are scoped to an inbox",
+            "category": "reliability",
+            "passed": true,
+            "duration_ms": 1.63
+          },
+          {
+            "id": "C06",
+            "title": "Bound pagination and list newest events first",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 3.36
+          },
+          {
+            "id": "S02",
+            "title": "Reject malformed inbox input",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 2.45
+          },
+          {
+            "id": "S03",
+            "title": "Reject oversized and malformed request bodies",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 1.36
+          },
+          {
+            "id": "C07",
+            "title": "Accept non-JSON and empty webhook bodies",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 2.36
+          },
+          {
+            "id": "S04",
+            "title": "Keep credentials out of storage responses and logs",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 0.73
+          },
+          {
+            "id": "S05",
+            "title": "Reject incorrect hook tokens without revealing inboxes",
+            "category": "security",
+            "passed": true,
+            "duration_ms": 0.83
+          },
+          {
+            "id": "C08",
+            "title": "Unknown resources and unsupported methods return JSON",
+            "category": "contract",
+            "passed": true,
+            "duration_ms": 1.54
+          },
+          {
+            "id": "D01",
+            "title": "Events and idempotency survive process restart",
+            "category": "compatibility",
+            "passed": true,
+            "duration_ms": 59.97
+          },
+          {
+            "id": "D02",
+            "title": "Read old events and preserve their idempotency state",
+            "category": "compatibility",
+            "passed": true,
+            "duration_ms": 0.95
+          }
+        ],
+        "expected_schema_version": 1,
+        "execution": "local-subprocess",
+        "evaluation_isolation": "procedural",
+        "human_interventions": null,
+        "predecessor_sha256": "626254c065586ec92e991959156d7b187cfa7038b103360f6a577c9a66105afc",
+        "compatibility_fixture": "database populated via predecessor HTTP API before candidate startup",
+        "duration_seconds": 0.231,
+        "passed": 19,
+        "total": 19,
+        "status": "passed",
+        "execution_runtime": {
+          "python_implementation": "CPython",
+          "python_version": "3.14.6",
+          "sqlite_version": "3.53.3"
+        },
+        "verifier_sha256": "ae420dcbc20b8599253a9af43dd31c6162a2acc2ca240a046e03148186482f8e",
+        "contract_sha256": "a248f3a66113b668153d127542f97deb8344dcc52033919efd92f69f00fd5269"
+      }
+    }
+  ],
+  "total": 2,
+  "passed": 1,
+  "status": "failed"
+}

@@ -228,6 +228,28 @@ and [2026-10-30 container integration](maintenance/2026-10-30-retention-containe
 
 ## Reproduce, don't infer
 
+`replay-matrix RUN_ID --python PYTHON_A --python PYTHON_B` repeats the same
+verified frozen archive in up to four explicitly selected installed runtimes
+on POSIX. The ledger/manifest/report is checked once before execution, and each
+runtime receives fresh temporary copies of those same captured source bytes.
+The maintained matrix worker, whose SHA-256 is included, loads archived code
+only in the requested child interpreter with `-I -B`; it does not import the
+working checkout's verifier. Contract-002 dependency packages and original
+legacy SQL fixtures are retained. Parent validation binds source hashes, runtime
+metadata, check counts and complete passing 19/32-check sets before accepting
+any verdict. The JSON contains all per-runtime results, including failures and
+runtime errors, without changing archived evidence or the public ledger.
+
+This adds verification invocations, not new AI attempts. Aggregate counts refer
+to requested invocations, not unique Python versions or extra backend checks.
+`--timeout` is a per-runtime deadline (default 90, range 1..300), plus bounded
+process-group cleanup. Missing/broken runtimes have no fallback, and one failure
+does not suppress the remaining results. Only version observations are public;
+raw diagnostics remain local. Matrix mode retains local user permissions and
+network access, and is not a hostile-code sandbox. Source consistency and
+timeouts do not attest the requested executable or exhaust Python/SQLite
+compatibility. See the [actual matrix and negative control](maintenance/2026-11-03-runtime-matrix.md).
+
 Run `python3 -m phoenix replay RUN_ID` for trusted records with an archived verifier.
 Replay validates the requested ledger entry, manifest, report and artifact hashes
 before loading any archived code. It rejects unlisted artifacts, symlinked files,

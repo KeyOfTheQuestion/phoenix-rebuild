@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 · Bounded archive runtime matrix
+
+- Add POSIX `replay-matrix` for 1..4 explicitly installed Python executables. Audit once, execute captured frozen bytes in separate runtimes, validate observations and retain every acceptance/runtime failure without model calls or ledger publication.
+- Bound each runtime to 1..300 seconds and request process-group cleanup on timeout. Preserve explicit interpreter symlinks, refuse invalid reports and avoid fallback or automatic runtime installation.
+- Keep existing contracts/verifiers and historical evidence unchanged. Extend existing CI/Pages checks to exercise actual v1/v2 matrix replay. Preserve today's failed first AI attempt and feedback-assisted second pass in the [verification record](docs/maintenance/2026-11-03-runtime-matrix.md).
+
 ## 2026-11-02 · Measured execution runtime
 
 - Record actual Python implementation/version and SQLite version in new acceptance reports and ledger summaries. Validate metadata shape while preserving unknown legacy observations.

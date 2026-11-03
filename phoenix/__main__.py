@@ -36,7 +36,24 @@ def main():
     replay.add_argument("run_id")
     replay.add_argument("--container", action="store_true", help="Run the verified archive inside Docker without loading its verifier on the host")
     replay.add_argument("--timeout", type=int, default=90, help="Container execution deadline, 1..300 seconds; used only with --container")
+    matrix = commands.add_parser("replay-matrix", help="Replay one verified archive in 1..4 installed Python runtimes; POSIX only; no model call")
+    matrix.add_argument("run_id")
+    matrix.add_argument("--python", dest="interpreters", action="append", required=True, help="Installed Python executable; repeat up to four times")
+    matrix.add_argument("--timeout", type=int, default=90, help="Deadline per runtime, 1..300 seconds; default 90")
     args = parser.parse_args()
+    if args.command == "replay-matrix":
+        from .matrix import replay_matrix
+        from .audit import EvidenceError
+        try:
+            report = replay_matrix(ROOT / "docs", args.run_id, args.interpreters, args.timeout)
+        except EvidenceError as error:
+            print("Runtime matrix refused: " + str(error), file=sys.stderr)
+            return 2
+        except OSError as error:
+            print("Runtime matrix refused: " + type(error).__name__, file=sys.stderr)
+            return 2
+        print(json.dumps(report, indent=2))
+        return 0 if report["status"] == "passed" else 1 if report["status"] == "failed" else 2
     if args.command == "verify-retention":
         from .retention import evaluate_retention, evaluate_retention_full
         if args.publish and not args.full:

@@ -29,6 +29,7 @@ jobs:
           python -m phoenix verify-retention
           python -m phoenix verify-retention --full
           python tests/retention_archive_smoke.py
+          python tests/matrix_smoke.py
           python -m phoenix audit
       - name: Verify the optional container runner before publishing
         run: python tests/container_smoke.py

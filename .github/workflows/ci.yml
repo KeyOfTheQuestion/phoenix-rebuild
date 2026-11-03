@@ -54,3 +54,5 @@ jobs:
         run: python tests/retention_archive_smoke.py
       - name: Audit historical evidence
         run: python -m phoenix audit
+      - name: Replay v1 and v2 archives with the runtime matrix command
+        run: python tests/matrix_smoke.py

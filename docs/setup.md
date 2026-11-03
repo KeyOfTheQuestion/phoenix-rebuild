@@ -42,6 +42,20 @@ current run and leaves the archived report intact. Inside Docker the observation
 is measured in the container, not on the client. A single runtime pass is not
 a compatibility matrix; see the [scope and verification](maintenance/2026-11-02-runtime-evidence.md).
 
+On POSIX, compare an archived run using `python3 -m phoenix replay-matrix RUN_ID
+--python python3.9 --python python3.14 --timeout 30`. Each name/path must refer
+to an installed executable. Relative paths are made absolute before staging;
+the selected symlink path is retained, including a virtual environment's Python.
+The command accepts 1..4 invocations, defaults to 90 seconds per invocation and
+allows 1..300 seconds. Timeout cleanup requests SIGTERM, then SIGKILL for that
+invocation's process group, with separate bounded waits (1 and 5 seconds).
+Remaining requested runtimes still run. Exit 0 means all passed, 1 means an
+acceptance failure, and 2 means an input/archive refusal or any runtime/report
+error. There is no installation or fallback. Private runtime diagnostics stay
+in ignored `.phoenix/matrix-errors/`; public JSON uses ordinal runtime indices
+and measured versions, never interpreter paths. Redirect JSON to a new file to
+retain it; no ledger entry is published. See the [controls and limits](maintenance/2026-11-03-runtime-matrix.md).
+
 By default the adapter passes `--ignore-user-config`. This prevents unrelated
 MCP servers, settings, and unsupported configured model aliases from disrupting
 the run. Authentication is still resolved by the CLI. To explicitly use your

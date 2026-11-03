@@ -83,6 +83,14 @@ python3 -m phoenix verify-retention --predecessor docs/evidence/记录编号/ser
 
 新的验收与复验结果包含 `execution_runtime`，记录实际 Python 实现／版本和 SQLite 库版本。网页显示这些版本；旧报告缺少信息时明确显示“未记录”。复验测量本次运行时，保留原始报告。要检查 Python 最低支持版本，可用已安装的 Python 3.9 解释器执行完整命令，例如 `python3.9 -m phoenix rebuild --attempts 2 --timeout 300`。候选及上一实现使用同一解释器；Codex CLI 的默认模型策略不变。详见[运行时证据及范围](docs/maintenance/2026-11-02-runtime-evidence.md)。
 
+在 POSIX 系统上，可用多个已安装的 Python 比较同一份冻结归档：
+
+```sh
+python3 -m phoenix replay-matrix 记录编号 --python python3.9 --python python3.14 --timeout 30
+```
+
+命令只审计一次，再把同一份已捕获字节交给各运行时。可明确指定 1..4 个解释器，每个限时 1..300 秒；超时会清理本次进程组。输出各自的实际版本和新验收报告，保留失败，不安装 Python、不调用模型，也不新增公开尝试记录。退出码 0 表示全部运行通过，1 表示验收失败，2 表示拒绝执行或运行时／报告错误；解释器缺失时不自动替换。这仍是本地执行可信代码，不是恶意代码沙箱，也不代表完整版本覆盖。详见[矩阵复验及反向验证](docs/maintenance/2026-11-03-runtime-matrix.md)。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

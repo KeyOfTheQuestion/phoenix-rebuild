@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-11-02 维护：新验收及复验结果现记录实际 Python／SQLite 版本，旧报告缺少信息时明确显示“未记录”。本次真实重建在 Python 3.9.6 上通过 19/19；10 月 30 日的跨版本失败证据保留。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-02-runtime-evidence.md">查看验证记录 ↗</a>',
+  maintenanceNote:'2026-11-03 维护：新增跨运行时归档复验命令，逐项保留结果并限时执行；复验不计入 AI 尝试数。今天两次真实重建为 17/19、19/19，首次失败保留。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-03-runtime-matrix.md">查看矩阵及失败证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',

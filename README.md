@@ -102,6 +102,14 @@ Runtime matters: the October 30 AI candidate passed 19/19 on Python 3.14, but an
 
 New acceptance and replay results include `execution_runtime`: the measured Python implementation/version and SQLite library version. The notebook shows these versions or explicitly says “Not recorded” for older reports. Replay measures its own execution runtime and keeps the original report unchanged. To exercise the Python floor, run the whole command with an installed Python 3.9 interpreter, for example `python3.9 -m phoenix rebuild --attempts 2 --timeout 300`. The candidate and predecessor use that same interpreter; the Codex CLI's default model policy is unchanged. See the [runtime evidence and scope](docs/maintenance/2026-11-02-runtime-evidence.md).
 
+To compare the same frozen archive across installed Python runtimes on POSIX:
+
+```sh
+python3 -m phoenix replay-matrix RUN_ID --python python3.9 --python python3.14 --timeout 30
+```
+
+The command audits once and supplies identical captured bytes to each runtime. It supports 1..4 explicit executables, a 1..300-second deadline per runtime and process-group cleanup on timeout. It returns each measured runtime and fresh acceptance report, preserves failures, and never installs Python, calls a model or publishes another ledger entry. Exit 0 means every invocation passed, 1 means acceptance failed, and 2 means refusal or a runtime/report error. Missing executables have no fallback. This is local trusted-code execution, not a hostile-code sandbox or an exhaustive compatibility claim. See the [matrix verification and negative control](docs/maintenance/2026-11-03-runtime-matrix.md).
+
 ## Run the webhook inbox
 
 ```sh
