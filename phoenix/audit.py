@@ -10,6 +10,7 @@ CHECK_IDS = {
     "S01", "S02", "S03", "S04", "S05", "R01", "R02", "R03", "R04", "D01", "D02",
 }
 RETENTION_PROFILE = "retention-composed-v1"
+RETENTION_AI_PROFILE = "retention-ai-v1"
 RETENTION_CHECK_IDS = {"B-" + key for key in CHECK_IDS} | {
     "M01", "M02", "M03", "M04", "S01", "P01", "P02", "F01", "E01", "E02", "E03", "E04", "P03",
 }
@@ -94,17 +95,32 @@ def inspect_bundle(directory, summary):
             ):
                 raise EvidenceError("The published ledger only supports contract-001 schema expectation 1 for contract 001")
         elif contract == "002":
-            if profile != RETENTION_PROFILE or report.get("contract_version") != "2.0.0":
+            if profile not in (RETENTION_PROFILE, RETENTION_AI_PROFILE) or report.get("contract_version") != "2.0.0":
                 raise EvidenceError("Unknown contract-002 verifier profile or version")
-            if report.get("kind") != "retention-reference-verification":
-                raise EvidenceError("Contract 002 currently supports reference verification only")
+            is_ai = profile == RETENTION_AI_PROFILE
+            if report.get("kind") != ("ai-rebuild" if is_ai else "retention-reference-verification"):
+                raise EvidenceError("Contract-002 kind does not match its verifier profile")
             if type(report.get("baseline_expected_schema_version")) is not int or report["baseline_expected_schema_version"] != 2 \
                     or type(report.get("expected_total")) is not int or report["expected_total"] != 32:
                 raise EvidenceError("Invalid contract-002 schema expectation or check coverage")
-            if report.get("status") not in ("passed", "failed"):
+            if not is_ai and report.get("status") not in ("passed", "failed"):
                 raise EvidenceError("Contract-002 reference archives require an acceptance verdict")
             required = {"server.py", "verifier.py", "predecessor.py", "contract.md", "report.json",
                         "baseline.py", "retention.py", "records.py", "audit.py"}
+            if is_ai:
+                required.add("prompt.md")
+                provenance = report.get("provenance", {})
+                if not isinstance(provenance, dict) or provenance.get("generator") != "codex-cli" \
+                        or type(provenance.get("attempt")) is not int or not 1 <= provenance["attempt"] <= 5 \
+                        or not artifacts.get("prompt.md", b"").strip() \
+                        or type(report.get("human_interventions")) is not int or report["human_interventions"] != 0:
+                    raise EvidenceError("Contract-002 AI archives require generator provenance and the exact prompt")
+                if report.get("status") == "generation-failed" and not (
+                    report.get("execution") == "not-executed" and report.get("checks") == []
+                    and report.get("passed") == report.get("total") == 0
+                    and isinstance(report.get("error"), str) and report["error"]
+                ):
+                    raise EvidenceError("Invalid contract-002 generation failure")
             if set(artifacts) != required or not report.get("predecessor_sha256"):
                 raise EvidenceError("Contract-002 archives require the complete frozen dependency set and predecessor")
             expected_ids = RETENTION_CHECK_IDS
@@ -114,7 +130,7 @@ def inspect_bundle(directory, summary):
             if report.get(key) != value:
                 raise EvidenceError("ledger differs from report: " + key)
         bound = {"server.py": "candidate_sha256", "contract.md": "contract_sha256"}
-        if report.get("verifier_sha256"):
+        if contract == "002" or report.get("verifier_sha256"):
             bound["verifier.py"] = "verifier_sha256"
         if report.get("predecessor_sha256"):
             bound["predecessor.py"] = "predecessor_sha256"
@@ -135,7 +151,8 @@ def inspect_bundle(directory, summary):
             raise EvidenceError("Unknown verdict")
         if report["status"] == "verification-error" and not (
             checks == [] and report["passed"] == report["total"] == 0
-            and report.get("execution") == "docker-container-attempted"
+            and report.get("execution") in (("docker-container-attempted", "local-subprocess-attempted")
+                                            if profile == RETENTION_AI_PROFILE else ("docker-container-attempted",))
             and isinstance(report.get("error"), str) and report["error"]
         ):
             raise EvidenceError("Invalid verification error; it must not claim an acceptance verdict")

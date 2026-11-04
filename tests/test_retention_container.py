@@ -23,7 +23,8 @@ class RetentionContainerTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.row = next(row for row in json.loads((ROOT / "docs/runs.json").read_text())
-                        if row.get("contract_id") == "002" and row["status"] == "passed")
+                        if row.get("contract_id") == "002" and row["status"] == "passed"
+                        and row["kind"] == "retention-reference-verification")
         self.original, self.artifacts = verified_run(ROOT / "docs", self.row["id"])
         directory = self.root / "docs/evidence" / self.row["id"]
         shutil.copytree(ROOT / "docs/evidence" / self.row["id"], directory)

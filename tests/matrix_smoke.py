@@ -12,8 +12,14 @@ from phoenix.records import ROOT
 def main():
     ledger = (ROOT / "docs/runs.json").read_bytes()
     rows = json.loads(ledger)
-    chosen = [next(r for r in rows if r["kind"] == "ai-rebuild" and r["status"] == "passed"),
-              next(r for r in rows if r.get("contract_id") == "002" and r["status"] == "passed")]
+    chosen = [next(r for r in rows if r["kind"] == "ai-rebuild" and r["status"] == "passed"
+                   and r.get("contract_id", "001") == "001"),
+              next(r for r in rows if r.get("contract_id") == "002" and r["status"] == "passed"
+                   and r["kind"] == "retention-reference-verification")]
+    v2_ai = next((r for r in rows if r.get("contract_id") == "002" and r["kind"] == "ai-rebuild"
+                  and r["status"] == "passed"), None)
+    if v2_ai:
+        chosen.append(v2_ai)
     observations = []
     for row in chosen:
         archived, artifacts = verified_run(ROOT / "docs", row["id"])

@@ -14,7 +14,7 @@
 
 Phoenix is an open, executable experiment. A generator receives a public specification in a fresh directory, produces a complete implementation, and faces an independent HTTP acceptance harness. Every published attempt includes its source, exact contract, outcome, artifact hashes, and reported usage. Failed attempts stay visible.
 
-The first subject is a **durable webhook inbox**: capture exact UTF-8 bodies, authenticate inspection routes, deduplicate concurrent deliveries, preserve credentials, and reopen an existing SQLite database. It has 19 acceptance checks. There is a runnable, human-reviewed reference implementation; reference checks are labeled separately from AI rebuilds.
+The first subject is a **durable webhook inbox**: capture exact UTF-8 bodies, authenticate inspection routes, deduplicate concurrent deliveries, preserve credentials, and reopen an existing SQLite database. Contract 001 has 19 acceptance checks; contract 002 adds migration and retention for 32 checks. There is a runnable, human-reviewed reference implementation; reference checks are labeled separately from AI rebuilds.
 
 ## Try it in a minute
 
@@ -78,7 +78,7 @@ With a Linux cgroup-v2 Docker engine, `python3 -m phoenix container-verify` runs
 
 See the [container profile, limits and setup](docs/container-runner.md) and [2026-10-26 container rebuild verification record](docs/maintenance/2026-10-26-container-rebuild.md).
 
-## Pilot: retention and v1 migration
+## Rebuild with retention and v1 migration
 
 [Contract 002](specs/webhook-inbox-retention.md) adds per-inbox retention, explicit batches of at most 100 expired-event deletions, and atomic migration from v1. Existing events, tokens and idempotency survive migration; retention starts disabled. The AI-assisted [reference pilot](examples/retention/server.py) keeps the original tables and adds a policy table. Policy updates and reads never delete events implicitly.
 
@@ -88,6 +88,9 @@ python3 -m phoenix verify-retention --full
 python3 -m phoenix verify-retention --full --publish
 # Exercise migration from a trusted archived v1 AI implementation:
 python3 -m phoenix verify-retention --predecessor docs/evidence/RUN_ID/server.py
+# Generate contract 002 with all 32 checks; choose a successful v1 AI predecessor:
+python3 -m phoenix rebuild --contract 002 --attempts 2 --timeout 300 \
+  --predecessor docs/evidence/20261103T023452Z-4ec8a9/server.py
 ```
 
 The default 13-check pilot uses real predecessor HTTP data and checks migration, policy persistence, bounded/concurrent expiry, isolation and key reuse. It explicitly backdates only synthetic v2 fixture events through SQLite after migration checks, rather than claiming that time actually elapsed.
@@ -96,7 +99,9 @@ The default 13-check pilot uses real predecessor HTTP data and checks migration,
 
 Without `--publish`, these commands only print results. `--full --publish` captures the candidate, predecessor, contract, entrypoint and all four project-module dependencies before evaluation, then publishes those same bytes as a **contract-002 reference verification**. `python3 -m phoenix replay RUN_ID` validates the complete bundle and runs its frozen modules in a temporary private package. It does not import the current workspace verifier or modify the archive. Add `--container --timeout 90` to replay the complete verified package inside the same restricted Docker profile. The host checks all eight source/contract hashes, the 32-check result and the actual boundary probe; missing Docker or invalid output exits 2 without host fallback. See the [2026-10-30 container replay checks](docs/maintenance/2026-10-30-retention-container.md).
 
-Reference checks call no model. Public rows identify the contract; contract-002 reference rows do not enter AI-attempt/success metrics. AI reconstruction and its 19-check results remain contract 001, and v2 AI generation remains a follow-up. The audit selects strict 19/32-check profiles, preserves legacy records and refuses unsupported v2 AI labels. See the [2026-10-29 archive and replay evidence](docs/maintenance/2026-10-29-retention-archive.md). Earlier dated records remain unchanged.
+`rebuild --contract 002` now makes a real model call and uses the full frozen 32-check package. It publishes the exact prompt and all dependencies under the distinct `retention-ai-v1` profile. Reference checks call no model and retain `retention-composed-v1`; they stay outside AI metrics. Default generation remains contract 001. The audit enforces each profile's kind, complete artifacts, bindings and check set; historical records remain unchanged.
+
+Contract-002 generation currently supports local acceptance only: `--contract 002 --container` refuses before any model call. Its completed AI archives support local, Docker and installed-runtime matrix replay. The migration fixture requires a v1 predecessor; v2-to-v2 policy/data continuity is not yet checked. A generation failure retains a complete zero-check bundle; a local evaluator error retains the generated source as `verification-error` and stops without another model call. See the [first real 32/32 AI reconstruction and two-runtime replay](docs/maintenance/2026-11-04-retention-ai.md), including the contract metadata change and remaining limits.
 
 Runtime matters: the October 30 AI candidate passed 19/19 on Python 3.14, but an additional replay on Python 3.9 failed 2 checks because of empty-query parsing. Both observations and the unedited candidate remain public in the [cross-runtime failure record](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci). A passing archived observation does not establish compatibility with every supported Python version.
 
@@ -139,7 +144,7 @@ See [browser test setup](docs/setup.md#notebook-browser-checks) and the [2026-10
 
 ## Help change the contract
 
-Propose an observable requirement with a concrete acceptance example using the [contract-change issue template](https://github.com/KeyOfTheQuestion/phoenix-rebuild/issues/new?template=contract-change.yml). Good next challenges: expiry policies, schema migration, and bounded replay with an explicit destination policy. Published results must retain failures and disclose human intervention. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/roadmap.md).
+Propose an observable requirement with a concrete acceptance example using the [contract-change issue template](https://github.com/KeyOfTheQuestion/phoenix-rebuild/issues/new?template=contract-change.yml). Good next challenges: v2-to-v2 retention continuity, container acceptance during v2 generation, and bounded outbound replay with an explicit destination policy. Published results must retain failures and disclose human intervention. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/roadmap.md).
 
 Built in public by [KeyOfTheQuestion](https://github.com/KeyOfTheQuestion). Inspired by specification-driven software engineering, including [StrongDM Attractor](https://github.com/strongdm/attractor). Phoenix's focus is a small, inspectable reconstruction experiment with executable data compatibility evidence.
 

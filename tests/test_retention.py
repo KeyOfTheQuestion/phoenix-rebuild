@@ -28,7 +28,8 @@ class RetentionPilotTests(unittest.TestCase):
     def test_reference_migrates_latest_successful_ai_data_and_passes_the_focused_pilot(self):
         before = (ROOT / "docs/runs.json").read_bytes()
         rows = json.loads(before)
-        latest = next(r for r in rows if r["kind"] == "ai-rebuild" and r["status"] == "passed")
+        latest = next(r for r in rows if r["kind"] == "ai-rebuild" and r["status"] == "passed"
+                      and r.get("contract_id", "001") == "001")
         predecessor = ROOT / "docs/evidence" / latest["id"] / "server.py"
         report = evaluate_retention(RETENTION, predecessor)
         self.assertEqual(report["status"], "passed", report)

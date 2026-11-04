@@ -182,7 +182,7 @@ class NotebookBrowserTests(unittest.TestCase):
             self.page.unroute(pattern)
 
     def test_contract_002_is_labelled_reference_and_excluded_from_ai_filter(self):
-        record = next(row for row in self.ledger if row.get("contract_id") == "002")
+        record = next(row for row in self.ledger if row.get("contract_id") == "002" and row["kind"] == "retention-reference-verification")
         self.assertEqual(record["kind"], "retention-reference-verification")
         self.open_notebook()
         button = self.page.locator('[data-run="%s"]' % record["id"])
@@ -201,6 +201,34 @@ class NotebookBrowserTests(unittest.TestCase):
         self.page.locator("#language").click()
         expect(self.page.locator("#runs tr").filter(has=self.page.locator('[data-run="%s"]' % record["id"]))
                ).to_contain_text("契约 002")
+
+    def test_contract_002_ai_profile_links_dependencies_and_preserves_failure_classification(self):
+        original = next(r for r in self.ledger if r.get("contract_id") == "002"
+                        and r["kind"] == "retention-reference-verification")
+        base = json.loads((SITE / "evidence" / original["id"] / "report.json").read_text())
+        pattern = "**/evidence/%s/report.json" % original["id"]
+        for status in ("passed", "failed", "generation-failed"):
+            report = dict(base, kind="ai-rebuild", verifier_profile="retention-ai-v1", status=status)
+            row = dict(original, kind="ai-rebuild", verifier_profile="retention-ai-v1", status=status)
+            if status == "generation-failed":
+                report.update(checks=[], passed=0, total=0, execution="not-executed", error="Synthetic generation failure")
+                row.update(passed=0, total=0)
+            self.page.route("**/runs.json", lambda route: route.fulfill(json=[row]))
+            self.page.route(pattern, lambda route: route.fulfill(json=report))
+            self.page.goto(self.base, wait_until="networkidle")
+            expect(self.page.locator("#ai-count")).to_have_text("1")
+            expect(self.page.locator("#success-count")).to_have_text("1" if status == "passed" else "0")
+            self.page.get_by_role("button", name="AI rebuilds", exact=True).click()
+            expect(self.page.locator("#runs .badge")).to_have_text("AI REBUILD")
+            expect(self.page.locator("#runs")).to_contain_text("Contract 002")
+            self.page.locator("#runs [data-run]").click()
+            for artifact in ("baseline.py", "retention.py", "records.py", "audit.py", "prompt.md"):
+                expect(self.page.locator('#artifact-links a[href$="/%s"]' % artifact)).to_be_visible()
+            if status == "generation-failed":
+                expect(self.page.locator("#checks-list")).to_contain_text("Synthetic generation failure")
+            self.page.locator("#close-dialog").click()
+            self.page.unroute(pattern)
+            self.page.unroute("**/runs.json")
 
     def test_container_results_and_runtime_errors_do_not_claim_local_execution(self):
         # Synthetic responses exercise modes without inventing a published run.

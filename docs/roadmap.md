@@ -16,7 +16,7 @@
 2. [Done in initial release] Freeze the exact verifier source at the start of generation, even if the harness changes while a provider runs.
 3. Capture the actual resolved model identity when the CLI exposes a reliable field.
 4. [Done 2026-10-22] Add an end-to-end browser check for ledger filters, language and artifact links, including a Pages publication check ([verification record](maintenance/2026-10-22-notebook-browser-checks.md)).
-5. [Pilot 2026-10-27; composed acceptance 2026-10-28; reference archive 2026-10-29; container replay 2026-10-30] Contract 002 now has atomic migration, bounded expiry, 32-check composed acceptance and a complete frozen reference archive/replay profile ([archive verification](maintenance/2026-10-29-retention-archive.md)). Its multi-module archives support `replay --container` with complete dependency bindings and no host fallback ([controls](maintenance/2026-10-30-retention-container.md)). Published reference rows identify contract 002 and do not count as AI attempts. V2 AI reconstruction remains a follow-up; AI generation stays on contract 001.
+5. [Pilot 2026-10-27; composed acceptance 2026-10-28; reference archive 2026-10-29; container replay 2026-10-30; AI generation 2026-11-04] Contract 002 now has atomic migration, bounded expiry and full frozen 32-check AI reconstruction via `rebuild --contract 002`. AI archives use `retention-ai-v1`; reference rows retain their separate profile and stay outside AI metrics. Both support local, Docker and runtime-matrix replay. Default generation remains contract 001; v2 generation itself currently uses local acceptance. The first actual v2 attempt passed 32/32 on Python 3.9 and replayed on 3.9/3.14 ([evidence and limits](maintenance/2026-11-04-retention-ai.md)).
 6. [Done in initial release] Exercise continuity between two different successful AI rebuilds (use `rebuild --predecessor docs/evidence/RUN/server.py`).
 7. Add another provider adapter with the same evidence format.
 8. Add reproducible, bounded outbound delivery before considering webhook replay.
@@ -29,6 +29,12 @@
    An exhaustive compatibility matrix is not claimed. The [October 30 failure](maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)
    demonstrates why a 19/19 pass on Python 3.14 is insufficient to establish
    Python 3.9 compatibility. Preserve both runtime observations and candidate bytes.
+10. Add a distinct v2-to-v2 continuity fixture for existing retention policies,
+    disabled policies, event data and idempotency state. Current contract-002
+    migration acceptance deliberately starts from a v1 predecessor.
+11. Extend the existing preflight/failure-preservation behavior to Docker
+    acceptance during contract-002 generation. Archived v2 AI Docker replay is
+    already supported; `rebuild --contract 002 --container` currently refuses.
 
 No success streak or daily claim is published before the corresponding evidence
 exists. Community requirements must describe observable behavior and acceptance

@@ -14,6 +14,9 @@
 - For daily reconstruction, prefer an already-installed Python 3.9 interpreter
   to check the supported floor. Record its actual execution runtime; if unavailable,
   disclose the limitation rather than claiming a floor check or silently installing Python.
+- Contract-002 migration acceptance currently needs a v1 predecessor. Choose a
+  successful contract-001 AI archive for that fixture; do not claim v2-to-v2
+  policy/data continuity until the corresponding fixture exists.
 - The English and Chinese README must agree about implemented functionality.
 - For substantive changes, run `python3 -m unittest discover -s tests -v`,
   `python3 -m phoenix verify`, and `python3 -m phoenix audit` before committing.

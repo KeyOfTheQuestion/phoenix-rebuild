@@ -21,7 +21,8 @@ class ReplayIntegrityTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.site = self.root / "docs"
         ledger = json.loads((ROOT / "docs/runs.json").read_text())
-        self.row = next(r for r in ledger if r["kind"] == "ai-rebuild" and r["status"] == "passed")
+        self.row = next(r for r in ledger if r["kind"] == "ai-rebuild" and r["status"] == "passed"
+                        and r.get("contract_id", "001") == "001")
         self.directory = self.site / "evidence" / self.row["id"]
         shutil.copytree(ROOT / "docs/evidence" / self.row["id"], self.directory,
                         ignore=shutil.ignore_patterns("__pycache__"))

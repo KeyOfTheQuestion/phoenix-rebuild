@@ -26,7 +26,7 @@ class RuntimeMatrixTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         rows = json.loads((ROOT / "docs/runs.json").read_text())
         self.row = next(r for r in rows if r["id"] == "20261102T020351Z-0ba772")
-        self.retention = next(r for r in rows if r.get("contract_id") == "002")
+        self.retention = next(r for r in rows if r.get("contract_id") == "002" and r["kind"] == "retention-reference-verification")
         self.legacy = next(r for r in rows if r["kind"] == "ai-rebuild" and r["status"] == "passed"
                            and not r.get("predecessor_sha256"))
         for row in (self.row, self.retention, self.legacy):

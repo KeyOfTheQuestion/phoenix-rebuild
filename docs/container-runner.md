@@ -47,12 +47,12 @@ after validation cannot replace the bytes being executed. Without a recorded
 predecessor, the archived verifier keeps its original fixture behavior; no
 current reference implementation or current verifier is substituted.
 
-Contract-002 `retention-composed-v1` archives also supply their verified
+Contract-002 `retention-composed-v1` reference and `retention-ai-v1` AI archives also supply their verified
 `baseline.py`, `retention.py`, `records.py`, `audit.py` and `contract.md`.
 Only this exact dependency set is accepted, with a recorded predecessor and
 immutable source bytes. The entrypoint and frozen modules load only inside
 Docker, using temporary package directories on `/tmp`. Host validation checks
-all eight source/contract bindings, the reference-only contract-002 profile,
+all eight source/contract bindings, the matching AI/reference kind and profile,
 schema-version-2 expectation, all 32 passing identifiers and the actual boundary
 probe. The recorded `report.json` is audited on the host but is not mounted or
 used as a substitute for fresh checks. Archive-format version 1 remains unchanged.
@@ -62,6 +62,10 @@ verifier hashes as well as the container observations. A missing Docker runtime
 or an inconsistent archive is refused without host execution. Local replay
 without `--container` retains its existing behavior and does not require Docker.
 See the [2026-10-30 controls and daily reconstruction](maintenance/2026-10-30-retention-container.md).
+Contract-002 AI generation itself currently supports local acceptance only:
+`rebuild --contract 002 --container` refuses before any model call. This does
+not restrict Docker replay of completed v2 AI archives. See the
+[2026-11-04 generation and replay checks](maintenance/2026-11-04-retention-ai.md).
 
 | Boundary | Policy |
 | --- | --- |

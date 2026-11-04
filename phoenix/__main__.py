@@ -26,6 +26,7 @@ def main():
     generate.add_argument("--attempts", type=int, choices=range(1, 6), default=2)
     generate.add_argument("--timeout", type=int, default=300)
     generate.add_argument("--model", help="Optional; otherwise use the clean CLI default")
+    generate.add_argument("--contract", choices=("001", "002"), default="001", help="Contract to reconstruct; 002 uses full frozen 32-check local acceptance")
     generate.add_argument("--use-user-config", action="store_true", help="Opt into your user config, including model selection and MCP servers")
     generate.add_argument("--predecessor", help="Trusted previous implementation used to create the continuity database")
     generate.add_argument("--container", action="store_true", help="Verify generated code inside Docker; generation still uses the host CLI")
@@ -86,9 +87,10 @@ def main():
         return 0 if report["status"] == "passed" else 1
     if args.command == "rebuild":
         from .rebuild import rebuild
+        contract_options = {"contract_id": args.contract} if args.contract != "001" else {}
         try:
             reports = rebuild(args.attempts, args.timeout, args.model, args.use_user_config, args.predecessor,
-                              use_container=args.container, verification_timeout=args.verification_timeout)
+                              use_container=args.container, verification_timeout=args.verification_timeout, **contract_options)
         except (RuntimeError, OSError) as error:
             print(str(error), file=sys.stderr)
             return 2
@@ -121,7 +123,7 @@ def main():
         except EvidenceError as error:
             print("Replay refused: " + str(error), file=sys.stderr)
             return 2
-        if archived.get("verifier_profile") == "retention-composed-v1" and not args.container:
+        if archived.get("verifier_profile") in ("retention-composed-v1", "retention-ai-v1") and not args.container:
             from .retention_archive import replay_frozen_retention
             report = replay_frozen_retention(artifacts)
             report["execution_runtime"] = runtime_identity()
@@ -131,8 +133,8 @@ def main():
         if args.container:
             from .container import RETENTION_SUPPORT, evaluate_snapshot_in_container
             options = {}
-            if archived.get("verifier_profile") == "retention-composed-v1":
-                options = {"verifier_profile": "retention-composed-v1",
+            if archived.get("verifier_profile") in ("retention-composed-v1", "retention-ai-v1"):
+                options = {"verifier_profile": archived["verifier_profile"],
                            "support_sources": {name: artifacts[name] for name in RETENTION_SUPPORT}}
             try:
                 report = evaluate_snapshot_in_container(

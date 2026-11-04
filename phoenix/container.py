@@ -113,10 +113,11 @@ def _validate(report, sources, verifier_profile="contract-001"):
     if not valid_execution_runtime(report.get("execution_runtime")):
         raise ContainerError("Container did not report a valid execution runtime")
     expected_ids = CHECK_IDS
-    if verifier_profile == "retention-composed-v1":
+    if verifier_profile in ("retention-composed-v1", "retention-ai-v1"):
         bindings.update(RETENTION_SUPPORT)
         expected = {"contract_id": "002", "contract_version": "2.0.0",
-                    "verifier_profile": verifier_profile, "kind": "retention-reference-verification",
+                    "verifier_profile": verifier_profile,
+                    "kind": "ai-rebuild" if verifier_profile == "retention-ai-v1" else "retention-reference-verification",
                     "baseline_expected_schema_version": 2, "expected_total": 32}
         if any(type(report.get(key)) is not type(value) or report[key] != value
                for key, value in expected.items()):
@@ -172,7 +173,7 @@ def evaluate_snapshot_in_container(candidate_source, verifier_source, predecesso
                "entrypoint.py": ENTRYPOINT.encode("utf-8")}
     if predecessor_source is not None:
         sources["predecessor.py"] = predecessor_source
-    if verifier_profile == "retention-composed-v1":
+    if verifier_profile in ("retention-composed-v1", "retention-ai-v1"):
         if not isinstance(support_sources, dict) or set(support_sources) != set(RETENTION_SUPPORT) \
                 or predecessor_source is None:
             raise ContainerError("Container contract-002 replay requires its exact frozen dependency set and predecessor")

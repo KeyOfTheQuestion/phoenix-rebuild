@@ -113,11 +113,30 @@ Do not treat a Git worktree, a subprocess, or a prompt instruction as isolation.
 The notebook is a static site. It runs no candidate code in visitors' browsers
 and has no model API calls, registration, tracking, or server secret.
 
-## Contract 002 reference pilot
+## Contract 002 generation and reference checks
 
-The separate AI-assisted retention reference supports explicit per-inbox expiry
-and atomic, opt-in migration from v1. It is not connected to AI generation.
-Its published full archives support Docker replay. To run its focused/composed reference checks:
+Contract 002 supports explicit per-inbox expiry and atomic migration from v1,
+with retention disabled initially. Generate it with the full 32-check frozen
+acceptance package and a successful contract-001 predecessor:
+
+```sh
+python3 -m phoenix rebuild --contract 002 --attempts 2 --timeout 300 \
+  --predecessor docs/evidence/20261103T023452Z-4ec8a9/server.py
+```
+
+The default remains contract 001. Contract-002 generation currently uses local
+acceptance only; adding `--container` refuses before any model call. Completed
+AI archives support local, Docker and runtime-matrix replay. The fixture requires
+a v1 predecessor and does not establish v2-to-v2 policy/data continuity.
+
+The distinct `retention-ai-v1` profile includes the exact generation prompt and
+all frozen dependencies. Generation failures retain zero-check bundles; local
+evaluator errors retain generated source as `verification-error`, with no
+acceptance verdict, mode switch or another model attempt. Private diagnostics
+stay in ignored `.phoenix/generator-errors/latest-verification.log`. See the
+[actual generation, method change and checks](maintenance/2026-11-04-retention-ai.md).
+
+The separate AI-assisted reference makes no model call. To run its checks:
 
 ```sh
 python3 -m phoenix verify-retention
@@ -130,16 +149,16 @@ The default is the original 13-check pilot. `--full` composes it with 19 baselin
 checks that explicitly expect schema version 2. The result needs all 32 distinct
 check IDs to pass. Candidate/predecessor bytes are captured once for both phases;
 each phase creates its own predecessor-populated database. Incomplete checks or
-changed source bindings cannot produce a combined pass. AI generation and its
-metrics stay on contract 001. See the
+changed source bindings cannot produce a combined pass. These reference checks
+remain separate from AI generation and its metrics. See the
 [composed verification and method change](maintenance/2026-10-28-retention-composed.md).
 
 These are local subprocess checks of trusted code, not a hostile-code sandbox.
 Migration data comes from the predecessor's HTTP API. After migration has been
 checked, only synthetic v2 events are backdated directly in SQLite while stopped
 to exercise expiry deterministically. The pilot reports this method explicitly,
-does not call a model and does not publish AI attempts. Existing verification,
-reconstruction remains on contract 001. See the
+does not call a model and does not publish AI attempts. Default baseline
+verification and generation remain on contract 001. See the
 [complete pilot contract](../specs/webhook-inbox-retention.md) and
 [verification record](maintenance/2026-10-27-retention-pilot.md).
 

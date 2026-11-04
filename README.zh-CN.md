@@ -6,7 +6,7 @@
 
 Phoenix 把这个问题做成可运行、可复现的公开实验：每次生成从新目录开始，AI 接收公开规格，生成完整代码，再由独立程序通过真实 HTTP 请求验收。每次发布保留源码、规格、验收结果、文件指纹和工具实际返回的用量。失败记录同样公开。
 
-第一个重建对象是一个**持久化 Webhook 收件服务**。它要保存原始正文、保护管理接口、处理并发重复投递、避免凭据泄露，并兼容已有 SQLite 数据。当前规格有 19 项验收。人工审阅的参考实现与 AI 重建会明确区分。
+第一个重建对象是一个**持久化 Webhook 收件服务**。它要保存原始正文、保护管理接口、处理并发重复投递、避免凭据泄露，并兼容已有 SQLite 数据。契约 001 有 19 项验收；契约 002 加入迁移与保留期限，共 32 项。人工审阅的参考实现与 AI 重建会明确区分。
 
 ## 立即运行
 
@@ -59,7 +59,7 @@ python3 -m phoenix replay <记录编号> --container --timeout 90
 
 详见[容器配置、限制与安装说明](docs/container-runner.md)及 [2026-10-26 容器重建验证记录](docs/maintenance/2026-10-26-container-rebuild.md)。
 
-## 试验：保留期限与 v1 数据迁移
+## 重建保留期限与 v1 数据迁移功能
 
 [第二份契约](specs/webhook-inbox-retention.md)增加按收件箱配置保留期限、每批最多删除 100 条过期事件，以及从 v1 原子迁移。迁移保留旧事件、令牌和幂等状态，默认不开启清理。[AI 辅助开发的参考试验](examples/retention/server.py)保留原有表结构，只新增策略表；读取或修改策略不自动删除事件。
 
@@ -69,6 +69,9 @@ python3 -m phoenix verify-retention --full
 python3 -m phoenix verify-retention --full --publish
 # 从可信的历史 v1 AI 实现创建数据后验证迁移：
 python3 -m phoenix verify-retention --predecessor docs/evidence/记录编号/server.py
+# 生成契约 002 并运行全部 32 项验收；选择成功的 v1 AI 实现作为上一版：
+python3 -m phoenix rebuild --contract 002 --attempts 2 --timeout 300 \
+  --predecessor docs/evidence/20261103T023452Z-4ec8a9/server.py
 ```
 
 默认的 13 项试验检查真实的上一实现 HTTP 数据、迁移、策略持久化、限量及并发清理、收件箱隔离和幂等键重用。完成迁移验证后，验收器仅通过 SQLite 回填合成 v2 事件的时间，用于确定性测试，不声称真实等待过保留期限。
@@ -77,7 +80,9 @@ python3 -m phoenix verify-retention --predecessor docs/evidence/记录编号/ser
 
 不加 `--publish` 时只输出结果。`--full --publish` 会在验收前捕获候选源码、上一实现、契约、入口及四个项目模块依赖，再把同一份字节发布为**契约 002 的参考验证**。使用 `python3 -m phoenix replay 记录编号` 时，会先核对完整证据包，再在临时私有包中运行归档模块，不导入当前工作区验收器，也不修改归档。加上 `--container --timeout 90`，可将完整的已校验证据包交给同一套受限 Docker 配置运行。主机会核对八项源码／契约指纹、32 项验收结果和实际边界探测；Docker 不可用或输出不合法时退出码为 2，不回退到主机执行。详见 [2026-10-30 容器复验检查](docs/maintenance/2026-10-30-retention-container.md)。
 
-参考验证不调用模型。公开记录会标明契约，契约 002 的参考记录不计入 AI 尝试与成功数。AI 重建及其 19 项验收仍使用第一份契约，v2 AI 生成接入留待后续。审计按契约严格检查 19/32 项配置，兼容旧记录，并拒绝尚不支持的 v2 AI 标签。详见 [2026-10-29 归档与复验证据](docs/maintenance/2026-10-29-retention-archive.md)；此前的历史记录保持不变。
+`rebuild --contract 002` 现在会真实调用模型，使用完整冻结的 32 项验收包，并以独立的 `retention-ai-v1` 配置归档准确提示词与全部依赖。参考验证不调用模型，仍使用 `retention-composed-v1`，不计入 AI 指标。默认生成仍是契约 001。审计严格核对各配置的记录类别、完整产物、源码绑定和检查集合；历史记录保持不变。
+
+契约 002 的生成目前只支持本地验收：`--contract 002 --container` 会在调用模型前拒绝执行。已完成的 AI 归档支持本地、Docker 和多运行时矩阵复验。迁移测试目前要求 v1 上一实现，尚未验证 v2→v2 的策略与数据延续。生成失败会保留完整的零检查证据包；本地验收器出错时，以 `verification-error` 保留生成源码并停止，不再调用模型。详见[首个真实 32/32 AI 重建与双运行时复验](docs/maintenance/2026-11-04-retention-ai.md)，其中披露契约说明变更与剩余边界。
 
 运行时会影响结果：10 月 30 日的 AI 候选在 Python 3.14 上通过 19/19，但在 Python 3.9 的补充复验中，因空查询字符串的解析差异失败了 2 项。两次实际观察及未经修改的候选源码均保留在[跨版本失败记录](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)中。一次归档通过不代表已覆盖所有受支持的 Python 版本。
 

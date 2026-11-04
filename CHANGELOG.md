@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-04 · Contract-002 AI reconstruction
+
+- Added `rebuild --contract 002` with the complete frozen 32-check acceptance package, exact prompt, v1 predecessor and four helper dependencies. Default generation remains contract 001; v2 generation currently uses local acceptance and refuses `--container` before provider use.
+- Added the distinct `retention-ai-v1` archive/audit profile, including preserved generation/runtime failures, local/Docker replay and existing runtime-matrix support. Reference records retain their own classification and stay outside AI metrics.
+- Require the verifier's report digest for both v2 profiles. Preserve the real attempt's pre-hardening audit snapshot and disclose the post-generation repair with negative controls.
+- Added eight adapter controls, a synthetic CLI/Docker integration control and browser classification coverage. Preserve historical evidence; disclose the contract metadata change and the v1-only continuity fixture.
+- The first real v2 candidate passed 32/32 on its first attempt and replayed successfully on Python 3.9 and 3.14. See the [generation and verification record](docs/maintenance/2026-11-04-retention-ai.md).
+
 ## 2026-11-03 · Bounded archive runtime matrix
 
 - Add POSIX `replay-matrix` for 1..4 explicitly installed Python executables. Audit once, execute captured frozen bytes in separate runtimes, validate observations and retain every acceptance/runtime failure without model calls or ledger publication.

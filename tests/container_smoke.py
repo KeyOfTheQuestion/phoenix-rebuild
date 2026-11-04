@@ -86,7 +86,8 @@ print(json.dumps({'type': 'turn.completed', 'usage': None}))
 def main():
     reference = ROOT / "examples/reference/server.py"
     ledger = json.loads((ROOT / "docs/runs.json").read_text())
-    row = next(r for r in ledger if r["kind"] == "ai-rebuild" and r["status"] == "passed")
+    row = next(r for r in ledger if r["kind"] == "ai-rebuild" and r["status"] == "passed"
+               and r.get("contract_id", "001") == "001")
     archived, _ = verified_run(ROOT / "docs", row["id"])
 
     def replay_in_container(record):
@@ -107,8 +108,8 @@ def main():
         for field in ("candidate_sha256", "verifier_sha256", "predecessor_sha256", "contract_sha256"):
             assert report.get(field) == original.get(field), field
         if original.get("contract_id") == "002":
-            assert report["kind"] == "retention-reference-verification"
-            assert report["verifier_profile"] == "retention-composed-v1"
+            assert report["kind"] == original["kind"]
+            assert report["verifier_profile"] == original["verifier_profile"]
             for field in ("shared_subject_sha256", "retention_verifier_sha256", "records_support_sha256", "audit_support_sha256"):
                 assert report[field] == original[field], field
         assert {p.name: p.read_bytes() for p in directory.iterdir() if p.is_file()} == before
@@ -123,9 +124,15 @@ def main():
                           and not r.get("predecessor_sha256"))
         legacy = replay_in_container(legacy_row)
         assert legacy["verifier_sha256"] != baseline["verifier_sha256"]
-        retention_row = next(r for r in ledger if r.get("contract_id") == "002" and r["status"] == "passed")
+        retention_row = next(r for r in ledger if r.get("contract_id") == "002" and r["status"] == "passed"
+                             and r["kind"] == "retention-reference-verification")
         retention = replay_in_container(retention_row)
+        v2_ai_row = next((r for r in ledger if r.get("contract_id") == "002" and r["kind"] == "ai-rebuild"
+                          and r["status"] == "passed"), None)
+        v2_ai = replay_in_container(v2_ai_row) if v2_ai_row else None
         adapter_control = check_rebuild_adapter(row)
+        from retention_rebuild_smoke import check_retention_adapter
+        retention_adapter_control = check_retention_adapter(use_container=True)
         with tempfile.TemporaryDirectory(prefix="phoenix-container-ci-") as temporary:
             directory = Path(temporary)
             candidate = directory / "server.py"
@@ -146,7 +153,9 @@ def main():
         "archived_run_id": row["id"], "reference": baseline, "archived_ai": ai,
         "legacy_sql_fixture_run_id": legacy_row["id"], "legacy_sql_fixture": legacy,
         "retention_reference_run_id": retention_row["id"], "retention_reference": retention,
+        "contract_002_ai_run_id": v2_ai_row["id"] if v2_ai_row else None, "contract_002_ai": v2_ai,
         "rebuild_adapter_control": adapter_control,
+        "contract_002_generator_control": retention_adapter_control,
         "timeout_control": "deadline refused the slow candidate; no Phoenix containers remained",
     }, sort_keys=True))
 

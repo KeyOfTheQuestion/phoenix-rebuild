@@ -17,7 +17,11 @@ OUTPUT_SCHEMA = {
 
 
 def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predecessor=None,
-            use_container=False, verification_timeout=90):
+            use_container=False, verification_timeout=90, contract_id="001"):
+    if contract_id not in ("001", "002"):
+        raise RuntimeError("Select contract 001 or 002")
+    if contract_id == "002" and use_container:
+        raise RuntimeError("Contract-002 generation currently uses local verification; use Docker for archived replay")
     if use_container:
         from .container import ContainerError, evaluate_snapshot_in_container, prepare_container
         prepare_container(verification_timeout)
@@ -25,15 +29,42 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
     if executable is None:
         raise RuntimeError("Install and authenticate the Codex CLI first; see docs/setup.md")
     version = subprocess.run([executable, "--version"], capture_output=True, text=True, timeout=10).stdout.strip()
-    specification = (ROOT / "specs" / "webhook-inbox.md").read_text(encoding="utf-8")
-    verifier_source = (ROOT / "phoenix" / "verify.py").read_bytes()
+    frozen_sources = None
+    if contract_id == "002":
+        from .retention_archive import capture_retention_sources
+        frozen_sources = capture_retention_sources(ROOT, ai=True)
+        specification = frozen_sources["contract.md"].decode("utf-8")
+        verifier_source = frozen_sources["verifier.py"]
+    else:
+        specification = (ROOT / "specs" / "webhook-inbox.md").read_text(encoding="utf-8")
+        verifier_source = (ROOT / "phoenix" / "verify.py").read_bytes()
     predecessor_path = Path(predecessor) if predecessor else ROOT / "examples" / "reference" / "server.py"
     predecessor_source = predecessor_path.read_bytes()
-    if not use_container:
+    if not use_container and contract_id == "001":
         frozen_verifier = types.ModuleType("phoenix_frozen_verifier")
         exec(compile(verifier_source, "phoenix-verifier-snapshot.py", "exec"), frozen_verifier.__dict__)
 
-    def record(report, candidate, prompt, provenance, predecessor=None):
+    def record(report, candidate, prompt, provenance, predecessor=None, candidate_source=None):
+        if frozen_sources is not None:
+            # Failure bundles retain the same full input closure, even if no
+            # candidate could be executed. Temporary copies publish frozen bytes.
+            report = dict(report, kind="ai-rebuild", human_interventions=0,
+                          contract_id="002", contract_version="2.0.0", verifier_profile="retention-ai-v1",
+                          baseline_expected_schema_version=2, expected_total=32,
+                          predecessor_sha256=hashlib.sha256(predecessor_source).hexdigest())
+            for name, field in (("baseline.py", "shared_subject_sha256"), ("retention.py", "retention_verifier_sha256"),
+                                ("records.py", "records_support_sha256"), ("audit.py", "audit_support_sha256")):
+                report[field] = hashlib.sha256(frozen_sources[name]).hexdigest()
+            with tempfile.TemporaryDirectory(prefix="phoenix-v2-evidence-") as temporary:
+                directory = Path(temporary)
+                current = directory / "server.py"
+                current.write_bytes(candidate_source if candidate_source is not None else Path(candidate).read_bytes())
+                previous = directory / "predecessor.py"
+                previous.write_bytes(predecessor_source)
+                return publish(report, current, prompt, provenance, predecessor=previous,
+                               verifier_source=verifier_source, contract_source=frozen_sources["contract.md"],
+                               extra_artifacts={name: frozen_sources[name] for name in
+                                                ("baseline.py", "retention.py", "records.py", "audit.py")})
         return publish(report, candidate, prompt, provenance, predecessor=predecessor,
                        verifier_source=verifier_source, contract_source=specification.encode("utf-8"))
     feedback = ""
@@ -122,6 +153,7 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
             # Stage the predecessor only after the generator has exited.
             predecessor = workspace / "predecessor.py"
             predecessor.write_bytes(predecessor_source)
+            candidate_source = candidate.read_bytes()
             if use_container:
                 verification_start = time.monotonic()
                 try:
@@ -135,10 +167,23 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
                     # source and stop instead of spending another model attempt.
                     report = verification_error(verification_start, predecessor_source,
                                                 str(error) if isinstance(error, ContainerError) else type(error).__name__)
+            elif frozen_sources is not None:
+                from .retention_archive import replay_frozen_retention
+                verification_start = time.monotonic()
+                try:
+                    report = replay_frozen_retention(dict(frozen_sources, **{
+                        "server.py": candidate_source, "predecessor.py": predecessor_source}))
+                except Exception as error:
+                    logs = ROOT / ".phoenix/generator-errors"
+                    logs.mkdir(parents=True, exist_ok=True)
+                    (logs / "latest-verification.log").write_text(str(error), encoding="utf-8")
+                    report = verification_error(verification_start, predecessor_source, type(error).__name__,
+                                                execution="local-subprocess-attempted")
             else:
                 report = frozen_verifier.evaluate(candidate, kind="ai-rebuild", predecessor=predecessor)
             report["generation_seconds"] = provenance["generation_seconds"]
-            published = record(report, candidate, prompt, provenance, predecessor=predecessor)
+            published = record(report, candidate, prompt, provenance, predecessor=predecessor,
+                               candidate_source=candidate_source)
             reports.append(published)
             print("%s: %s/%s checks — %s" % (published["id"], published["passed"], published["total"], published["status"]), flush=True)
             if report["status"] == "passed":
@@ -150,15 +195,17 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
     return reports
 
 
-def verification_error(start, predecessor_source, reason):
+def verification_error(start, predecessor_source, reason, execution="docker-container-attempted"):
     from datetime import datetime, timezone
     return {"schema_version": 1, "kind": "ai-rebuild", "status": "verification-error",
             "started_at": datetime.now(timezone.utc).isoformat(), "passed": 0, "total": 0,
             "duration_seconds": round(time.monotonic() - start, 3), "human_interventions": 0,
-            "execution": "docker-container-attempted", "checks": [],
+            "execution": execution, "checks": [],
             "predecessor_sha256": hashlib.sha256(predecessor_source).hexdigest(),
-            "error": "Container verification could not produce a validated report (" + reason + "); no acceptance verdict. "
-                     "No host fallback or generation retry. Check Docker and local .phoenix/container-errors/latest.log when present."}
+            "error": ("Container" if execution == "docker-container-attempted" else "Local") + " verification could not produce a validated report (" + reason + "); no acceptance verdict. "
+                     + ("No host fallback or generation retry. Check Docker and local .phoenix/container-errors/latest.log when present."
+                        if execution == "docker-container-attempted" else
+                        "No verification-mode switch or generation retry. Check local .phoenix/generator-errors/latest-verification.log.")}
 
 
 def generation_error(message, start):

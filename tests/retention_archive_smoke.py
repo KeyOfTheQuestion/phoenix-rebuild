@@ -13,7 +13,8 @@ from phoenix.records import ROOT
 
 def main():
     rows = json.loads((ROOT / "docs/runs.json").read_text())
-    row = next(row for row in rows if row.get("contract_id") == "002" and row["status"] == "passed")
+    row = next(row for row in rows if row.get("contract_id") == "002" and row["status"] == "passed"
+               and row["kind"] == "retention-reference-verification")
     report, artifacts = verified_run(ROOT / "docs", row["id"])
     directory = ROOT / "docs/evidence" / row["id"]
     before = {p.name: p.read_bytes() for p in directory.iterdir() if p.is_file()}

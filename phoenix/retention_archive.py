@@ -51,6 +51,25 @@ def evaluate(candidate, predecessor=None):
     return report
 '''
 
+AI_ENTRYPOINT = ENTRYPOINT + '''
+# The generator adapter supplies independently generated source to the same checks.
+evaluate_reference = evaluate
+def evaluate(candidate, predecessor=None):
+    report = evaluate_reference(candidate, predecessor)
+    report.update(kind="ai-rebuild", human_interventions=0, verifier_profile="retention-ai-v1")
+    return report
+'''
+
+
+def capture_retention_sources(root=None, ai=False):
+    root = Path(ROOT if root is None else root)
+    return {"verifier.py": (AI_ENTRYPOINT if ai else ENTRYPOINT).encode("utf-8"),
+            "contract.md": (root / "specs/webhook-inbox-retention.md").read_bytes(),
+            "baseline.py": (root / "phoenix/verify.py").read_bytes(),
+            "retention.py": (root / "phoenix/retention.py").read_bytes(),
+            "records.py": (root / "phoenix/records.py").read_bytes(),
+            "audit.py": (root / "phoenix/audit.py").read_bytes()}
+
 
 def replay_frozen_retention(artifacts):
     """Use only bytes returned by verified_run, never reopen the original archive."""
@@ -67,16 +86,10 @@ def replay_frozen_retention(artifacts):
 
 def publish_retention(candidate, predecessor):
     """Capture source first, evaluate those snapshots, then publish the same bytes."""
-    artifacts = {
+    artifacts = dict(capture_retention_sources(), **{
         "server.py": Path(candidate).read_bytes(),
         "predecessor.py": Path(predecessor).read_bytes(),
-        "verifier.py": ENTRYPOINT.encode("utf-8"),
-        "contract.md": (ROOT / "specs/webhook-inbox-retention.md").read_bytes(),
-        "baseline.py": (ROOT / "phoenix/verify.py").read_bytes(),
-        "retention.py": (ROOT / "phoenix/retention.py").read_bytes(),
-        "records.py": (ROOT / "phoenix/records.py").read_bytes(),
-        "audit.py": (ROOT / "phoenix/audit.py").read_bytes(),
-    }
+    })
     report = replay_frozen_retention(artifacts)
     # Publishing also reads only captured source copies, after evaluation has finished.
     with tempfile.TemporaryDirectory(prefix="phoenix-retention-publish-") as temporary:

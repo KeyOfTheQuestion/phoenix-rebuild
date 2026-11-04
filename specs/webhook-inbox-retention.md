@@ -1,6 +1,6 @@
 # Phoenix contract 002: explicit webhook retention and v1 migration
 
-Version: 2.0.0 (reference/acceptance pilot; not yet an AI-ledger contract). This document is the complete implementation input.
+Version: 2.0.0. This document is the complete implementation input.
 
 Build a useful HTTP service that receives webhooks, preserves their original
 UTF-8 bodies, and lets an administrator inspect them. Use only the Python 3.9+
@@ -173,6 +173,11 @@ fixtures are written by a real v1 predecessor over HTTP and checked before any
 aging fixture is introduced. Subsequent expiry checks explicitly backdate only
 synthetic test events via SQLite while the subject is stopped, then issue real
 HTTP requests. That is fixture aging, not proof of elapsed real-world retention.
-The full v1 acceptance suite and the public reconstruction ledger stay on
-contract 001. Integrating a complete v2 reconstruction/harness archive remains a
-follow-up; do not label this pilot as a new AI reconstruction result.
+`verify-retention --full` combines 19 baseline HTTP checks expecting schema 2
+with 13 focused checks. `rebuild --contract 002` generates an independent
+implementation and records its actual outcome against those same 32 checks.
+Reference validation remains distinct from AI generation. Generation currently
+uses local verification; frozen v2 archives support local, container and runtime
+matrix replay. Migration fixtures use a v1 predecessor; v2-to-v2 policy/data
+continuity is outside this fixture's current scope. Failed generations and
+acceptance attempts remain public rather than being relabelled as successes.
