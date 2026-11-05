@@ -43,20 +43,28 @@ Path(sys.argv[sys.argv.index('--output-last-message')+1]).write_text(json.dumps(
 print(json.dumps({'type':'turn.completed','usage':None}))
 ''' % (ROOT / "examples/retention/server.py").read_text())
         fixture.chmod(0o755)
+        host_guard = (patch("phoenix.retention_archive.replay_frozen_retention",
+                            side_effect=AssertionError("Docker generation must not load the archived verifier on the host"))
+                      if use_container else contextlib.nullcontext())
         with patch("phoenix.rebuild.ROOT", root), patch("phoenix.records.ROOT", root), \
                 patch("phoenix.rebuild.shutil.which", side_effect=lambda name: str(fixture) if name == "codex" else which(name)), \
-                contextlib.redirect_stdout(io.StringIO()):
-            report, = rebuild(attempts=1, contract_id="002", predecessor=previous)
+                host_guard, contextlib.redirect_stdout(io.StringIO()):
+            report, = rebuild(attempts=1, contract_id="002", predecessor=previous,
+                              use_container=use_container, verification_timeout=45)
         assert report["status"] == "passed" and report["passed"] == report["total"] == 32
         assert report["kind"] == "ai-rebuild" and report["verifier_profile"] == "retention-ai-v1"
         assert report["provenance"]["version"] == "synthetic-v2-ci-fixture (no model call)"
+        assert report["execution"] == ("docker-container" if use_container else "local-subprocess")
+        assert report["provenance"]["requested_verification"] == report["execution"]
+        if use_container:
+            assert report["provenance"]["verification_timeout_seconds"] == 45
         assert audit(root / "docs") == []
         _, artifacts = verified_run(root / "docs", report["id"])
         result = report
         if use_container:
             result = evaluate_snapshot_in_container(artifacts["server.py"], artifacts["verifier.py"],
                 predecessor_source=artifacts["predecessor.py"], verifier_profile="retention-ai-v1",
-                support_sources={name: artifacts[name] for name in RETENTION_SUPPORT})
+                support_sources={name: artifacts[name] for name in RETENTION_SUPPORT}, timeout=45)
             assert result["status"] == "passed" and result["passed"] == result["total"] == 32
             assert result["kind"] == "ai-rebuild" and result["verifier_profile"] == "retention-ai-v1"
             for field in ("candidate_sha256", "predecessor_sha256", "contract_sha256", "verifier_sha256",
@@ -65,7 +73,7 @@ print(json.dumps({'type':'turn.completed','usage':None}))
         assert (ROOT / "docs/runs.json").read_bytes() == ledger
         return {"generation": "synthetic CLI returning the existing reference; no model call",
                 "temporary_ledger_audit": "passed; discarded after the control", "public_ledger_changed": False,
-                "source_predecessor_record": row["id"], "verification": result}
+                "source_predecessor_record": row["id"], "generation_verification": report, "verification": result}
 
 
 if __name__ == "__main__":

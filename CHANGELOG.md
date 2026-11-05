@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-05 · Docker acceptance during v2 generation
+
+- Added `rebuild --contract 002 --container`: preflight Docker before provider use, then send the complete frozen `retention-ai-v1` package to the existing runner without loading archived verifier code on the host.
+- Preserve runtime/report failures as complete zero-check bundles without host fallback or another model call; retain acceptance retries, generation failures and default local/v1 behavior.
+- Added four unit tests and replaced the earlier v2 refusal control with preflight coverage. Existing CI/Pages now exercise synthetic CLI generation with real Docker acceptance and independent replay of its disposable archive.
+- Today's one actual local v2 cycle passed 32/32 on attempt 1. Disclose the installed CLI change to 0.166.0 and the contract's execution-mode text change in the [verification record](docs/maintenance/2026-11-05-retention-container-rebuild.md). Historical evidence stays unchanged.
+
 ## 2026-11-04 · Contract-002 AI reconstruction
 
 - Added `rebuild --contract 002` with the complete frozen 32-check acceptance package, exact prompt, v1 predecessor and four helper dependencies. Default generation remains contract 001; v2 generation currently uses local acceptance and refuses `--container` before provider use.

@@ -13,7 +13,8 @@ from unittest.mock import patch
 
 from phoenix import __main__ as cli
 from phoenix import rebuild as adapter
-from phoenix.audit import audit, verified_run
+from phoenix.audit import audit, verified_run, RETENTION_CHECK_IDS
+from phoenix.container import ContainerError
 from phoenix.records import ROOT
 
 
@@ -124,10 +125,98 @@ class RetentionRebuildTests(unittest.TestCase):
         self.assertEqual((self.root / "docs/evidence" / report["id"] / "server.py").read_text(), self.code)
         self.assertEqual(audit(self.root / "docs"), [])
 
-    def test_v2_container_generation_is_refused_before_spending_usage(self):
-        with self.assertRaisesRegex(RuntimeError, "local"):
-            self.rebuild(use_container=True)
+    def test_v2_container_preflight_failure_spends_no_generation_usage(self):
+        with patch("phoenix.container.prepare_container", side_effect=ContainerError("synthetic unavailable Docker")) as prepare:
+            try:
+                self.rebuild(use_container=True, verification_timeout=37)
+            except RuntimeError as error:
+                self.assertIsInstance(error, ContainerError)
+            else:
+                self.fail("Unavailable Docker must refuse before provider use")
+        prepare.assert_called_once_with(37)
         self.cli_process.assert_not_called()
+        self.assertFalse((self.root / "docs/runs.json").exists())
+
+    def container_result(self, candidate, verifier, predecessor_source=None, timeout=90,
+                         *, verifier_profile=None, support_sources=None):
+        self.assertEqual(candidate, self.code.encode())
+        self.assertEqual(predecessor_source, self.previous)
+        self.assertEqual(timeout, 37)
+        self.assertEqual(verifier_profile, "retention-ai-v1")
+        self.assertIn(b'evaluate_reference = evaluate', verifier)
+        expected = {("baseline.py" if name == "verify.py" else name): raw for name, raw in self.before.items()}
+        self.assertEqual(support_sources, dict(expected, **{"contract.md": self.contract}))
+        return {"schema_version": 1, "kind": "ai-rebuild", "status": "passed", "started_at": "synthetic-unit-control",
+                "passed": 32, "total": 32, "checks": [{"id": key, "passed": True} for key in sorted(RETENTION_CHECK_IDS)],
+                "execution": "docker-container", "duration_seconds": 0}
+
+    def container_rebuild(self, **kwargs):
+        try:
+            return self.rebuild(use_container=True, verification_timeout=37, **kwargs)
+        except RuntimeError as error:
+            self.fail("Contract-002 Docker acceptance was refused: " + str(error))
+
+    def test_v2_container_uses_all_frozen_inputs_without_loading_archived_code_on_host(self):
+        self.mutate = True
+        with patch("phoenix.container.prepare_container") as prepare, \
+                patch("phoenix.container.evaluate_snapshot_in_container", side_effect=self.container_result) as runner, \
+                patch("phoenix.retention_archive.replay_frozen_retention", side_effect=AssertionError("No host evaluator")) as local:
+            report, = self.container_rebuild(attempts=1)
+        prepare.assert_called_once_with(37)
+        runner.assert_called_once()
+        local.assert_not_called()
+        self.assertEqual((report["status"], report["passed"], report["total"]), ("passed", 32, 32))
+        self.assertEqual(report["execution"], "docker-container")
+        self.assertEqual(report["provenance"]["requested_verification"], "docker-container")
+        self.assertEqual(report["provenance"]["verification_timeout_seconds"], 37)
+        checked, artifacts = verified_run(self.root / "docs", report["id"])
+        self.assertEqual(artifacts["contract.md"], self.contract)
+        self.assertEqual(artifacts["predecessor.py"], self.previous)
+        self.assertEqual(len(artifacts), 10)
+
+    def test_v2_container_runtime_errors_keep_full_bundle_and_stop_without_host_fallback_or_retry(self):
+        for error in (ContainerError("Synthetic invalid runtime report"), OSError("/private/synthetic-path")):
+            with self.subTest(error=type(error).__name__), patch("phoenix.container.prepare_container"), \
+                    patch("phoenix.container.evaluate_snapshot_in_container", side_effect=error), \
+                    patch("phoenix.retention_archive.replay_frozen_retention", side_effect=AssertionError("No host fallback")) as local:
+                before = len(self.prompts)
+                report, = self.container_rebuild(attempts=2)
+                self.assertEqual(len(self.prompts), before + 1)
+                local.assert_not_called()
+                self.assertEqual(report["status"], "verification-error")
+                self.assertEqual(report["execution"], "docker-container-attempted")
+                self.assertEqual((report["passed"], report["total"]), (0, 0))
+                self.assertNotIn("/private/", report["error"])
+                checked, artifacts = verified_run(self.root / "docs", report["id"])
+                self.assertEqual(artifacts["server.py"], self.code.encode())
+                self.assertEqual(len(artifacts), 10)
+
+    def test_v2_container_acceptance_failure_keeps_both_attempts_and_only_passes_check_feedback(self):
+        passing = self.container_result(self.code.encode(), b'evaluate_reference = evaluate', self.previous, 37,
+                                       verifier_profile="retention-ai-v1", support_sources=dict(
+                                           {("baseline.py" if name == "verify.py" else name): raw for name, raw in self.before.items()},
+                                           **{"contract.md": self.contract}))
+        failing = dict(passing, status="failed", passed=0, total=1,
+                       checks=[{"id": "M01", "title": "Synthetic migration failure", "passed": False}])
+        with patch("phoenix.container.prepare_container"), \
+                patch("phoenix.container.evaluate_snapshot_in_container", side_effect=[failing, passing]):
+            first, second = self.container_rebuild(attempts=2)
+        self.assertEqual([first["status"], second["status"]], ["failed", "passed"])
+        self.assertEqual(len(self.prompts), 2)
+        self.assertIn("Synthetic migration failure", self.prompts[1])
+        self.assertEqual(audit(self.root / "docs"), [])
+
+    def test_v2_container_generation_timeout_retains_requested_mode_without_acceptance(self):
+        self.failure = subprocess.TimeoutExpired("synthetic generator", 300)
+        with patch("phoenix.container.prepare_container"), \
+                patch("phoenix.container.evaluate_snapshot_in_container") as runner:
+            report, = self.container_rebuild(attempts=2)
+        runner.assert_not_called()
+        self.assertEqual(len(self.prompts), 1)
+        self.assertEqual(report["status"], "generation-failed")
+        self.assertEqual(report["execution"], "not-executed")
+        self.assertEqual(report["provenance"]["requested_verification"], "docker-container")
+        self.assertEqual(audit(self.root / "docs"), [])
 
     def test_v2_ai_profile_cannot_drop_prompt_or_be_relabelled_as_reference(self):
         report, = self.rebuild(attempts=1)

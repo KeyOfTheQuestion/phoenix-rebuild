@@ -124,9 +124,14 @@ python3 -m phoenix rebuild --contract 002 --attempts 2 --timeout 300 \
   --predecessor docs/evidence/20261103T023452Z-4ec8a9/server.py
 ```
 
-The default remains contract 001. Contract-002 generation currently uses local
-acceptance only; adding `--container` refuses before any model call. Completed
-AI archives support local, Docker and runtime-matrix replay. The fixture requires
+The default remains contract 001 with local acceptance. For contract 002, add
+`--container --verification-timeout 90` to preflight Docker before provider use,
+then evaluate the generated source with the complete frozen package inside
+Docker. Only the host CLI generates code; it receives no verifier/predecessor.
+Later container/runtime report errors preserve the complete zero-check bundle
+without host fallback or another model call. Completed AI archives support
+local, Docker and runtime-matrix replay. See the
+[container-generation controls](maintenance/2026-11-05-retention-container-rebuild.md). The fixture requires
 a v1 predecessor and does not establish v2-to-v2 policy/data continuity.
 
 The distinct `retention-ai-v1` profile includes the exact generation prompt and

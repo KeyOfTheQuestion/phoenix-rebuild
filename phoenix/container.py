@@ -176,7 +176,7 @@ def evaluate_snapshot_in_container(candidate_source, verifier_source, predecesso
     if verifier_profile in ("retention-composed-v1", "retention-ai-v1"):
         if not isinstance(support_sources, dict) or set(support_sources) != set(RETENTION_SUPPORT) \
                 or predecessor_source is None:
-            raise ContainerError("Container contract-002 replay requires its exact frozen dependency set and predecessor")
+            raise ContainerError("Container contract-002 acceptance requires its exact frozen dependency set and predecessor")
         sources.update(support_sources)
     elif verifier_profile != "contract-001" or support_sources is not None:
         raise ContainerError("Container verifier profile or dependency set is unsupported")

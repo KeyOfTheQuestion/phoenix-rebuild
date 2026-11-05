@@ -26,7 +26,7 @@ def main():
     generate.add_argument("--attempts", type=int, choices=range(1, 6), default=2)
     generate.add_argument("--timeout", type=int, default=300)
     generate.add_argument("--model", help="Optional; otherwise use the clean CLI default")
-    generate.add_argument("--contract", choices=("001", "002"), default="001", help="Contract to reconstruct; 002 uses full frozen 32-check local acceptance")
+    generate.add_argument("--contract", choices=("001", "002"), default="001", help="Contract to reconstruct; 002 uses full frozen 32-check acceptance")
     generate.add_argument("--use-user-config", action="store_true", help="Opt into your user config, including model selection and MCP servers")
     generate.add_argument("--predecessor", help="Trusted previous implementation used to create the continuity database")
     generate.add_argument("--container", action="store_true", help="Verify generated code inside Docker; generation still uses the host CLI")

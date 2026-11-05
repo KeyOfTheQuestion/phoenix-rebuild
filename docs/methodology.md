@@ -243,9 +243,19 @@ preserves a zero-check `verification-error` with `local-subprocess-attempted`,
 keeps diagnostics private and stops without retrying the model or changing mode.
 Generation failure and acceptance failure remain separate outcomes.
 
-Contract 001 remains the default. Contract-002 generation is currently local
-only; `--contract 002 --container` refuses before provider use. Completed AI v2
-archives support Docker and runtime-matrix replay with the same full bindings.
+Contract 001 and local acceptance remain the defaults. Contract-002 generation
+now also supports `--container`: the existing Docker/image preflight precedes
+provider use, and the adapter passes its frozen AI entrypoint, four helpers,
+contract, candidate and predecessor to the runner after generation. The runner
+checks all eight bindings, the 32-check profile and the actual boundary probe;
+the host does not load the archived verifier. Runtime/report failures preserve
+the full zero-check `verification-error` bundle without host fallback or another
+model call. Generation failures remain `not-executed`, even when Docker was
+requested. CI/Pages exercise the adapter with an explicitly synthetic CLI and
+real Docker, then independently replay its disposable archive. The public ledger
+is unchanged by those controls. See the
+[integration and actual daily evidence](maintenance/2026-11-05-retention-container-rebuild.md).
+Completed AI v2 archives also support Docker and runtime-matrix replay with the same full bindings.
 The migration fixture currently requires a successful v1 predecessor; it does
 not check v2-to-v2 policy/data continuity. The contract-002 text removes its old
 reference-only pilot label and documents AI eligibility; endpoint and schema

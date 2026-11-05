@@ -91,6 +91,9 @@ python3 -m phoenix verify-retention --predecessor docs/evidence/RUN_ID/server.py
 # Generate contract 002 with all 32 checks; choose a successful v1 AI predecessor:
 python3 -m phoenix rebuild --contract 002 --attempts 2 --timeout 300 \
   --predecessor docs/evidence/20261103T023452Z-4ec8a9/server.py
+# Optional: preflight Docker, then verify the generated v2 implementation there:
+python3 -m phoenix rebuild --contract 002 --container --verification-timeout 90 \
+  --predecessor docs/evidence/20261103T023452Z-4ec8a9/server.py
 ```
 
 The default 13-check pilot uses real predecessor HTTP data and checks migration, policy persistence, bounded/concurrent expiry, isolation and key reuse. It explicitly backdates only synthetic v2 fixture events through SQLite after migration checks, rather than claiming that time actually elapsed.
@@ -101,7 +104,9 @@ Without `--publish`, these commands only print results. `--full --publish` captu
 
 `rebuild --contract 002` now makes a real model call and uses the full frozen 32-check package. It publishes the exact prompt and all dependencies under the distinct `retention-ai-v1` profile. Reference checks call no model and retain `retention-composed-v1`; they stay outside AI metrics. Default generation remains contract 001. The audit enforces each profile's kind, complete artifacts, bindings and check set; historical records remain unchanged.
 
-Contract-002 generation currently supports local acceptance only: `--contract 002 --container` refuses before any model call. Its completed AI archives support local, Docker and installed-runtime matrix replay. The migration fixture requires a v1 predecessor; v2-to-v2 policy/data continuity is not yet checked. A generation failure retains a complete zero-check bundle; a local evaluator error retains the generated source as `verification-error` and stops without another model call. See the [first real 32/32 AI reconstruction and two-runtime replay](docs/maintenance/2026-11-04-retention-ai.md), including the contract metadata change and remaining limits.
+`rebuild --contract 002 --container` now preflights Docker before provider use, then runs the complete frozen AI verifier package there after generation. No archived verifier code is loaded on the host in this mode. A later container/runtime report error preserves all ten artifacts as a zero-check `verification-error` and stops without host fallback or another model call. Default acceptance remains local; completed AI archives also support local, Docker and installed-runtime matrix replay. See the [container-generation integration and verification](docs/maintenance/2026-11-05-retention-container-rebuild.md).
+
+The migration fixture requires a v1 predecessor; v2-to-v2 policy/data continuity is not yet checked. Generation failures retain complete zero-check bundles. The [first real 32/32 AI reconstruction and two-runtime replay](docs/maintenance/2026-11-04-retention-ai.md) remains unchanged, including its original method limits.
 
 Runtime matters: the October 30 AI candidate passed 19/19 on Python 3.14, but an additional replay on Python 3.9 failed 2 checks because of empty-query parsing. Both observations and the unedited candidate remain public in the [cross-runtime failure record](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci). A passing archived observation does not establish compatibility with every supported Python version.
 

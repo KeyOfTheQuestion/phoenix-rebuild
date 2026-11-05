@@ -20,10 +20,8 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
             use_container=False, verification_timeout=90, contract_id="001"):
     if contract_id not in ("001", "002"):
         raise RuntimeError("Select contract 001 or 002")
-    if contract_id == "002" and use_container:
-        raise RuntimeError("Contract-002 generation currently uses local verification; use Docker for archived replay")
     if use_container:
-        from .container import ContainerError, evaluate_snapshot_in_container, prepare_container
+        from .container import ContainerError, RETENTION_SUPPORT, evaluate_snapshot_in_container, prepare_container
         prepare_container(verification_timeout)
     executable = shutil.which("codex")
     if executable is None:
@@ -157,9 +155,12 @@ def rebuild(attempts=2, timeout=300, model=None, use_user_config=False, predeces
             if use_container:
                 verification_start = time.monotonic()
                 try:
+                    options = {} if frozen_sources is None else {
+                        "verifier_profile": "retention-ai-v1",
+                        "support_sources": {name: frozen_sources[name] for name in RETENTION_SUPPORT}}
                     report = evaluate_snapshot_in_container(
-                        candidate.read_bytes(), verifier_source, predecessor_source=predecessor_source,
-                        timeout=verification_timeout,
+                        candidate_source, verifier_source, predecessor_source=predecessor_source,
+                        timeout=verification_timeout, **options,
                     )
                     report.update(kind="ai-rebuild", human_interventions=0)
                 except (ContainerError, OSError) as error:

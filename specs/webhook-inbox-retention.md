@@ -176,8 +176,8 @@ HTTP requests. That is fixture aging, not proof of elapsed real-world retention.
 `verify-retention --full` combines 19 baseline HTTP checks expecting schema 2
 with 13 focused checks. `rebuild --contract 002` generates an independent
 implementation and records its actual outcome against those same 32 checks.
-Reference validation remains distinct from AI generation. Generation currently
-uses local verification; frozen v2 archives support local, container and runtime
+Reference validation remains distinct from AI generation. Generation supports
+local verification and explicit Docker acceptance; frozen v2 archives support local, container and runtime
 matrix replay. Migration fixtures use a v1 predecessor; v2-to-v2 policy/data
 continuity is outside this fixture's current scope. Failed generations and
 acceptance attempts remain public rather than being relabelled as successes.
