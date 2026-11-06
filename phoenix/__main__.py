@@ -18,6 +18,12 @@ def main():
     retention.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"), help="Trusted v1 program used to create migration data through HTTP")
     retention.add_argument("--full", action="store_true", help="Compose 19 schema-v2 baseline checks with the 13 focused retention checks; no model call")
     retention.add_argument("--publish", action="store_true", help="With --full, publish a frozen contract-002 reference bundle; no model call")
+    continuity = commands.add_parser("verify-continuity", help="Check policy and data continuity between two trusted v2 programs")
+    continuity.add_argument("--candidate", required=True, help="Trusted receiving v2 implementation")
+    continuity.add_argument("--predecessor", required=True, help="Trusted v2 program that creates the handoff database")
+    continuity.add_argument("--output-dir", help="Save a separate frozen continuity bundle in a new directory")
+    handoff_replay = commands.add_parser("replay-continuity", help="Validate and replay a trusted frozen v2 continuity bundle")
+    handoff_replay.add_argument("directory")
     container = commands.add_parser("container-verify", help="Run HTTP acceptance inside an optional, restricted Docker container")
     container.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     container.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"))
@@ -42,6 +48,19 @@ def main():
     matrix.add_argument("--python", dest="interpreters", action="append", required=True, help="Installed Python executable; repeat up to four times")
     matrix.add_argument("--timeout", type=int, default=90, help="Deadline per runtime, 1..300 seconds; default 90")
     args = parser.parse_args()
+    if args.command in ("verify-continuity", "replay-continuity"):
+        from .audit import EvidenceError
+        from .continuity import verify_continuity, replay_continuity
+        try:
+            if args.command == "verify-continuity":
+                report = verify_continuity(args.candidate, args.predecessor, args.output_dir)
+            else:
+                report = replay_continuity(args.directory)
+        except (EvidenceError, OSError) as error:
+            print("Continuity verification refused: " + str(error), file=sys.stderr)
+            return 2
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0 if report["status"] == "passed" else 1
     if args.command == "replay-matrix":
         from .matrix import replay_matrix
         from .audit import EvidenceError

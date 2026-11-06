@@ -106,7 +106,15 @@ Without `--publish`, these commands only print results. `--full --publish` captu
 
 `rebuild --contract 002 --container` now preflights Docker before provider use, then runs the complete frozen AI verifier package there after generation. No archived verifier code is loaded on the host in this mode. A later container/runtime report error preserves all ten artifacts as a zero-check `verification-error` and stops without host fallback or another model call. Default acceptance remains local; completed AI archives also support local, Docker and installed-runtime matrix replay. See the [container-generation integration and verification](docs/maintenance/2026-11-05-retention-container-rebuild.md).
 
-The migration fixture requires a v1 predecessor; v2-to-v2 policy/data continuity is not yet checked. Generation failures retain complete zero-check bundles. The [first real 32/32 AI reconstruction and two-runtime replay](docs/maintenance/2026-11-04-retention-ai.md) remains unchanged, including its original method limits.
+The 32-check migration fixture still requires a v1 predecessor. A separate eight-check fixture now checks v2-to-v2 policy/data continuity; it does not change the reconstruction verdict or add an AI attempt. Generation failures retain complete zero-check bundles. The [first real 32/32 AI reconstruction and two-runtime replay](docs/maintenance/2026-11-04-retention-ai.md) remains unchanged, including its original method limits.
+
+```sh
+python3 -m phoenix verify-continuity --candidate path/to/trusted/v2.py \
+  --predecessor path/to/trusted/previous-v2.py --output-dir path/to/new-continuity-bundle
+python3 -m phoenix replay-continuity path/to/new-continuity-bundle
+```
+
+The continuity fixture starts a v2 predecessor through HTTP, then checks enabled, explicitly disabled and longer retention policies, event bodies/headers/timestamps, tokens and idempotency across handoff and restart, bounded explicit expiry and expired-key reuse. Only synthetic fixture timestamps are backdated through SQLite while stopped; this is not elapsed-time evidence. Both commands run trusted code locally and make no model call. `--output-dir` optionally saves five frozen inputs (candidate, predecessor, contract, verifier and HTTP helper), the report and manifest in a new directory, outside the AI ledger. Replay validates hashes, kind/profile and source bindings before executing temporary copies. See the [fixture, evidence and limits](docs/maintenance/2026-11-06-v2-continuity.md).
 
 Runtime matters: the October 30 AI candidate passed 19/19 on Python 3.14, but an additional replay on Python 3.9 failed 2 checks because of empty-query parsing. Both observations and the unedited candidate remain public in the [cross-runtime failure record](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci). A passing archived observation does not establish compatibility with every supported Python version.
 
@@ -149,7 +157,7 @@ See [browser test setup](docs/setup.md#notebook-browser-checks) and the [2026-10
 
 ## Help change the contract
 
-Propose an observable requirement with a concrete acceptance example using the [contract-change issue template](https://github.com/KeyOfTheQuestion/phoenix-rebuild/issues/new?template=contract-change.yml). Good next challenges: v2-to-v2 retention continuity, container acceptance during v2 generation, and bounded outbound replay with an explicit destination policy. Published results must retain failures and disclose human intervention. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/roadmap.md).
+Propose an observable requirement with a concrete acceptance example using the [contract-change issue template](https://github.com/KeyOfTheQuestion/phoenix-rebuild/issues/new?template=contract-change.yml). Good next challenges: bounded outbound delivery with an explicit destination policy and a second provider adapter. Published results must retain failures and disclose human intervention. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [roadmap](docs/roadmap.md).
 
 Built in public by [KeyOfTheQuestion](https://github.com/KeyOfTheQuestion). Inspired by specification-driven software engineering, including [StrongDM Attractor](https://github.com/strongdm/attractor). Phoenix's focus is a small, inspectable reconstruction experiment with executable data compatibility evidence.
 

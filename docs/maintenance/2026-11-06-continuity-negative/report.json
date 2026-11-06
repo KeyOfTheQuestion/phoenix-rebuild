@@ -1,0 +1,40 @@
+{
+  "started_at": "2026-11-06T03:06:50.451115+00:00",
+  "execution_runtime": {
+    "python_implementation": "CPython",
+    "python_version": "3.9.6",
+    "sqlite_version": "3.43.2"
+  },
+  "expected_total": 8,
+  "checks": [
+    {
+      "id": "V01",
+      "title": "Create, age and reopen the HTTP-written v2 predecessor fixture",
+      "passed": true,
+      "duration_ms": 528.01
+    },
+    {
+      "id": "V02",
+      "title": "Start the candidate at version 2 and preserve every named row",
+      "passed": false,
+      "error": "Candidate startup changed schema version or predecessor rows",
+      "duration_ms": 220.35
+    }
+  ],
+  "duration_seconds": 0.75,
+  "passed": 1,
+  "total": 2,
+  "status": "failed",
+  "schema_version": 1,
+  "kind": "v2-continuity-verification",
+  "contract_id": "002",
+  "contract_version": "2.0.0",
+  "verifier_profile": "v2-continuity-v1",
+  "execution": "local-subprocess",
+  "candidate_sha256": "2f0e2903409a2fc6f47fedeedd928aabd71878ff3c586c590f934d804322f6e9",
+  "predecessor_sha256": "dfa7d4030b30f2a33bacbc172459ddc265aeb25d70f92b2aeb5bab0a996a6be9",
+  "contract_sha256": "8585891ec40f537a09ee306442845532c19d22122182b21f0f6041b2288bb374",
+  "verifier_sha256": "04ea41766fa1b1339697ea7fab1a721905b1b91b1f1de98da342c43424c36c5c",
+  "shared_subject_sha256": "494d66e9c3e66b33596ebb0ba55e68d3db32347bc1e658c3bc1f0a87f3ebe0b1",
+  "fixture": "The v2 predecessor creates policies, inboxes and keyed events via HTTP. The fixture backdates only synthetic event timestamps in SQLite while stopped and observes the predecessor again before handoff."
+}

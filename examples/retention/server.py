@@ -253,8 +253,13 @@ class Handler(BaseHTTPRequestHandler):
     do_HEAD = dispatch
 
 
+class InboxServer(ThreadingHTTPServer):
+    # Admit concurrent deliveries while the accept loop schedules handler threads.
+    request_queue_size = 32
+
+
 if __name__ == "__main__":
     if not ADMIN:
         raise SystemExit("PHOENIX_ADMIN_TOKEN must be configured")
     initialize()
-    ThreadingHTTPServer(("127.0.0.1", int(os.environ.get("PORT", "8787"))), Handler).serve_forever()
+    InboxServer(("127.0.0.1", int(os.environ.get("PORT", "8787"))), Handler).serve_forever()

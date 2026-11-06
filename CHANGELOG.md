@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-06 · Separate v2-to-v2 continuity fixture
+
+- Added `verify-continuity --candidate FILE --predecessor FILE [--output-dir DIR]` and `replay-continuity DIR` with eight checks for persistent policies, event data, idempotency, restart, bounded expiry and expired-key reuse across a v2-to-v2 handoff.
+- Capture five source/contract inputs before execution. Optional bundles retain those inputs, the report and manifest; replay validates hashes, kind/profile and bindings before executing temporary copies. Failed observations remain evidence.
+- Keep these local-only observations outside the AI ledger and the existing 19/32-check rules. The 32-check rebuild still requires a v1 predecessor. Disclose synthetic fixture timestamp aging and normal local process permissions in the [method and evidence record](docs/maintenance/2026-11-06-v2-continuity.md).
+- Required regression checks exposed reference connection resets under the eight-client burst. Give both reference entrypoints a listen queue of 32, add a controlled delayed-accept regression, and preserve the original failing report and source identity.
+
 ## 2026-11-05 · Docker acceptance during v2 generation
 
 - Added `rebuild --contract 002 --container`: preflight Docker before provider use, then send the complete frozen `retention-ai-v1` package to the existing runner without loading archived verifier code on the host.

@@ -87,7 +87,15 @@ python3 -m phoenix rebuild --contract 002 --container --verification-timeout 90 
 
 `rebuild --contract 002 --container` 现在会在调用模型前预检 Docker，生成结束后在容器内运行完整冻结的 AI 验收包，不在主机加载归档验收代码。若容器运行或报告校验出错，会保留全部十项产物，以零检查的 `verification-error` 记录并停止，不回退主机，也不再次调用模型。默认仍是本地验收；已完成的 AI 归档也支持本地、Docker 和多运行时矩阵复验。详见[容器生成接入与验证](docs/maintenance/2026-11-05-retention-container-rebuild.md)。
 
-迁移测试仍要求 v1 上一实现，尚未验证 v2→v2 的策略与数据延续。生成失败会保留完整的零检查证据包。[首个真实 32/32 AI 重建与双运行时复验](docs/maintenance/2026-11-04-retention-ai.md)的历史记录及当时的方法边界保持不变。
+32 项迁移验收仍要求 v1 上一实现。新增的独立 8 项检查用于验证 v2→v2 的策略与数据延续，不改变重建验收结论，也不新增 AI 尝试。生成失败会保留完整的零检查证据包。[首个真实 32/32 AI 重建与双运行时复验](docs/maintenance/2026-11-04-retention-ai.md)的历史记录及当时的方法边界保持不变。
+
+```sh
+python3 -m phoenix verify-continuity --candidate path/to/trusted/v2.py \
+  --predecessor path/to/trusted/previous-v2.py --output-dir path/to/new-continuity-bundle
+python3 -m phoenix replay-continuity path/to/new-continuity-bundle
+```
+
+延续性测试先通过 HTTP 在 v2 上一实现中创建数据，再检查启用、明确禁用及较长保留期限的策略，切换实现和重启后的正文、请求头、时间戳、令牌及幂等状态，以及显式限量清理和过期键重用。仅在停止服务时通过 SQLite 回填合成测试事件的时间，不声称真实等待过保留期限。两个命令都在本地执行可信代码，不调用模型。可选的 `--output-dir` 会将候选、上一实现、契约、验收器及 HTTP 辅助模块这五份冻结输入，连同报告和文件清单保存到新目录，不写入 AI 记录。复验先核对文件指纹、类别／配置及源码绑定，再执行临时副本。详见[测试样本、证据与边界](docs/maintenance/2026-11-06-v2-continuity.md)。
 
 运行时会影响结果：10 月 30 日的 AI 候选在 Python 3.14 上通过 19/19，但在 Python 3.9 的补充复验中，因空查询字符串的解析差异失败了 2 项。两次实际观察及未经修改的候选源码均保留在[跨版本失败记录](docs/maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)中。一次归档通过不代表已覆盖所有受支持的 Python 版本。
 

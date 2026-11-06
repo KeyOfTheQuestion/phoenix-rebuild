@@ -29,9 +29,12 @@
    An exhaustive compatibility matrix is not claimed. The [October 30 failure](maintenance/2026-10-30-retention-container.md#cross-runtime-failure-discovered-by-ci)
    demonstrates why a 19/19 pass on Python 3.14 is insufficient to establish
    Python 3.9 compatibility. Preserve both runtime observations and candidate bytes.
-10. Add a distinct v2-to-v2 continuity fixture for existing retention policies,
-    disabled policies, event data and idempotency state. Current contract-002
-    migration acceptance deliberately starts from a v1 predecessor.
+10. [Implemented 2026-11-06] Add `verify-continuity` and `replay-continuity` for a
+    distinct eight-check v2-to-v2 fixture covering existing/disabled policies,
+    events, idempotency, restart and bounded expiry. Optional complete frozen
+    bundles remain outside the AI ledger and replay from validated temporary
+    copies. This fixture is local only; the existing 32-check reconstruction
+    still starts from a v1 predecessor ([method and evidence](maintenance/2026-11-06-v2-continuity.md)).
 11. [Done 2026-11-05] Extend the existing preflight/failure-preservation behavior
     to Docker acceptance during contract-002 generation. The adapter supplies
     the full frozen `retention-ai-v1` package, preserves failures without host

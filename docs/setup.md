@@ -131,8 +131,8 @@ Docker. Only the host CLI generates code; it receives no verifier/predecessor.
 Later container/runtime report errors preserve the complete zero-check bundle
 without host fallback or another model call. Completed AI archives support
 local, Docker and runtime-matrix replay. See the
-[container-generation controls](maintenance/2026-11-05-retention-container-rebuild.md). The fixture requires
-a v1 predecessor and does not establish v2-to-v2 policy/data continuity.
+[container-generation controls](maintenance/2026-11-05-retention-container-rebuild.md). This 32-check fixture
+still requires a v1 predecessor; use the separate continuity command below for a v2-to-v2 handoff.
 
 The distinct `retention-ai-v1` profile includes the exact generation prompt and
 all frozen dependencies. Generation failures retain zero-check bundles; local
@@ -179,6 +179,35 @@ on the host. All eight source/contract hashes, the 32-check profile and boundary
 observations must match. Docker remains optional; runtime failures exit 2 without
 host fallback. See the [archive profile](maintenance/2026-10-29-retention-archive.md)
 and [container replay checks](maintenance/2026-10-30-retention-container.md).
+
+## V2-to-v2 policy and data continuity
+
+Choose trusted candidate and predecessor files that both implement contract 002:
+
+```sh
+python3 -m phoenix verify-continuity --candidate path/to/trusted/v2.py \
+  --predecessor path/to/trusted/previous-v2.py --output-dir path/to/new-continuity-bundle
+python3 -m phoenix replay-continuity path/to/new-continuity-bundle
+```
+
+`verify-continuity` runs eight separate HTTP checks of existing policies, event
+data and idempotency across handoff, restart, explicit expiry and expired-key reuse.
+It creates enabled, explicitly disabled and longer-policy inboxes through the v2
+predecessor. Synthetic timestamps are backdated through SQLite only while stopped,
+then observed again through predecessor HTTP before handoff. This does not claim
+that real time elapsed.
+
+Omit `--output-dir` to print the report without saving a bundle. With a new output
+directory, the command saves five frozen inputs (candidate, predecessor, contract,
+continuity verifier and HTTP helper), plus `report.json` and `manifest.json`.
+Replay checks the complete file set, hashes, kind/profile and source bindings
+before loading code; it executes verified temporary copies and leaves the bundle
+unchanged. Preserve failed observations as well as passes.
+
+Both commands are local-only trusted-code execution with normal user permissions.
+They make no model calls and add no AI ledger rows. The eight checks do not replace
+or extend the existing 32-check reconstruction/migration fixture, which continues
+to require a v1 predecessor. See the [fixture, evidence and limits](maintenance/2026-11-06-v2-continuity.md).
 
 ## Publish the notebook with GitHub Pages
 

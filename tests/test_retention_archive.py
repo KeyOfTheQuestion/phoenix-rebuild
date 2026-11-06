@@ -56,7 +56,8 @@ class RetentionArchiveTests(unittest.TestCase):
         report, artifacts = verified_run(self.site, self.row["id"])
         self.assertEqual((report["contract_id"], report["contract_version"], report["kind"]),
                          ("002", "2.0.0", "retention-reference-verification"))
-        self.assertEqual((report["passed"], report["total"]), (32, 32))
+        self.assertEqual((report["passed"], report["total"]), (32, 32),
+                         [check for check in report["checks"] if not check["passed"]])
         self.assertEqual(set(artifacts), {"server.py", "verifier.py", "predecessor.py", "contract.md", "report.json",
                                          "baseline.py", "retention.py", "records.py", "audit.py"})
         self.assertIsNone(report["usage"])
@@ -67,7 +68,7 @@ class RetentionArchiveTests(unittest.TestCase):
         before = {p.name: p.read_bytes() for p in self.directory.iterdir()}
         with patch("phoenix.retention.evaluate_retention_full", side_effect=AssertionError("live code must not execute")):
             result, output, errors = self.replay()
-        self.assertEqual(result, 0, errors)
+        self.assertEqual(result, 0, errors or output)
         report = json.loads(output)
         self.assertEqual((report["passed"], report["total"]), (32, 32))
         self.assertEqual(report["replay_source"], "verified-archive-bytes")

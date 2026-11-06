@@ -25,7 +25,7 @@ This is procedural separation, not a security proof of source blindness. The CLI
 and its authentication still run on the user's machine. `--use-user-config`
 explicitly includes personal model settings and MCP configuration.
 
-Each failed generation or verification remains a separate ledger entry.
+Each failed generation or acceptance in a rebuild cycle remains a separate ledger entry.
 Acceptance failure summaries may be passed to a new attempt; no previous source
 is copied. This makes subsequent attempts feedback-assisted, not independent
 one-shot samples. Do not interpret the pass ratio as a benchmark score.
@@ -48,7 +48,7 @@ relabelled. The notebook distinguishes runtime errors and actual execution modes
 
 ## Data continuity
 
-For current runs, the verifier first starts the chosen predecessor and creates
+For current reconstruction runs, the verifier first starts the chosen predecessor and creates
 an inbox plus an event using its HTTP API. It then shuts the predecessor down,
 starts the candidate against the same SQLite file, and checks the existing event
 and its idempotency key. Restart tests stop and restart the candidate itself.
@@ -256,12 +256,50 @@ real Docker, then independently replay its disposable archive. The public ledger
 is unchanged by those controls. See the
 [integration and actual daily evidence](maintenance/2026-11-05-retention-container-rebuild.md).
 Completed AI v2 archives also support Docker and runtime-matrix replay with the same full bindings.
-The migration fixture currently requires a successful v1 predecessor; it does
-not check v2-to-v2 policy/data continuity. The contract-002 text removes its old
+The 32-check migration fixture still requires a successful v1 predecessor;
+the separate continuity fixture below checks v2-to-v2 policy/data handoff.
+The contract-002 text removes its old
 reference-only pilot label and documents AI eligibility; endpoint and schema
 requirements remain unchanged, but the exact contract hash changes. Historical
 contract snapshots and outcomes are preserved. See the
 [first real v2 AI attempt and verification](maintenance/2026-11-04-retention-ai.md).
+
+## Separate v2-to-v2 continuity observation
+
+`verify-continuity --candidate FILE --predecessor FILE` checks two trusted
+contract-002 implementations with eight distinct checks. It creates three inboxes,
+enabled/explicitly-disabled/longer retention policies and four keyed UTF-8 events
+through the v2 predecessor's HTTP API. While stopped, only synthetic event
+timestamps are backdated in SQLite. The predecessor is restarted to capture its
+logical rows and HTTP responses before handing the same database to the candidate.
+Fixture aging is disclosed; no elapsed real-world retention period is claimed.
+
+| Check | Observation |
+| --- | --- |
+| V01 | The v2 predecessor creates and reopens the complete HTTP fixture. |
+| V02 | Candidate startup reports schema 2 and preserves every inbox, event and policy row. |
+| V03 | Enabled, explicitly disabled and longer-policy responses remain unchanged. |
+| V04 | Existing bodies, headers, timestamps, hook tokens, duplicate IDs and conflict behavior survive. |
+| V05 | Candidate restart preserves rows, policies and idempotency without implicit expiry. |
+| V06 | Explicit expiry with limit 1 removes only the oldest eligible event. |
+| V07 | Disabled and longer-policy events remain protected. |
+| V08 | An expired key can create a replacement; duplicate state and policies survive restart. |
+
+Before execution, the command captures the candidate, predecessor, contract,
+continuity verifier and HTTP helper. Optional `--output-dir DIR` saves those five
+inputs, `report.json` and `manifest.json` in a new directory, preserving failures
+as well as passes. `replay-continuity DIR` checks the complete file set, every
+hash, report kind/profile and source binding before loading any archived code.
+It runs captured verified bytes in temporary copies without modifying the bundle
+or substituting the working checkout's verifier/helper. Hashes establish file
+consistency, not independent attestation or protection against malicious code.
+
+These local-only commands retain normal user permissions, make no model call
+and write no AI ledger row. Their eight-check observation is separate from the
+19/32-check reconstruction verdicts and does not establish compatibility with
+all historical v2 implementations or database states. The 32-check rebuild still
+uses a v1 predecessor. Historical archives and contract/checker bytes remain
+unchanged. See the [fixture and recorded evidence](maintenance/2026-11-06-v2-continuity.md).
 
 ## Reproduce, don't infer
 
