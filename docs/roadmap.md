@@ -19,7 +19,12 @@
 5. [Pilot 2026-10-27; composed acceptance 2026-10-28; reference archive 2026-10-29; container replay 2026-10-30; AI generation 2026-11-04] Contract 002 now has atomic migration, bounded expiry and full frozen 32-check AI reconstruction via `rebuild --contract 002`. AI archives use `retention-ai-v1`; reference rows retain their separate profile and stay outside AI metrics. Both support local, Docker and runtime-matrix replay. Default generation remains contract 001 with local acceptance; v2 generation also supports explicit Docker acceptance (2026-11-05). The first actual v2 attempt passed 32/32 on Python 3.9 and replayed on 3.9/3.14 ([evidence and limits](maintenance/2026-11-04-retention-ai.md)).
 6. [Done in initial release] Exercise continuity between two different successful AI rebuilds (use `rebuild --predecessor docs/evidence/RUN/server.py`).
 7. Add another provider adapter with the same evidence format.
-8. Add reproducible, bounded outbound delivery before considering webhook replay.
+8. [Loopback pilot 2026-11-07] `deliver-event` now reads one stored event and
+   posts its original bytes to an explicitly selected IPv4 loopback receiver,
+   with a worker-wide deadline, response cap, selected headers and truthful
+   uncertain outcomes ([method and checks](maintenance/2026-11-07-loopback-delivery.md)).
+   Delivery to other hosts, a destination policy and durable outbox remain
+   follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix
    implemented 2026-11-03] New acceptance/replay results and evidence dialogs record actual
    Python/SQLite runtime identity ([verification](maintenance/2026-11-02-runtime-evidence.md)).

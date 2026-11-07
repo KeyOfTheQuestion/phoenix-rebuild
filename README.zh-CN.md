@@ -109,6 +109,22 @@ python3 -m phoenix replay-matrix 记录编号 --python python3.9 --python python
 
 命令只审计一次，再把同一份已捕获字节交给各运行时。可明确指定 1..4 个解释器，每个限时 1..300 秒；超时会清理本次进程组。输出各自的实际版本和新验收报告，保留失败，不安装 Python、不调用模型，也不新增公开尝试记录。退出码 0 表示全部运行通过，1 表示验收失败，2 表示拒绝执行或运行时／报告错误；解释器缺失时不自动替换。这仍是本地执行可信代码，不是恶意代码沙箱，也不代表完整版本覆盖。详见[矩阵复验及反向验证](docs/maintenance/2026-11-03-runtime-matrix.md)。
 
+
+## 本机 Webhook 投递试验
+
+读取已有事件，并将原始 UTF-8 正文发送给明确指定的本机 HTTP 接收器：
+
+```sh
+python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
+  --event-id EVENT_ID --destination http://127.0.0.1:9000/webhook --timeout 3
+```
+
+通过 `PHOENIX_ADMIN_TOKEN` 环境变量提供收件服务的管理令牌。客户端校验
+正文指纹、转发指定事件头，每次最多尝试一次 POST，并限制整个工作进程的
+耗时和响应读取量。POST 开始后无法确认响应时，回执为 `delivery-unknown`。
+当前试验接受 IPv4 回环 HTTP 地址。详见[使用方法](docs/delivery.md)及
+[独立接收器验证](docs/maintenance/2026-11-07-loopback-delivery.md)。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

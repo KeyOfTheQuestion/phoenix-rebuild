@@ -209,6 +209,20 @@ They make no model calls and add no AI ledger rows. The eight checks do not repl
 or extend the existing 32-check reconstruction/migration fixture, which continues
 to require a v1 predecessor. See the [fixture, evidence and limits](maintenance/2026-11-06-v2-continuity.md).
 
+
+## Explicit loopback delivery
+
+Run `python3 -m phoenix deliver-event --source http://127.0.0.1:8787 --event-id
+EVENT_ID --destination http://127.0.0.1:9000/webhook --timeout 3` after starting
+both local services. Set `PHOENIX_ADMIN_TOKEN` to the inbox's existing admin
+token. The token travels to the worker through stdin and is used only for the
+source GET. Exit 0 records a 2xx receiver response, 1 records another receiver
+status, and 2 records refusal, source failure or an uncertain delivery.
+
+The overall worker deadline covers startup and both HTTP operations. A POST
+that has started may have reached the receiver even if the deadline expires.
+The receipt preserves that uncertainty. See [bounds and receipt semantics](delivery.md).
+
 ## Publish the notebook with GitHub Pages
 
 The included Pages workflow publishes `docs/` on pushes to `main`. Enable Pages

@@ -130,6 +130,7 @@ The command audits once and supplies identical captured bytes to each runtime. I
 
 ## Run the webhook inbox
 
+
 ```sh
 export PHOENIX_ADMIN_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 python3 examples/reference/server.py
@@ -147,7 +148,25 @@ curl -s "http://127.0.0.1:8787/hooks/INBOX_ID/INBOX_TOKEN" \
   -H 'X-Webhook-Id: example-001' -d '{"event":"hello.phoenix"}'
 ```
 
-This is a local development service. It does not currently deliver outbound webhooks, host production traffic, or implement tenant-level authorization.
+This is a local development service with a separate loopback delivery client.
+Outbound delivery to other hosts and a durable outbox remain future work.
+
+## Deliver an event locally
+
+The [loopback delivery pilot](docs/delivery.md) can read a stored event and send
+its exact UTF-8 body to an explicit local HTTP receiver:
+
+```sh
+python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
+  --event-id EVENT_ID --destination http://127.0.0.1:9000/webhook --timeout 3
+```
+
+Use the inbox's `PHOENIX_ADMIN_TOKEN` environment value. The client validates
+the source digest, forwards selected event headers, makes at most one POST and
+enforces a worker-wide deadline and response limit. A missing response after
+POST starts produces `delivery-unknown`. The pilot accepts IPv4 loopback HTTP
+addresses and has [independent receiver checks](docs/maintenance/2026-11-07-loopback-delivery.md).
+
 
 ## Check the notebook in a browser
 

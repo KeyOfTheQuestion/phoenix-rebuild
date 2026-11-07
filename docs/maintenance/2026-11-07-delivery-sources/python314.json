@@ -1,0 +1,99 @@
+{
+  "checks": [
+    {
+      "duration_ms": 137.78,
+      "id": "D01",
+      "passed": true,
+      "title": "delivers the actual inbox body and selected headers"
+    },
+    {
+      "duration_ms": 121.9,
+      "id": "D02",
+      "passed": true,
+      "title": "redirects are reported without following them"
+    },
+    {
+      "duration_ms": 61.88,
+      "id": "D03",
+      "passed": true,
+      "title": "receiver failure is one attempt"
+    },
+    {
+      "duration_ms": 359.23,
+      "id": "D04",
+      "passed": true,
+      "title": "invalid source events never start delivery"
+    },
+    {
+      "duration_ms": 25.33,
+      "id": "D05",
+      "passed": true,
+      "title": "invalid addresses credentials and deadlines refuse before network"
+    },
+    {
+      "duration_ms": 74.5,
+      "id": "D06",
+      "passed": true,
+      "title": "source credentials and unselected headers are not forwarded"
+    },
+    {
+      "duration_ms": 822.55,
+      "id": "D07",
+      "passed": true,
+      "title": "deadline after post keeps the outcome unknown"
+    },
+    {
+      "duration_ms": 422.37,
+      "id": "D08",
+      "passed": true,
+      "title": "slow drip source is bounded by the overall deadline"
+    },
+    {
+      "duration_ms": 106.91,
+      "id": "D09",
+      "passed": true,
+      "title": "receiver response capture is capped"
+    },
+    {
+      "duration_ms": 127.9,
+      "id": "D10",
+      "passed": true,
+      "title": "cli uses the token environment and truthful exit codes"
+    },
+    {
+      "duration_ms": 112.12,
+      "id": "D11",
+      "passed": true,
+      "title": "empty and maximum utf8 bodies arrive exactly"
+    },
+    {
+      "duration_ms": 25.25,
+      "id": "D12",
+      "passed": true,
+      "title": "inconsistent or partial worker messages keep receipts truthful"
+    }
+  ],
+  "execution_runtime": {
+    "python_implementation": "CPython",
+    "python_version": "3.14.6",
+    "sqlite_version": "3.53.3"
+  },
+  "inbox_ai_run_id": "20261107T023127Z-4a21fe",
+  "kind": "loopback-delivery-verification",
+  "passed": 12,
+  "public_ledger_changed": false,
+  "schema_version": 1,
+  "scope": "current checkout; source HTTP read, loopback POST and worker protocol fault injection; synthetic data",
+  "source_sha256": {
+    "checks.py": "3f269186b5ccf8a3d4dcbf8fd180ef7d2ce98b6182549753f89376b04c889750",
+    "cli.py": "9c77f75cd21b7eca66d2367858d006f07bf3d8714bd10256e6dc2264dd7906b4",
+    "delivery.py": "d58f70de9f1a2a3a67ea4b00195a02a1f7e33d222c76a6ccfff3fc2bb727e5df",
+    "http_helper.py": "494d66e9c3e66b33596ebb0ba55e68d3db32347bc1e658c3bc1f0a87f3ebe0b1",
+    "inbox.py": "50a2283df3c1e7eb6bd1532aa726c28b69d9ce8dde5ff3582f5568110f7f43b7",
+    "records.py": "ffd8cb2e5d8542a461a3cd80f2b0f77f1c890ee5745b05e4f6e016d00fa7740b",
+    "runner.py": "b32c5fbd1806e773997fcf28ca90ec9500a32de440569cf0e65aaff6b7cabab2"
+  },
+  "started_at": "2026-11-07T02:43:21.591155+00:00",
+  "status": "passed",
+  "total": 12
+}

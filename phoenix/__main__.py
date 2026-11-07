@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import sys
 
 from .records import ROOT, publish
@@ -24,6 +25,11 @@ def main():
     continuity.add_argument("--output-dir", help="Save a separate frozen continuity bundle in a new directory")
     handoff_replay = commands.add_parser("replay-continuity", help="Validate and replay a trusted frozen v2 continuity bundle")
     handoff_replay.add_argument("directory")
+    delivery = commands.add_parser("deliver-event", help="Deliver one event to an explicit IPv4 loopback HTTP receiver")
+    delivery.add_argument("--source", required=True, help="Inbox origin http://127.0.0.1:PORT")
+    delivery.add_argument("--event-id", required=True)
+    delivery.add_argument("--destination", required=True, help="Explicit http://127.0.0.1:PORT/path")
+    delivery.add_argument("--timeout", type=float, default=3, help="Overall worker deadline, 0.1..10 seconds")
     container = commands.add_parser("container-verify", help="Run HTTP acceptance inside an optional, restricted Docker container")
     container.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     container.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"))
@@ -48,6 +54,20 @@ def main():
     matrix.add_argument("--python", dest="interpreters", action="append", required=True, help="Installed Python executable; repeat up to four times")
     matrix.add_argument("--timeout", type=int, default=90, help="Deadline per runtime, 1..300 seconds; default 90")
     args = parser.parse_args()
+    if args.command == "deliver-event":
+        from .delivery import DeliveryError, deliver_event
+        try:
+            report = deliver_event(args.source, args.event_id, args.destination,
+                                   os.environ.get("PHOENIX_ADMIN_TOKEN", ""), args.timeout)
+        except (DeliveryError, OSError) as error:
+            print("Delivery refused: " + str(error), file=sys.stderr)
+            return 2
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        if report["status"] == "delivered":
+            return 0
+        if report["status"] == "rejected":
+            return 1
+        return 2
     if args.command in ("verify-continuity", "replay-continuity"):
         from .audit import EvidenceError
         from .continuity import verify_continuity, replay_continuity

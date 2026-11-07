@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-07 · Bounded loopback delivery pilot
+
+- Added `deliver-event`, reading one stored event and posting its original bytes to an explicit IPv4 loopback HTTP receiver. Enforce source/body/header limits, a worker-wide deadline, a bounded receiver response and one POST attempt.
+- Preserve uncertain outcomes after POST starts, validate worker receipts and avoid forwarding source credentials. Add independent HTTP receivers, slow-stream and partial-result regressions, plus actual AI inbox delivery checks in existing CI/Pages.
+- Today's reconstruction, continuity checks and local delivery observations are recorded in the [maintenance notebook](docs/maintenance/2026-11-07-loopback-delivery.md). Delivery to other hosts and durable outbox semantics remain follow-ups.
+
 ## 2026-11-06 · Separate v2-to-v2 continuity fixture
 
 - Added `verify-continuity --candidate FILE --predecessor FILE [--output-dir DIR]` and `replay-continuity DIR` with eight checks for persistent policies, event data, idempotency, restart, bounded expiry and expired-key reuse across a v2-to-v2 handoff.

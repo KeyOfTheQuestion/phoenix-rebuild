@@ -301,6 +301,23 @@ all historical v2 implementations or database states. The 32-check rebuild still
 uses a v1 predecessor. Historical archives and contract/checker bytes remain
 unchanged. See the [fixture and recorded evidence](maintenance/2026-11-06-v2-continuity.md).
 
+
+## Loopback delivery observation
+
+`deliver-event` is a separate client operation using an explicit source origin,
+event ID and loopback receiver. It validates source bytes and digest, copies
+three selected event headers and attempts one POST. A captured standalone worker
+runs with an overall 0.1..10-second deadline. Responses are inspected up to 8192
+bytes plus one lookahead byte, and their contents are discarded. The phase
+marker is flushed before the attempt so partial results retain uncertainty.
+
+`tests/delivery_smoke.py` uses an archived AI inbox and independent synthetic
+receivers. It reports measured runtime and checkout source hashes. A separate
+control injects malformed worker results. These observations use no model and
+add no AI ledger entry. The [pilot specification](delivery.md) defines the local
+address policy and bounded receipt semantics. [Dated observations](maintenance/2026-11-07-loopback-delivery.md)
+retain the exact sources used for checkout verification.
+
 ## Reproduce, don't infer
 
 `replay-matrix RUN_ID --python PYTHON_A --python PYTHON_B` repeats the same
