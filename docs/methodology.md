@@ -109,6 +109,15 @@ or generation workflow was built without human input.
 
 ## Known limits
 
+The optional delivery journal is a local client observation, separate from
+backend reconstruction and the public ledger. It commits an unconfirmed row
+before network use and later saves a filtered receipt. An interrupted or
+unpersisted final outcome stays unconfirmed; it is never converted to failure
+or automatically resent. The extended delivery smoke includes actual SQLite
+and process-interruption checks, plus the existing worker-protocol fault
+injection. These add no model calls or reconstruction checks. See the
+[journal record and limitations](maintenance/2026-11-08-delivery-journal.md).
+
 - Default generation and replay without `--container` execute code in a local
   child process with a minimal environment, retaining the user's operating-system
   permissions and network access.

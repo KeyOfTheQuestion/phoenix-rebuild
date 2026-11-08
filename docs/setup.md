@@ -14,6 +14,14 @@ The notebook runs at http://127.0.0.1:8788. The reference service defaults to
 http://127.0.0.1:8787 and needs a nonempty `PHOENIX_ADMIN_TOKEN`. Set
 `PHOENIX_DB_PATH` and `PORT` to change its data file and local port.
 
+## Local delivery history
+
+Optional local delivery history uses no extra dependency: add `--journal
+./deliveries.sqlite3` to `deliver-event`, then read it with `python3 -m phoenix
+delivery-history --journal ./deliveries.sqlite3`. The directory must exist and
+support hard links. Unconfirmed records are never retried by history. See the
+[journal states and failure semantics](delivery.md#optional-local-attempt-journal).
+
 ## AI generation
 
 Install the official [Codex CLI](https://developers.openai.com/codex/cli/),

@@ -65,6 +65,8 @@ class Handler(BaseHTTPRequestHandler):
         state = self.server.state
         body = self.rfile.read(int(self.headers.get("Content-Length", 0)))
         state["requests"].append({"method": "POST", "headers": dict(self.headers), "path": self.path, "body": body})
+        if state.get("on_post"):
+            state["on_post"]()
         time.sleep(state["delay"])
         try:
             self.send_response(state["status"])
@@ -77,7 +79,7 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
 
-class DeliveryTests(unittest.TestCase):
+class DeliveryFixture:
     backend = ROOT / "examples/reference/server.py"
 
     def setUp(self):
@@ -108,6 +110,8 @@ class DeliveryTests(unittest.TestCase):
         parameters.update(kwargs)
         return deliver_event(**parameters)
 
+
+class DeliveryTests(DeliveryFixture, unittest.TestCase):
     def test_D01_delivers_the_actual_inbox_body_and_selected_headers(self):
         with tempfile.TemporaryDirectory() as temporary:
             subject = Subject(self.backend, temporary)

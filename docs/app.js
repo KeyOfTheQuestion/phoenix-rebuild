@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-11-07 进展：新增本机投递试验，使用今天的真实 AI 收件服务通过 12 项正文、凭据、超时及回执检查。今天重建首次通过 32/32，昨日到今日的交接通过 8/8。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-07-loopback-delivery.md">查看投递试验与重建证据 ↗</a>',
+  maintenanceNote:'2026-11-08 进展：新增本地投递记录，在联网前提交，进程中断后保留未确认状态，查询不会重发。21 项投递与日志检查使用今天的真实 AI 收件服务；今天重建首次通过 32/32，昨日到今日的交接通过 8/8。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-08-delivery-journal.md">查看日志边界与重建证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',

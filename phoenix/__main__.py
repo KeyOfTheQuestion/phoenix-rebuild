@@ -30,6 +30,10 @@ def main():
     delivery.add_argument("--event-id", required=True)
     delivery.add_argument("--destination", required=True, help="Explicit http://127.0.0.1:PORT/path")
     delivery.add_argument("--timeout", type=float, default=3, help="Overall worker deadline, 0.1..10 seconds")
+    delivery.add_argument("--journal", help="Optional local SQLite attempt history; committed before network activity")
+    history = commands.add_parser("delivery-history", help="Read local delivery attempts without retrying them")
+    history.add_argument("--journal", required=True)
+    history.add_argument("--limit", type=int, default=20, help="Newest 1..100 attempts, default 20")
     container = commands.add_parser("container-verify", help="Run HTTP acceptance inside an optional, restricted Docker container")
     container.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     container.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"))
@@ -56,18 +60,30 @@ def main():
     args = parser.parse_args()
     if args.command == "deliver-event":
         from .delivery import DeliveryError, deliver_event
+        from .delivery_journal import JournalError
         try:
             report = deliver_event(args.source, args.event_id, args.destination,
-                                   os.environ.get("PHOENIX_ADMIN_TOKEN", ""), args.timeout)
-        except (DeliveryError, OSError) as error:
+                                   os.environ.get("PHOENIX_ADMIN_TOKEN", ""), args.timeout, journal=args.journal)
+        except (DeliveryError, JournalError, OSError) as error:
             print("Delivery refused: " + str(error), file=sys.stderr)
             return 2
         print(json.dumps(report, indent=2, ensure_ascii=False))
+        if report.get("journal_saved") is False:
+            return 2
         if report["status"] == "delivered":
             return 0
         if report["status"] == "rejected":
             return 1
         return 2
+    if args.command == "delivery-history":
+        from .delivery_journal import JournalError, delivery_history
+        try:
+            attempts = delivery_history(args.journal, args.limit)
+        except JournalError as error:
+            print("Delivery history refused: " + str(error), file=sys.stderr)
+            return 2
+        print(json.dumps({"kind": "local-delivery-history", "attempts": attempts}, indent=2, ensure_ascii=False))
+        return 0
     if args.command in ("verify-continuity", "replay-continuity"):
         from .audit import EvidenceError
         from .continuity import verify_continuity, replay_continuity

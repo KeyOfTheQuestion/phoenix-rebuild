@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-08 · Persistent local delivery history
+
+- Added optional `deliver-event --journal FILE` and read-only `delivery-history`. Commit an unconfirmed attempt before network activity, then save a redacted final receipt. An interruption never authorizes a resend; final-storage failure preserves the actual HTTP outcome with an explicit flag and exit code 2.
+- Publish initialized databases atomically for concurrent first use. Validate raw SQLite identity and rollback mode before opening existing files, preserving unrelated recovery files and refusing WAL without creating sidecars.
+- Expanded delivery checks from 12 to 21, including real process interruption, concurrent clients and a locked final commit. Keep historical evidence unchanged; [today's record](docs/maintenance/2026-11-08-delivery-journal.md) separates local journal observations from actual AI reconstruction.
+
 ## 2026-11-07 · Bounded loopback delivery pilot
 
 - Added `deliver-event`, reading one stored event and posting its original bytes to an explicit IPv4 loopback HTTP receiver. Enforce source/body/header limits, a worker-wide deadline, a bounded receiver response and one POST attempt.

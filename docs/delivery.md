@@ -70,3 +70,61 @@ and hashes of the current worker, HTTP helper, inbox, checks, runner, CLI and
 record support. CI and Pages run it without model credentials. Historical
 checkout observations can be reproduced from their commit and source snapshots.
 See the [first observations](maintenance/2026-11-07-loopback-delivery.md).
+
+## Optional local attempt journal
+
+Use a new local file to keep an attempt even if the client is interrupted:
+
+```sh
+python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
+  --event-id EVENT_ID --destination http://127.0.0.1:9000/webhook \
+  --journal ./deliveries.sqlite3
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --limit 20
+```
+
+The parent commits an `unconfirmed` row before starting the network worker.
+The row identifies this invocation, event, UTC start and worker hash, with
+SHA-256 fingerprints of the source and destination URL strings. It stores no
+URLs, tokens, request bodies or receiver response contents. Fingerprints are
+comparison values, not encryption of guessable URLs. Files remain local and are
+ignored by Git; they are never uploaded to the AI ledger automatically.
+
+After the worker finishes, a second transaction stores a filtered receipt and
+the row becomes `finished`. Its receipt can still say `delivery-unknown`.
+Every journaled stdout receipt includes `journal_attempt_id` and `journal_saved`.
+If final persistence fails, the observed HTTP result stays in stdout with
+`journal_saved: false`, `journal_error: final-receipt-not-saved` and CLI exit 2.
+That storage failure does not mean the receiver missed the event.
+
+| Journal state | What is known |
+| --- | --- |
+| `unconfirmed`, receipt `null` | This invocation was recorded; the client may still be running or may have stopped before or after sending. |
+| `finished` | A final client receipt was persisted; inspect its status and HTTP outcome. |
+
+An interruption can leave a row unconfirmed even after a receiver accepted the
+POST. History neither labels it failed nor retries it. Another explicit
+`deliver-event` invocation creates another attempt and may deliver a duplicate.
+This log has no queue, automatic recovery/resend or exactly-once guarantee.
+
+The journal uses SQLite rollback mode with `synchronous=FULL` and a one-second
+lock wait per connection. Journal setup and final persistence are separate from
+the existing worker-wide network deadline. A new file has mode 0600 and is
+initialized privately before exclusive hard-link publication; its directory must
+already exist on a filesystem supporting same-directory hard links. Concurrent
+first use cannot observe an empty published database. Existing file permissions
+are not changed. This does not promise recovery from every OS/storage failure.
+
+The client checks the raw SQLite identity, version and rollback-mode header
+before opening an existing file with SQLite. Unrelated databases and WAL-mode
+files are refused before HTTP use, avoiding recovery writes or WAL sidecar
+creation during refusal. Unsupported, locked or unavailable journals prevent
+the invocation from contacting either service. This concerns trusted local
+files; it is not protection against adversarial path replacement.
+
+History opens a supported journal read-only, returns the newest 1..100 attempts
+(default 20), and never creates a missing file or contacts services. The journal
+has no automatic deletion or size cap; manage its storage locally. The
+[journal observations](maintenance/2026-11-08-delivery-journal.md) include actual
+process interruption, competing clients, a failed final commit, unrelated hot
+rollback journals and WAL refusal. The expanded smoke now records 21 checks;
+the earlier 12-check reports retain their original sources and outcomes.

@@ -1,0 +1,123 @@
+"""Local attempt history. Unconfirmed records never authorize another POST."""
+from contextlib import contextmanager
+import json
+import os
+from pathlib import Path
+import sqlite3
+import tempfile
+import uuid
+
+
+APPLICATION_ID = 0x50484A31
+RECEIPT_FIELDS = {
+    "schema_version", "kind", "event_id", "started_at", "duration_seconds", "timeout_seconds",
+    "worker_sha256", "status", "attempts", "http_status", "error", "body_sha256", "request_bytes",
+    "response_bytes_observed", "response_truncated",
+}
+
+
+class JournalError(RuntimeError):
+    pass
+
+
+def initialize(path):
+    descriptor, name = tempfile.mkstemp(prefix=".phoenix-journal-", dir=str(path.parent))
+    os.close(descriptor)
+    temporary = Path(name)
+    connection = None
+    try:
+        connection = sqlite3.connect(str(temporary), timeout=1)
+        connection.execute("PRAGMA synchronous=FULL")
+        with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute("CREATE TABLE delivery_attempts (id TEXT PRIMARY KEY, started_at TEXT NOT NULL, "
+                               "event_id TEXT NOT NULL, source_sha256 TEXT NOT NULL, destination_sha256 TEXT NOT NULL, "
+                               "worker_sha256 TEXT NOT NULL, receipt_json TEXT)")
+            connection.execute("PRAGMA application_id=%s" % APPLICATION_ID)
+            connection.execute("PRAGMA user_version=1")
+        connection.close()
+        connection = None
+        # Publish only a complete database. Competing creators never replace it.
+        try:
+            os.link(str(temporary), str(path))
+        except FileExistsError:
+            pass
+    finally:
+        if connection is not None:
+            connection.close()
+        temporary.unlink()
+
+
+def check_header(path):
+    if not path.is_file():
+        raise JournalError("A regular Phoenix delivery journal is required")
+    with path.open("rb") as handle:
+        header = handle.read(100)
+    # Check identity before SQLite can recover an unrelated hot journal. Refuse
+    # WAL before even a read-only SQLite open can create -wal/-shm sidecars.
+    if len(header) != 100 or header[:16] != b"SQLite format 3\x00" \
+            or int.from_bytes(header[68:72], "big") != APPLICATION_ID \
+            or int.from_bytes(header[60:64], "big") != 1:
+        raise JournalError("Not a supported Phoenix delivery journal")
+    if header[18:20] != b"\x01\x01":
+        raise JournalError("Delivery journal requires SQLite rollback mode")
+
+
+@contextmanager
+def database(path, create=False, readonly=False):
+    connection = None
+    try:
+        path = Path(path).absolute()
+        if create and not path.exists():
+            initialize(path)
+        check_header(path)
+        uri = path.as_uri() + ("?mode=ro" if readonly else "?mode=rw")
+        connection = sqlite3.connect(uri, uri=True, timeout=1)
+        connection.row_factory = sqlite3.Row
+        if not readonly:
+            connection.execute("PRAGMA synchronous=FULL")
+        if connection.execute("PRAGMA application_id").fetchone()[0] != APPLICATION_ID \
+                or connection.execute("PRAGMA user_version").fetchone()[0] != 1:
+            raise JournalError("Not a supported Phoenix delivery journal")
+        columns = [row[1] for row in connection.execute("PRAGMA table_info(delivery_attempts)")]
+        if columns != ["id", "started_at", "event_id", "source_sha256", "destination_sha256", "worker_sha256", "receipt_json"]:
+            raise JournalError("Invalid delivery journal schema")
+        yield connection
+    except (OSError, sqlite3.Error, ValueError, TypeError) as error:
+        raise JournalError("Delivery journal unavailable: " + type(error).__name__) from error
+    finally:
+        if connection is not None:
+            connection.close()
+
+
+def start_attempt(path, metadata):
+    identifier = uuid.uuid4().hex
+    with database(path, create=True) as connection, connection:
+        connection.execute("INSERT INTO delivery_attempts VALUES (?, ?, ?, ?, ?, ?, NULL)",
+                           (identifier, metadata["started_at"], metadata["event_id"], metadata["source_sha256"],
+                            metadata["destination_sha256"], metadata["worker_sha256"]))
+    return identifier
+
+
+def finish_attempt(path, identifier, receipt):
+    filtered = {key: value for key, value in receipt.items() if key in RECEIPT_FIELDS}
+    with database(path) as connection, connection:
+        updated = connection.execute("UPDATE delivery_attempts SET receipt_json=? WHERE id=? AND receipt_json IS NULL",
+                                     (json.dumps(filtered, ensure_ascii=True, sort_keys=True), identifier))
+        if updated.rowcount != 1:
+            raise JournalError("Attempt missing or already finished")
+
+
+def delivery_history(path, limit=20):
+    if type(limit) is not int or not 1 <= limit <= 100:
+        raise JournalError("History limit must be an integer from 1 to 100")
+    with database(path, readonly=True) as connection:
+        rows = connection.execute("SELECT * FROM delivery_attempts ORDER BY started_at DESC, id DESC LIMIT ?", (limit,))
+        result = []
+        for row in rows:
+            item = dict(row)
+            raw = item.pop("receipt_json")
+            item.update(state="finished" if raw is not None else "unconfirmed",
+                        receipt=json.loads(raw) if raw is not None else None)
+            result.append(item)
+        return result

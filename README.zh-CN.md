@@ -125,6 +125,14 @@ python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
 当前试验接受 IPv4 回环 HTTP 地址。详见[使用方法](docs/delivery.md)及
 [独立接收器验证](docs/maintenance/2026-11-07-loopback-delivery.md)。
 
+加上 `--journal ./deliveries.sqlite3`，可在联网前保存本次调用；使用
+`python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --limit 20`
+查看历史。中断记录保留为 `unconfirmed`，查询不会重新发送。日志只保存事件
+ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是投递记录，持久队列
+仍待后续实现；详见 [21 项投递与日志检查](docs/maintenance/2026-11-08-delivery-journal.md)。
+若最终写入失败，终端回执保留 HTTP 结果，并返回 `journal_saved: false` 和退出码 2；
+这不代表接收器未收到事件。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

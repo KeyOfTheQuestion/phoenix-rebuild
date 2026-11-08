@@ -23,7 +23,10 @@
    posts its original bytes to an explicitly selected IPv4 loopback receiver,
    with a worker-wide deadline, response cap, selected headers and truthful
    uncertain outcomes ([method and checks](maintenance/2026-11-07-loopback-delivery.md)).
-   Delivery to other hosts, a destination policy and durable outbox remain
+   [Local attempt journal 2026-11-08](maintenance/2026-11-08-delivery-journal.md)
+   now commits an unconfirmed record before network use and retains filtered
+   final receipts, without recovery resends. Delivery to other hosts, a
+   destination policy and durable outbox remain
    follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix
    implemented 2026-11-03] New acceptance/replay results and evidence dialogs record actual

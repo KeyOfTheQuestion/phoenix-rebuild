@@ -116,7 +116,7 @@ def worker(payload):
     return receipt
 
 
-def deliver_event(source, event_id, destination, admin_token, timeout=3):
+def deliver_event(source, event_id, destination, admin_token, timeout=3, journal=None):
     """Read one event, post it at most once, and enforce a worker-wide deadline."""
     endpoint(source, source=True)
     endpoint(destination)
@@ -132,6 +132,17 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3):
     source_bytes = Path(__file__).read_bytes()
     payload = {"source": source, "event_id": event_id, "destination": destination,
                "token": admin_token, "timeout": timeout}
+    journal_id = None
+    if journal is not None:
+        from .delivery_journal import start_attempt
+        journal_id = start_attempt(journal, {
+            "started_at": timestamp, "event_id": event_id,
+            "source_sha256": hashlib.sha256(source.encode("ascii")).hexdigest(),
+            "destination_sha256": hashlib.sha256(destination.encode("ascii")).hexdigest(),
+            "worker_sha256": hashlib.sha256(source_bytes).hexdigest(),
+        })
+    # Journal setup has its own bounded lock wait, outside the network deadline.
+    started = time.monotonic()
     timed_out = False
     with tempfile.TemporaryDirectory(prefix="phoenix-delivery-") as temporary:
         directory = Path(temporary)
@@ -175,6 +186,15 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3):
     result.update(schema_version=1, kind="loopback-delivery", event_id=event_id,
                   started_at=timestamp, duration_seconds=round(time.monotonic() - started, 3),
                   timeout_seconds=timeout, worker_sha256=hashlib.sha256(source_bytes).hexdigest())
+    if journal_id is not None:
+        from .delivery_journal import JournalError, finish_attempt
+        result.update(journal_attempt_id=journal_id, journal_saved=False)
+        try:
+            finish_attempt(journal, journal_id, result)
+        except JournalError:
+            result["journal_error"] = "final-receipt-not-saved"
+        else:
+            result["journal_saved"] = True
     return result
 
 

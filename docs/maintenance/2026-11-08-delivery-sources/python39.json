@@ -1,0 +1,155 @@
+{
+  "checks": [
+    {
+      "duration_ms": 357.18,
+      "id": "D01",
+      "passed": true,
+      "title": "delivers the actual inbox body and selected headers"
+    },
+    {
+      "duration_ms": 319.48,
+      "id": "D02",
+      "passed": true,
+      "title": "redirects are reported without following them"
+    },
+    {
+      "duration_ms": 163.1,
+      "id": "D03",
+      "passed": true,
+      "title": "receiver failure is one attempt"
+    },
+    {
+      "duration_ms": 1226.15,
+      "id": "D04",
+      "passed": true,
+      "title": "invalid source events never start delivery"
+    },
+    {
+      "duration_ms": 25.22,
+      "id": "D05",
+      "passed": true,
+      "title": "invalid addresses credentials and deadlines refuse before network"
+    },
+    {
+      "duration_ms": 185.85,
+      "id": "D06",
+      "passed": true,
+      "title": "source credentials and unselected headers are not forwarded"
+    },
+    {
+      "duration_ms": 814.52,
+      "id": "D07",
+      "passed": true,
+      "title": "deadline after post keeps the outcome unknown"
+    },
+    {
+      "duration_ms": 412.26,
+      "id": "D08",
+      "passed": true,
+      "title": "slow drip source is bounded by the overall deadline"
+    },
+    {
+      "duration_ms": 211.22,
+      "id": "D09",
+      "passed": true,
+      "title": "receiver response capture is capped"
+    },
+    {
+      "duration_ms": 337.92,
+      "id": "D10",
+      "passed": true,
+      "title": "cli uses the token environment and truthful exit codes"
+    },
+    {
+      "duration_ms": 321.43,
+      "id": "D11",
+      "passed": true,
+      "title": "empty and maximum utf8 bodies arrive exactly"
+    },
+    {
+      "duration_ms": 24.02,
+      "id": "D12",
+      "passed": true,
+      "title": "inconsistent or partial worker messages keep receipts truthful"
+    },
+    {
+      "duration_ms": 499.9,
+      "id": "J01",
+      "passed": true,
+      "title": "final receipts are private redacted and persistent"
+    },
+    {
+      "duration_ms": 23.85,
+      "id": "J02",
+      "passed": true,
+      "title": "unavailable or unrelated journal refuses before http"
+    },
+    {
+      "duration_ms": 366.13,
+      "id": "J03",
+      "passed": true,
+      "title": "history is bounded read only and never delivers"
+    },
+    {
+      "duration_ms": 234.56,
+      "id": "J04",
+      "passed": true,
+      "title": "killed client retains unconfirmed attempt without retry"
+    },
+    {
+      "duration_ms": 535.87,
+      "id": "J05",
+      "passed": true,
+      "title": "concurrent clients retain distinct attempts"
+    },
+    {
+      "duration_ms": 1279.6,
+      "id": "J06",
+      "passed": true,
+      "title": "failed final commit keeps http outcome and unconfirmed row"
+    },
+    {
+      "duration_ms": 384.77,
+      "id": "J07",
+      "passed": true,
+      "title": "simultaneous first use publishes only initialized database"
+    },
+    {
+      "duration_ms": 61.4,
+      "id": "J08",
+      "passed": true,
+      "title": "refusing unrelated hot database preserves recovery files"
+    },
+    {
+      "duration_ms": 168.78,
+      "id": "J09",
+      "passed": true,
+      "title": "wal history refuses without creating sidecars"
+    }
+  ],
+  "execution_runtime": {
+    "python_implementation": "CPython",
+    "python_version": "3.9.6",
+    "sqlite_version": "3.43.2"
+  },
+  "inbox_ai_run_id": "20261108T023025Z-c3520d",
+  "kind": "loopback-delivery-verification",
+  "passed": 21,
+  "public_ledger_changed": false,
+  "schema_version": 1,
+  "scope": "current checkout; source HTTP, loopback POST, worker protocol faults and local SQLite journal; synthetic data",
+  "source_sha256": {
+    "checks.py": "7fbed4f718b79c4a795eaccc3191a622b67fb1f93e6fa471a503f432b019e903",
+    "cli.py": "e7cbb9a0c314f0044be46809ae09e08f17daabe6029feebef42cc9e32cf8b8e8",
+    "delivery.py": "3608f4c9267979ad21ceaef74c95aa566e09db2169ee36d645892b11e3f7a6e1",
+    "http_helper.py": "494d66e9c3e66b33596ebb0ba55e68d3db32347bc1e658c3bc1f0a87f3ebe0b1",
+    "inbox.py": "7129b9e37ce17405ad9c4c8f3ab2c3362c2af56cf054b6372c31d55efa1f264f",
+    "journal.py": "66a79b275318cfddd46fa2fcdb8ca36f672fa78e9c591dd1108fe42c59e9a736",
+    "journal_checks.py": "15b8110d302199c6dbe70860b992a861a30da4d1e9a151a3f5126087ff73ece2",
+    "records.py": "ffd8cb2e5d8542a461a3cd80f2b0f77f1c890ee5745b05e4f6e016d00fa7740b",
+    "runner.py": "b462445a7abbe6c1dc825fcc4cee77a8c09074e16180f905149af37cfdacd922"
+  },
+  "started_at": "2026-11-08T02:40:38.154536+00:00",
+  "status": "passed",
+  "total": 21
+}

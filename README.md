@@ -167,6 +167,15 @@ enforces a worker-wide deadline and response limit. A missing response after
 POST starts produces `delivery-unknown`. The pilot accepts IPv4 loopback HTTP
 addresses and has [independent receiver checks](docs/maintenance/2026-11-07-loopback-delivery.md).
 
+Add `--journal ./deliveries.sqlite3` to retain an invocation before network
+activity. Inspect it with `python3 -m phoenix delivery-history --journal
+./deliveries.sqlite3 --limit 20`. Interrupted attempts remain `unconfirmed`;
+history never resends them. The local log stores event IDs, fingerprints and
+filtered receipts, without tokens, URLs or bodies. It is an attempt journal,
+with [21 delivery/journal checks](docs/maintenance/2026-11-08-delivery-journal.md);
+a durable queue remains future work. If the final write fails, stdout retains
+the HTTP outcome with `journal_saved: false` and exit 2; do not infer non-delivery.
+
 
 ## Check the notebook in a browser
 

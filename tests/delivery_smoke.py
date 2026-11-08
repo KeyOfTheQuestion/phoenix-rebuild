@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from phoenix.records import ROOT
 from phoenix.verify import runtime_identity
 from test_delivery import DeliveryTests
+from test_delivery_journal import JournalTests
 
 
 class EvidenceResult(unittest.TestResult):
@@ -52,7 +53,8 @@ def main():
     paths = {"inbox.py": ROOT / "docs/evidence" / chosen["id"] / "server.py",
              "delivery.py": ROOT / "phoenix/delivery.py", "http_helper.py": ROOT / "phoenix/verify.py",
              "checks.py": ROOT / "tests/test_delivery.py", "runner.py": Path(__file__),
-             "cli.py": ROOT / "phoenix/__main__.py", "records.py": ROOT / "phoenix/records.py"}
+             "cli.py": ROOT / "phoenix/__main__.py", "records.py": ROOT / "phoenix/records.py",
+             "journal.py": ROOT / "phoenix/delivery_journal.py", "journal_checks.py": ROOT / "tests/test_delivery_journal.py"}
     hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in paths.items()}
     result = EvidenceResult()
     with tempfile.TemporaryDirectory(prefix="phoenix-delivery-smoke-") as temporary:
@@ -62,6 +64,7 @@ def main():
         DeliveryTests.backend = candidate
         try:
             unittest.defaultTestLoader.loadTestsFromTestCase(DeliveryTests).run(result)
+            unittest.defaultTestLoader.loadTestsFromTestCase(JournalTests).run(result)
         finally:
             DeliveryTests.backend = previous
     assert (ROOT / "docs/runs.json").read_bytes() == ledger
@@ -70,8 +73,8 @@ def main():
               "started_at": started_at, "execution_runtime": runtime_identity(),
               "inbox_ai_run_id": chosen["id"], "source_sha256": hashes, "checks": result.checks,
               "passed": sum(c["passed"] for c in result.checks), "total": len(result.checks),
-              "status": "passed" if result.wasSuccessful() and len(result.checks) == 12 else "failed",
-              "scope": "current checkout; source HTTP read, loopback POST and worker protocol fault injection; synthetic data",
+              "status": "passed" if result.wasSuccessful() and len(result.checks) == 21 else "failed",
+              "scope": "current checkout; source HTTP, loopback POST, worker protocol faults and local SQLite journal; synthetic data",
               "public_ledger_changed": False}
     print("DELIVERY_EVIDENCE=" + json.dumps(report, sort_keys=True))
     return 0 if report["status"] == "passed" else 1
