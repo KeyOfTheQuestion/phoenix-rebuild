@@ -25,9 +25,11 @@
    uncertain outcomes ([method and checks](maintenance/2026-11-07-loopback-delivery.md)).
    [Local attempt journal 2026-11-08](maintenance/2026-11-08-delivery-journal.md)
    now commits an unconfirmed record before network use and retains filtered
-   final receipts, without recovery resends. Delivery to other hosts, a
-   destination policy and durable outbox remain
-   follow-ups before webhook replay.
+   final receipts, without recovery resends. The optional
+   [exact loopback destination policy 2026-11-09](maintenance/2026-11-09-destination-policy.md)
+   validates a captured allowlist before network/journal activity and binds
+   its hash to final receipts. Delivery to other hosts, a policy for those
+   destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix
    implemented 2026-11-03] New acceptance/replay results and evidence dialogs record actual
    Python/SQLite runtime identity ([verification](maintenance/2026-11-02-runtime-evidence.md)).

@@ -22,6 +22,12 @@ delivery-history --journal ./deliveries.sqlite3`. The directory must exist and
 support hard links. Unconfirmed records are never retried by history. See the
 [journal states and failure semantics](delivery.md#optional-local-attempt-journal).
 
+Use `--destination-policy .phoenix/destinations.json` to require a captured
+exact-match list of approved local receiver URLs. Create the local directory
+and file using the [policy format](delivery.md#optional-destination-policy).
+Invalid or unmatched policies refuse before HTTP or journal creation; omitting
+the option retains the original explicit-URL behavior.
+
 ## AI generation
 
 Install the official [Codex CLI](https://developers.openai.com/codex/cli/),

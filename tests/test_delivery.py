@@ -40,6 +40,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         state = self.server.state
         state["requests"].append({"method": "GET", "headers": dict(self.headers), "path": self.path})
+        if state.get("on_get"):
+            state["on_get"]()
         status = state["status"]
         if self.server.source and self.headers.get("Authorization") != "Bearer " + TOKEN:
             status = 401
@@ -145,6 +147,14 @@ class DeliveryTests(DeliveryFixture, unittest.TestCase):
                 self.assertNotIn("cookie", captured)
                 self.assertNotIn(subject.token, json.dumps(report))
                 self.assertEqual(subject.request("GET", "/api/events/" + identifier)[1], before)
+                policy = Path(temporary) / "destination-policy.json"
+                raw_policy = json.dumps({"schema_version": 1, "destinations": [self.destination + "/approved"]}).encode()
+                policy.write_bytes(raw_policy)
+                approved = self.deliver(source="http://127.0.0.1:%s" % subject.port, event_id=identifier,
+                                        admin_token=subject.token, destination=self.destination + "/approved", policy=policy)
+                self.assertEqual(approved["status"], "delivered")
+                self.assertEqual(approved["destination_policy_sha256"], hashlib.sha256(raw_policy).hexdigest())
+                self.assertEqual(self.destination_state["requests"][-1]["body"], BODY.encode())
             finally:
                 subject.stop()
 

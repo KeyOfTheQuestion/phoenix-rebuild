@@ -133,6 +133,12 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 若最终写入失败，终端回执保留 HTTP 结果，并返回 `journal_saved: false` 和退出码 2；
 这不代表接收器未收到事件。
 
+需要明确的接收地址清单时，加上 `--destination-policy .phoenix/destinations.json`。
+[清单格式](docs/delivery.md#optional-destination-policy)允许 1..16 个完整本机 URL，
+端口、路径和查询必须逐字匹配；格式错误或地址不匹配时，在联网及创建日志前拒绝。
+最终回执保存所读文件的 SHA-256。[30 项检查记录](docs/maintenance/2026-11-09-destination-policy.md)
+包括真实 AI 收件服务经清单批准后的投递。该选项按调用启用，不开放外网地址。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

@@ -128,3 +128,62 @@ has no automatic deletion or size cap; manage its storage locally. The
 process interruption, competing clients, a failed final commit, unrelated hot
 rollback journals and WAL refusal. The expanded smoke now records 21 checks;
 the earlier 12-check reports retain their original sources and outcomes.
+
+## Optional destination policy
+
+An invocation can require an explicit approved receiver list. Create the
+ignored local directory with `mkdir -p .phoenix`, then save this UTF-8 JSON as
+`.phoenix/destinations.json`:
+
+```json
+{
+  "schema_version": 1,
+  "destinations": ["http://127.0.0.1:9000/webhook"]
+}
+```
+
+```sh
+python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
+  --event-id EVENT_ID --destination http://127.0.0.1:9000/webhook \
+  --destination-policy .phoenix/destinations.json --journal ./deliveries.sqlite3
+```
+
+The file must be a regular file of at most 16,384 bytes, containing exactly
+`schema_version` (integer 1) and `destinations` (1..16 distinct URL strings).
+Every entry must satisfy the existing literal IPv4 loopback HTTP address rules,
+including unused entries. Duplicate JSON keys, unknown fields, malformed JSON,
+unsupported versions, duplicate URLs and unavailable/nonregular files are refused.
+Directory and FIFO refusals release their file descriptors.
+
+The destination argument must match one approved string exactly, including
+port, path, query, escaping and an optional trailing slash. There are no
+wildcards, prefix matching, URL normalization or hostname resolution rules.
+The client still follows no redirects and sends at most one POST. These
+additional restrictions never permit an address refused by the original client.
+
+Validation happens before either HTTP operation or journal creation. Refusal
+returns CLI exit 2 with a diagnostic that omits policy contents, file paths and
+destination values; it creates no journal attempt and no AI ledger entry.
+The option is per invocation. Omitting it retains the original explicit-URL
+behavior; this is an operator guard, not account-wide or OS enforcement.
+
+The policy is read once before the invocation starts its network work. Edits
+after that capture affect subsequent invocations, not an in-progress POST.
+Every returned final receipt includes `destination_policy_sha256`, the SHA-256
+of exactly those captured bytes, including whitespace. A saved final journal
+receipt retains the same field for delivered, rejected, source-error and
+delivery-unknown outcomes. Policy URLs, paths and contents are not stored there.
+Interrupted `unconfirmed` rows keep their prior format: they do not establish
+which policy was used. History does not re-check policies or resend attempts.
+
+Policy files are plaintext local configuration. The hash is a comparison value,
+not encryption or an independent signature. As with the journal, trusted local
+files are assumed; this does not defend against a malicious caller replacing
+the code or choosing to omit the option. Captured bytes are bounded; arbitrary
+filesystem I/O is outside the network worker's absolute deadline. The FIFO and
+descriptor-lifetime observations use POSIX hosts. Delivery to external hosts,
+durable queues and recovery resends remain future work.
+
+See the [actual policy observations](maintenance/2026-11-09-destination-policy.md).
+The expanded smoke records 30 checks and freezes the policy module and checks
+alongside the existing source closure. Earlier 12/21-check reports remain intact.

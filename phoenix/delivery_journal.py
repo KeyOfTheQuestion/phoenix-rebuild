@@ -13,6 +13,7 @@ RECEIPT_FIELDS = {
     "schema_version", "kind", "event_id", "started_at", "duration_seconds", "timeout_seconds",
     "worker_sha256", "status", "attempts", "http_status", "error", "body_sha256", "request_bytes",
     "response_bytes_observed", "response_truncated",
+    "destination_policy_sha256",
 }
 
 

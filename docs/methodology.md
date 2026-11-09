@@ -327,6 +327,16 @@ add no AI ledger entry. The [pilot specification](delivery.md) defines the local
 address policy and bounded receipt semantics. [Dated observations](maintenance/2026-11-07-loopback-delivery.md)
 retain the exact sources used for checkout verification.
 
+An optional `--destination-policy FILE` now requires an exact loopback URL
+allowlist before either HTTP operation or journal creation. The bounded regular
+file is captured once; final receipts bind those bytes with
+`destination_policy_sha256`. Edits apply to later invocations. Interrupted
+journal rows retain their existing format and do not establish policy usage.
+The smoke adds file validation, exact-match refusal, policy-change and resource
+lifetime observations, while retaining the existing worker fault injection.
+This optional operator guard neither expands destinations nor changes backend
+contracts or AI acceptance counts. See the [policy observations and limits](maintenance/2026-11-09-destination-policy.md).
+
 ## Reproduce, don't infer
 
 `replay-matrix RUN_ID --python PYTHON_A --python PYTHON_B` repeats the same

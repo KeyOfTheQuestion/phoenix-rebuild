@@ -116,7 +116,7 @@ def worker(payload):
     return receipt
 
 
-def deliver_event(source, event_id, destination, admin_token, timeout=3, journal=None):
+def deliver_event(source, event_id, destination, admin_token, timeout=3, journal=None, policy=None):
     """Read one event, post it at most once, and enforce a worker-wide deadline."""
     endpoint(source, source=True)
     endpoint(destination)
@@ -127,6 +127,10 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3, journal
         raise DeliveryError("PHOENIX_ADMIN_TOKEN must contain 1..512 printable ASCII characters")
     if type(timeout) not in (int, float) or not math.isfinite(timeout) or not 0.1 <= timeout <= 10:
         raise DeliveryError("Delivery timeout must be 0.1..10 seconds")
+    policy_sha256 = None
+    if policy is not None:
+        from .delivery_policy import authorize_destination
+        policy_sha256 = authorize_destination(policy, destination)
     started = time.monotonic()
     timestamp = datetime.now(timezone.utc).isoformat()
     source_bytes = Path(__file__).read_bytes()
@@ -186,6 +190,8 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3, journal
     result.update(schema_version=1, kind="loopback-delivery", event_id=event_id,
                   started_at=timestamp, duration_seconds=round(time.monotonic() - started, 3),
                   timeout_seconds=timeout, worker_sha256=hashlib.sha256(source_bytes).hexdigest())
+    if policy_sha256 is not None:
+        result["destination_policy_sha256"] = policy_sha256
     if journal_id is not None:
         from .delivery_journal import JournalError, finish_attempt
         result.update(journal_attempt_id=journal_id, journal_saved=False)

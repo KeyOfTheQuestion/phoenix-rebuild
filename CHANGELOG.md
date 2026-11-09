@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-09 · Captured loopback destination policy
+
+- Added optional `deliver-event --destination-policy FILE`: validate a bounded, strict UTF-8 JSON allowlist and require the exact selected loopback URL before HTTP or journal activity. Existing address, redirect, response and deadline restrictions remain.
+- Bind captured policy bytes to returned and persisted final receipts with SHA-256. Read once per invocation; policy edits apply next time. Preserve journal format and interrupted-row uncertainty.
+- Expanded delivery observations from 21 to 30 checks, including exact-match refusal, complete policy validation, real AI inbox approval and descriptor cleanup after repeated directory/FIFO refusals. See [today's actual evidence and limits](docs/maintenance/2026-11-09-destination-policy.md).
+
 ## 2026-11-08 · Persistent local delivery history
 
 - Added optional `deliver-event --journal FILE` and read-only `delivery-history`. Commit an unconfirmed attempt before network activity, then save a redacted final receipt. An interruption never authorizes a resend; final-storage failure preserves the actual HTTP outcome with an explicit flag and exit code 2.

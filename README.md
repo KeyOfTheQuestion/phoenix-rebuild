@@ -176,6 +176,14 @@ with [21 delivery/journal checks](docs/maintenance/2026-11-08-delivery-journal.m
 a durable queue remains future work. If the final write fails, stdout retains
 the HTTP outcome with `journal_saved: false` and exit 2; do not infer non-delivery.
 
+For an approved receiver list, add `--destination-policy .phoenix/destinations.json`.
+The [policy format](docs/delivery.md#optional-destination-policy) accepts 1..16
+exact loopback URLs. Invalid files or an unmatched port, path or query refuse
+before network activity and journal creation. Final receipts bind the captured
+file's SHA-256; the [30-check observations](docs/maintenance/2026-11-09-destination-policy.md)
+include an actual AI inbox delivery through this guard. The option remains a
+per-invocation choice and permits no external hosts.
+
 
 ## Check the notebook in a browser
 
