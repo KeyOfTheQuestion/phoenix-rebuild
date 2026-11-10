@@ -31,7 +31,8 @@ jobs:
       - name: Exercise the notebook in Chromium
         run: python tests/browser_smoke.py
   verify:
-    runs-on: ubuntu-latest
+    # Python 3.9 has an official build for 24.04, not the newer latest image.
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python: ['3.9', '3.12', '3.13']

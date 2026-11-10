@@ -5,6 +5,7 @@
 - Added `delivery-history --cursor TOKEN`, an additive `next_cursor` response and `delivery_history_page`. Continue beyond the first 100 records using start-time/ID keyset ordering; retain the legacy Python list API and SQLite schema.
 - Validate bounded canonical cursor encodings before opening the journal. Preserve read-only behavior and receipt uncertainty; document cross-page updates, unsigned seek positions and returned-row versus scan limits.
 - Added eight pagination checks, complete traversal of 123 synthetic rows and canonical-guard negative controls. The expanded 38-check client smoke includes an actual AI-backed delivery receipt; see [today's evidence and limits](docs/maintenance/2026-11-10-history-pagination.md).
+- Pin the CI verify matrix to Ubuntu 24.04 after `ubuntu-latest` selected 26.04 without a Python 3.9 build. Retain the setup failure and cancelled matrix observations; keep all versions/checks and the existing publication jobs.
 
 ## 2026-11-09 · Captured loopback destination policy
 

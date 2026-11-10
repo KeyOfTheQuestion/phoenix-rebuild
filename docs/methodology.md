@@ -347,6 +347,12 @@ controls. D01 additionally pages an actual AI-backed delivery receipt. These
 remain client observations, not new reconstruction checks or AI attempts. See
 the [pagination evidence](maintenance/2026-11-10-history-pagination.md).
 
+The CI verify matrix is explicitly pinned to Ubuntu 24.04 after the moving
+`ubuntu-latest` image selected Ubuntu 26.04 without a Python 3.9 x64 build.
+The [setup failure and official manifest observation](maintenance/2026-11-10-history-pagination.md#ci-runner-migration-failure-and-platform-correction)
+are retained separately from backend verdicts. Python versions, checks and
+action revisions remain; no unavailable-runtime pass is inferred.
+
 ## Reproduce, don't infer
 
 `replay-matrix RUN_ID --python PYTHON_A --python PYTHON_B` repeats the same

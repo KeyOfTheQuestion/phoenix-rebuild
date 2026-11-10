@@ -1,0 +1,18 @@
+{
+  "source": "https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json",
+  "manifest_sha256": "78a935e3b2a9ebaa22d420a0c7cf789fa81747aa94a615cf4ed6924ae9dc3377",
+  "python_version": "3.9.25",
+  "linux_x64_builds": [
+    {
+      "arch": "x64",
+      "platform_version": "22.04",
+      "filename": "python-3.9.25-linux-22.04-x64.tar.gz"
+    },
+    {
+      "arch": "x64",
+      "platform_version": "24.04",
+      "filename": "python-3.9.25-linux-24.04-x64.tar.gz"
+    }
+  ],
+  "scope": "Official manifest observation, not an executed Ubuntu runtime"
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "ci-infrastructure-observation",
+  "status": "failed",
+  "run_id": 42747605384,
+  "run_url": "https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/42747605384",
+  "head_sha": "df1f9bb8b9cd938c0de0ce2e8b174bca0f536567",
+  "job": "verify (3.9)",
+  "stage": "actions/setup-python",
+  "requested_python": "3.9",
+  "runner_os": "Ubuntu 26.04",
+  "architecture": "x64",
+  "error": "The version '3.9' with architecture 'x64' was not found for Ubuntu 26.04.",
+  "failed_step_time_utc": "2026-11-10T03:09:53.0498506Z",
+  "tests_executed_in_failed_job": false,
+  "cancelled_matrix_jobs": [
+    "verify (3.12)",
+    "verify (3.13)"
+  ],
+  "successful_jobs": [
+    "notebook",
+    "container"
+  ],
+  "failure_log_sha256": "6453db7484f182032d95033d1b2a5663d232bb9537c5ba3cfe0f3fad5b4a229e",
+  "scope": "Runner/setup failure, distinct from the earlier local archived-replay unit failure. No AI generation or acceptance verdict.",
+  "followup": "Pin only the CI verify matrix to ubuntu-24.04, retain all checks and Python versions, and inspect new runs. Do not rerun or relabel this failed run."
+}

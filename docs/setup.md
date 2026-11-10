@@ -35,6 +35,12 @@ the option retains the original explicit-URL behavior.
 
 ## AI generation
 
+The GitHub CI compatibility matrix uses `ubuntu-24.04` so the declared Python
+3.9 floor has an available official build. It still checks 3.9, 3.12 and 3.13.
+The [retained runner-migration failure](maintenance/2026-11-10-history-pagination.md#ci-runner-migration-failure-and-platform-correction)
+explains the label change; this does not alter local interpreter selection or
+the existing Pages/container/browser job platforms.
+
 Install the official [Codex CLI](https://developers.openai.com/codex/cli/),
 authenticate it with `codex login`, and run:
 

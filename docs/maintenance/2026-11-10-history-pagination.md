@@ -91,6 +91,30 @@ existing remote container/browser workflows provide those publication checks.
 The [plan and rulings](../superpowers/plans/2026-11-10-history-pagination.md)
 record this diagnostic change alongside the bounded pagination work.
 
+## CI runner migration failure and platform correction
+
+After the pagination commit, [CI run 42747605384](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/42747605384)
+failed in `setup-python` for Python 3.9: `ubuntu-latest` used Ubuntu 26.04 and
+no matching x64 Python 3.9 build was available. Tests did not run in that job;
+the other two verify-matrix jobs were cancelled by matrix fail-fast. Container
+and notebook jobs passed. This is a separate infrastructure observation, not
+the local archived-replay acceptance failure described above. The
+[failure metadata](2026-11-10-ci-platform-failure.json) retains the run, commit,
+stage, message and log fingerprint.
+
+The [official Python build manifest](https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json)
+lists a Python 3.9.25 Linux x64 build for Ubuntu 24.04 and none for 26.04. A
+[bounded manifest summary](2026-11-10-python-platforms.json) records the observed
+entries and full-manifest fingerprint. This is an availability observation,
+not an executed-runtime success claim.
+
+The follow-up fixes only the CI verify matrix's runner label to
+`ubuntu-24.04`, retaining Python 3.9/3.12/3.13, every check and the pinned action
+revisions. Pages/container/browser jobs retain their existing platforms and
+publication workflow. The failed run remains unchanged; new commits run fresh
+CI/Pages validation. No new model call, credential, account permission or
+historical artifact change is involved.
+
 ## Today's sole bounded reconstruction cycle
 
 Existing authenticated **codex-cli 0.166.0**, clean defaults and installed
