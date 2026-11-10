@@ -136,8 +136,14 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 需要明确的接收地址清单时，加上 `--destination-policy .phoenix/destinations.json`。
 [清单格式](docs/delivery.md#optional-destination-policy)允许 1..16 个完整本机 URL，
 端口、路径和查询必须逐字匹配；格式错误或地址不匹配时，在联网及创建日志前拒绝。
-最终回执保存所读文件的 SHA-256。[30 项检查记录](docs/maintenance/2026-11-09-destination-policy.md)
+最终回执保存所读文件的 SHA-256。[策略检查记录](docs/maintenance/2026-11-09-destination-policy.md)
 包括真实 AI 收件服务经清单批准后的投递。该选项按调用启用，不开放外网地址。
+
+历史查询现在返回 `next_cursor`。非空时，将它传给
+`delivery-history --journal ./deliveries.sqlite3 --limit 20 --cursor TOKEN`
+继续读取更早的记录，可浏览首批 100 条之后的历史。分页只读，按开始时间和 ID
+排序，较新记录插入不会挤动后续页；回执仍可能在翻页期间完成。这是继续读取的
+位置，不是事务快照。详见 [38 项检查与方法边界](docs/maintenance/2026-11-10-history-pagination.md)。
 
 ## 浏览器端验证记录页
 

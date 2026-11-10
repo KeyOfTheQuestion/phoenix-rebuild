@@ -22,6 +22,11 @@ delivery-history --journal ./deliveries.sqlite3`. The directory must exist and
 support hard links. Unconfirmed records are never retried by history. See the
 [journal states and failure semantics](delivery.md#optional-local-attempt-journal).
 
+The history response includes `next_cursor`. Continue with `--cursor TOKEN`
+while that value is non-null; `--limit` still accepts 1..100 rows per page.
+Pages remain read-only and do not resend attempts. See [continuation semantics
+and limits](delivery.md#continue-delivery-history).
+
 Use `--destination-policy .phoenix/destinations.json` to require a captured
 exact-match list of approved local receiver URLs. Create the local directory
 and file using the [policy format](delivery.md#optional-destination-policy).

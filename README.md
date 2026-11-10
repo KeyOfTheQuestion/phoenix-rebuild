@@ -180,9 +180,16 @@ For an approved receiver list, add `--destination-policy .phoenix/destinations.j
 The [policy format](docs/delivery.md#optional-destination-policy) accepts 1..16
 exact loopback URLs. Invalid files or an unmatched port, path or query refuse
 before network activity and journal creation. Final receipts bind the captured
-file's SHA-256; the [30-check observations](docs/maintenance/2026-11-09-destination-policy.md)
+file's SHA-256; the [policy observations](docs/maintenance/2026-11-09-destination-policy.md)
 include an actual AI inbox delivery through this guard. The option remains a
 per-invocation choice and permits no external hosts.
+
+History now includes `next_cursor`. Pass its non-null value back with
+`delivery-history --journal ./deliveries.sqlite3 --limit 20 --cursor TOKEN`
+to read older pages, including records beyond the first 100. Pages are read-only,
+ordered by start time and ID, and remain stable against newer inserts. Receipts
+can finalize between pages; this is a seek position rather than a transaction
+snapshot. See the [38-check observations and limits](docs/maintenance/2026-11-10-history-pagination.md).
 
 
 ## Check the notebook in a browser

@@ -14,6 +14,7 @@ from phoenix.verify import runtime_identity
 from test_delivery import DeliveryTests
 from test_delivery_journal import JournalTests
 from test_delivery_policy import PolicyTests
+from test_history_pagination import HistoryPageTests
 
 
 class EvidenceResult(unittest.TestResult):
@@ -56,7 +57,8 @@ def main():
              "checks.py": ROOT / "tests/test_delivery.py", "runner.py": Path(__file__),
              "cli.py": ROOT / "phoenix/__main__.py", "records.py": ROOT / "phoenix/records.py",
              "journal.py": ROOT / "phoenix/delivery_journal.py", "journal_checks.py": ROOT / "tests/test_delivery_journal.py",
-             "policy.py": ROOT / "phoenix/delivery_policy.py", "policy_checks.py": ROOT / "tests/test_delivery_policy.py"}
+             "policy.py": ROOT / "phoenix/delivery_policy.py", "policy_checks.py": ROOT / "tests/test_delivery_policy.py",
+             "history_checks.py": ROOT / "tests/test_history_pagination.py"}
     hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in paths.items()}
     result = EvidenceResult()
     with tempfile.TemporaryDirectory(prefix="phoenix-delivery-smoke-") as temporary:
@@ -68,6 +70,7 @@ def main():
             unittest.defaultTestLoader.loadTestsFromTestCase(DeliveryTests).run(result)
             unittest.defaultTestLoader.loadTestsFromTestCase(JournalTests).run(result)
             unittest.defaultTestLoader.loadTestsFromTestCase(PolicyTests).run(result)
+            unittest.defaultTestLoader.loadTestsFromTestCase(HistoryPageTests).run(result)
         finally:
             DeliveryTests.backend = previous
     assert (ROOT / "docs/runs.json").read_bytes() == ledger
@@ -76,8 +79,8 @@ def main():
               "started_at": started_at, "execution_runtime": runtime_identity(),
               "inbox_ai_run_id": chosen["id"], "source_sha256": hashes, "checks": result.checks,
               "passed": sum(c["passed"] for c in result.checks), "total": len(result.checks),
-              "status": "passed" if result.wasSuccessful() and len(result.checks) == 30 else "failed",
-              "scope": "current checkout; source HTTP, loopback POST, protocol faults, local SQLite journal and captured destination policy; synthetic data",
+              "status": "passed" if result.wasSuccessful() and len(result.checks) == 38 else "failed",
+              "scope": "current checkout; source HTTP, loopback POST, protocol faults, local journal/history pages and captured destination policy; synthetic data",
               "public_ledger_changed": False}
     print("DELIVERY_EVIDENCE=" + json.dumps(report, sort_keys=True))
     return 0 if report["status"] == "passed" else 1

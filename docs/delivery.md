@@ -121,12 +121,12 @@ creation during refusal. Unsupported, locked or unavailable journals prevent
 the invocation from contacting either service. This concerns trusted local
 files; it is not protection against adversarial path replacement.
 
-History opens a supported journal read-only, returns the newest 1..100 attempts
+History opens a supported journal read-only, returns a page of 1..100 attempts
 (default 20), and never creates a missing file or contacts services. The journal
 has no automatic deletion or size cap; manage its storage locally. The
 [journal observations](maintenance/2026-11-08-delivery-journal.md) include actual
 process interruption, competing clients, a failed final commit, unrelated hot
-rollback journals and WAL refusal. The expanded smoke now records 21 checks;
+rollback journals and WAL refusal. Those initial journal observations recorded 21 checks;
 the earlier 12-check reports retain their original sources and outcomes.
 
 ## Optional destination policy
@@ -185,5 +185,54 @@ descriptor-lifetime observations use POSIX hosts. Delivery to external hosts,
 durable queues and recovery resends remain future work.
 
 See the [actual policy observations](maintenance/2026-11-09-destination-policy.md).
-The expanded smoke records 30 checks and freezes the policy module and checks
+Those policy observations recorded 30 checks and froze the policy module and checks
 alongside the existing source closure. Earlier 12/21-check reports remain intact.
+
+## Continue delivery history
+
+The first query returns the newest page with a `next_cursor` field:
+
+```sh
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --limit 20
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --limit 20 \
+  --cursor TOKEN_FROM_NEXT_CURSOR
+```
+
+Use the returned non-null token with the same journal to read older pages.
+`next_cursor: null` means that this query found no additional row. Each page
+returns at most 1..100 rows, default 20; an empty journal returns an empty list
+and null cursor. Even an exact terminal page has no continuation token.
+
+The order is `(started_at DESC, id DESC)`. Continuation uses a strict comparison
+against the last visible pair, so equal timestamps use the ID tie-breaker and
+records with newer keys do not shift subsequent pages. A read-only SELECT
+fetches at most `limit + 1` rows to detect continuation. Sorting/scanning work
+is not bounded by that returned-row limit; no query-latency guarantee is made.
+
+Pages are not a transaction snapshot across invocations. Receipt finalization
+can become visible on a later page without changing order. A late commit with
+an older key can appear later; external timestamp edits/deletions or clock
+changes are not hidden by a snapshot promise. History never freezes writers,
+retries delivery, changes receipt states or writes the journal.
+
+The token is unpadded URL-safe base64 of canonical compact ASCII JSON
+`[1, started_at, id]`, at most 256 characters. The key is a printable ASCII
+string of 1..64 characters and the ID is 32 lowercase hexadecimal characters.
+Malformed types, unsupported versions, invalid/oversized text, noncanonical JSON
+or base64, and padded tokens refuse before the journal is opened, with CLI exit
+2 and a diagnostic omitting the token. The cursor contains only a key already
+visible in local history. It is unsigned, unencrypted and not bound to a journal
+identity; it grants no authorization and can be edited to choose a seek position.
+
+Python callers can use `delivery_history_page(path, limit=20, cursor=None)` to
+receive `{"attempts": [...], "next_cursor": ...}`. The existing
+`delivery_history(path, limit=20)` still returns a list with the same newest-row
+behavior. The CLI's `next_cursor` is additive. Database schema, supported file
+mode, permission checks and missing-file behavior are unchanged.
+
+The [pagination observations](maintenance/2026-11-10-history-pagination.md)
+include complete traversal of 123 synthetic rows, timestamp ties, newer inserts,
+finalization between pages and the legacy API. H05 instruments the database
+boundary for invalid-input refusal; negative controls exercise canonical checks.
+D01 also reads the actual AI-backed delivery receipt through the page API.
+The expanded delivery smoke records 38 checks; old reports retain their bytes.

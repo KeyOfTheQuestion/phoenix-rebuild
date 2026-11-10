@@ -35,6 +35,7 @@ def main():
     history = commands.add_parser("delivery-history", help="Read local delivery attempts without retrying them")
     history.add_argument("--journal", required=True)
     history.add_argument("--limit", type=int, default=20, help="Newest 1..100 attempts, default 20")
+    history.add_argument("--cursor", help="Continue from the previous response's next_cursor")
     container = commands.add_parser("container-verify", help="Run HTTP acceptance inside an optional, restricted Docker container")
     container.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     container.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"))
@@ -78,13 +79,13 @@ def main():
             return 1
         return 2
     if args.command == "delivery-history":
-        from .delivery_journal import JournalError, delivery_history
+        from .delivery_journal import JournalError, delivery_history_page
         try:
-            attempts = delivery_history(args.journal, args.limit)
+            page = delivery_history_page(args.journal, args.limit, args.cursor)
         except JournalError as error:
             print("Delivery history refused: " + str(error), file=sys.stderr)
             return 2
-        print(json.dumps({"kind": "local-delivery-history", "attempts": attempts}, indent=2, ensure_ascii=False))
+        print(json.dumps({"kind": "local-delivery-history", **page}, indent=2, ensure_ascii=False))
         return 0
     if args.command in ("verify-continuity", "replay-continuity"):
         from .audit import EvidenceError

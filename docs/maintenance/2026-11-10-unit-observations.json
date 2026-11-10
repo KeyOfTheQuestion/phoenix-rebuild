@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "development-unit-observations",
+  "scope": "unittest observations; separate from backend acceptance and AI ledger",
+  "observations": [
+    {
+      "label": "Python 3.9.6 initial concurrent suite",
+      "status": "failed",
+      "total_tests": 149,
+      "failed_tests": 1,
+      "passed_tests": 148,
+      "duration_seconds": 80.346,
+      "failure_cases": [
+        "test_real_archived_candidate_uses_frozen_bytes_and_keeps_public_evidence_unchanged (test_runtime_matrix.RuntimeMatrixTests)"
+      ],
+      "private_log_sha256": "f93161fb2086e4ff490114864596a559b00b8a066771237946658789712c4735"
+    },
+    {
+      "label": "Python 3.9.6 serial repeat",
+      "status": "passed",
+      "total_tests": 149,
+      "failed_tests": 0,
+      "passed_tests": 149,
+      "duration_seconds": 79.879,
+      "failure_cases": [],
+      "private_log_sha256": "e67ab0db872c569fb390f331de029951daa6973ff8753789cf7f6ab9992cbd7b"
+    },
+    {
+      "label": "Python 3.14.6 suite",
+      "status": "passed",
+      "total_tests": 149,
+      "failed_tests": 0,
+      "passed_tests": 149,
+      "duration_seconds": 39.626,
+      "failure_cases": [],
+      "private_log_sha256": "efa10a93cc974557534fe9192a37595b8623e806149f41926bf191ef12c7ef55"
+    }
+  ],
+  "initial_failure_detail": "The frozen 20261102T020351Z-0ba772 matrix replay returned exit 1; stderr was empty. The original assertion omitted stdout, so the specific failed backend check is unknown.",
+  "diagnostic_followup": "An isolated replay of the same frozen bytes passed 19/19. Add stdout to that assertion diagnostic; do not change source, pass rules or historical outcomes. Serial full-floor repeat passed; root cause remains unconfirmed.",
+  "raw_logs": "Private because they can contain local paths. Hashes bind the retained logs, not independent attestations."
+}

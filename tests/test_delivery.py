@@ -151,10 +151,16 @@ class DeliveryTests(DeliveryFixture, unittest.TestCase):
                 raw_policy = json.dumps({"schema_version": 1, "destinations": [self.destination + "/approved"]}).encode()
                 policy.write_bytes(raw_policy)
                 approved = self.deliver(source="http://127.0.0.1:%s" % subject.port, event_id=identifier,
-                                        admin_token=subject.token, destination=self.destination + "/approved", policy=policy)
+                                        admin_token=subject.token, destination=self.destination + "/approved", policy=policy,
+                                        journal=Path(temporary) / "attempts.sqlite3")
                 self.assertEqual(approved["status"], "delivered")
                 self.assertEqual(approved["destination_policy_sha256"], hashlib.sha256(raw_policy).hexdigest())
                 self.assertEqual(self.destination_state["requests"][-1]["body"], BODY.encode())
+                from phoenix.delivery_journal import delivery_history_page
+                page = delivery_history_page(Path(temporary) / "attempts.sqlite3", 1)
+                self.assertEqual(page["attempts"][0]["event_id"], identifier)
+                self.assertEqual(page["attempts"][0]["receipt"]["destination_policy_sha256"], approved["destination_policy_sha256"])
+                self.assertIsNone(page["next_cursor"])
             finally:
                 subject.stop()
 

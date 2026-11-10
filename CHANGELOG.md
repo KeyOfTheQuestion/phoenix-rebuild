@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-10 · Read-only delivery history pagination
+
+- Added `delivery-history --cursor TOKEN`, an additive `next_cursor` response and `delivery_history_page`. Continue beyond the first 100 records using start-time/ID keyset ordering; retain the legacy Python list API and SQLite schema.
+- Validate bounded canonical cursor encodings before opening the journal. Preserve read-only behavior and receipt uncertainty; document cross-page updates, unsigned seek positions and returned-row versus scan limits.
+- Added eight pagination checks, complete traversal of 123 synthetic rows and canonical-guard negative controls. The expanded 38-check client smoke includes an actual AI-backed delivery receipt; see [today's evidence and limits](docs/maintenance/2026-11-10-history-pagination.md).
+
 ## 2026-11-09 · Captured loopback destination policy
 
 - Added optional `deliver-event --destination-policy FILE`: validate a bounded, strict UTF-8 JSON allowlist and require the exact selected loopback URL before HTTP or journal activity. Existing address, redirect, response and deadline restrictions remain.

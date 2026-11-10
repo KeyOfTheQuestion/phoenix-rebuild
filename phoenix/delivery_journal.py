@@ -1,8 +1,11 @@
 """Local attempt history. Unconfirmed records never authorize another POST."""
 from contextlib import contextmanager
+import base64
+import binascii
 import json
 import os
 from pathlib import Path
+import re
 import sqlite3
 import tempfile
 import uuid
@@ -109,16 +112,49 @@ def finish_attempt(path, identifier, receipt):
             raise JournalError("Attempt missing or already finished")
 
 
-def delivery_history(path, limit=20):
+def decode_history_cursor(cursor):
+    try:
+        if not isinstance(cursor, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,256}", cursor):
+            raise ValueError
+        raw = base64.b64decode(cursor + "=" * (-len(cursor) % 4), altchars=b"-_", validate=True)
+        position = json.loads(raw.decode("ascii"))
+        if not isinstance(position, list) or len(position) != 3 or type(position[0]) is not int or position[0] != 1 \
+                or not isinstance(position[1], str) or not 1 <= len(position[1]) <= 64 \
+                or any(not 32 <= ord(c) <= 126 for c in position[1]) \
+                or not isinstance(position[2], str) or not re.fullmatch(r"[0-9a-f]{32}", position[2]):
+            raise ValueError
+        if json.dumps(position, separators=(",", ":"), ensure_ascii=True).encode("ascii") != raw \
+                or base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=") != cursor:
+            raise ValueError
+        return position[1], position[2]
+    except (ValueError, TypeError, binascii.Error, RecursionError) as error:
+        raise JournalError("Invalid delivery history cursor") from error
+
+
+def delivery_history_page(path, limit=20, cursor=None):
     if type(limit) is not int or not 1 <= limit <= 100:
         raise JournalError("History limit must be an integer from 1 to 100")
+    position = decode_history_cursor(cursor) if cursor is not None else None
     with database(path, readonly=True) as connection:
-        rows = connection.execute("SELECT * FROM delivery_attempts ORDER BY started_at DESC, id DESC LIMIT ?", (limit,))
+        clause = " WHERE (started_at, id) < (?, ?)" if position is not None else ""
+        parameters = (*position, limit + 1) if position is not None else (limit + 1,)
+        rows = connection.execute("SELECT * FROM delivery_attempts" + clause +
+                                  " ORDER BY started_at DESC, id DESC LIMIT ?", parameters).fetchall()
         result = []
-        for row in rows:
+        for row in rows[:limit]:
             item = dict(row)
             raw = item.pop("receipt_json")
             item.update(state="finished" if raw is not None else "unconfirmed",
                         receipt=json.loads(raw) if raw is not None else None)
             result.append(item)
-        return result
+        next_cursor = None
+        if len(rows) > limit:
+            last = result[-1]
+            raw = json.dumps([1, last["started_at"], last["id"]], separators=(",", ":"), ensure_ascii=True).encode("ascii")
+            next_cursor = base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+            decode_history_cursor(next_cursor)
+        return {"attempts": result, "next_cursor": next_cursor}
+
+
+def delivery_history(path, limit=20):
+    return delivery_history_page(path, limit)["attempts"]

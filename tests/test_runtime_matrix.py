@@ -58,7 +58,7 @@ class RuntimeMatrixTests(unittest.TestCase):
         before = {p.name: p.read_bytes() for p in directory.iterdir()}
         ledger = (self.root / "docs/runs.json").read_bytes()
         code, output, errors = self.invoke()
-        self.assertEqual(code, 0, errors)
+        self.assertEqual(code, 0, errors + "\n" + output)
         matrix = json.loads(output)
         self.assertEqual((matrix["status"], matrix["passed"], matrix["total"]), ("passed", 1, 1))
         self.assertEqual(matrix["kind"], "archive-runtime-matrix")

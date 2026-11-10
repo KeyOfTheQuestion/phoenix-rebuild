@@ -337,6 +337,16 @@ lifetime observations, while retaining the existing worker fault injection.
 This optional operator guard neither expands destinations nor changes backend
 contracts or AI acceptance counts. See the [policy observations and limits](maintenance/2026-11-09-destination-policy.md).
 
+`delivery-history --cursor TOKEN` now continues read-only pages ordered by start
+time and ID. The unsigned token is a validated seek position, not a transaction
+snapshot or an authorization credential. Newer keys do not shift continuation,
+while receipt finalization or late/backdated writes may become visible. The
+legacy Python list API remains. H01..H08 use synthetic SQLite fixtures; H05
+instruments the database boundary, with separate canonical-guard negative
+controls. D01 additionally pages an actual AI-backed delivery receipt. These
+remain client observations, not new reconstruction checks or AI attempts. See
+the [pagination evidence](maintenance/2026-11-10-history-pagination.md).
+
 ## Reproduce, don't infer
 
 `replay-matrix RUN_ID --python PYTHON_A --python PYTHON_B` repeats the same

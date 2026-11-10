@@ -28,7 +28,9 @@
    final receipts, without recovery resends. The optional
    [exact loopback destination policy 2026-11-09](maintenance/2026-11-09-destination-policy.md)
    validates a captured allowlist before network/journal activity and binds
-   its hash to final receipts. Delivery to other hosts, a policy for those
+   its hash to final receipts. [Read-only journal pagination 2026-11-10](maintenance/2026-11-10-history-pagination.md)
+   adds bounded returned pages and keyset continuation beyond the newest 100 rows,
+   preserving receipt uncertainty and the legacy list API. Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix
    implemented 2026-11-03] New acceptance/replay results and evidence dialogs record actual
