@@ -5,6 +5,8 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -12,6 +14,7 @@ from unittest.mock import patch
 from phoenix import __main__ as cli
 from phoenix.delivery import DeliveryError
 from phoenix.delivery_journal import delivery_history
+from phoenix.records import ROOT
 from test_delivery import BODY, TOKEN, DeliveryFixture
 
 
@@ -153,11 +156,28 @@ class PolicyTests(DeliveryFixture, unittest.TestCase):
     def test_K09_repeated_nonregular_refusals_release_file_descriptors(self):
         fifo = Path(self.directory.name) / "policy.fifo"
         os.mkfifo(fifo)
-        before = len(os.listdir("/dev/fd"))
-        for _ in range(20):
-            for path in [Path(self.directory.name), fifo]:
-                with self.assertRaises(DeliveryError):
-                    self.protected(policy=path)
-        self.assertEqual(len(os.listdir("/dev/fd")), before)
-        self.assertEqual(self.source_state["requests"], [])
-        self.assertEqual(self.destination_state["requests"], [])
+        # Isolate descriptor counting from HTTP fixture threads in the suite.
+        program = """
+import os
+import sys
+
+from phoenix.delivery import DeliveryError
+from phoenix.delivery_policy import authorize_destination
+
+before = len(os.listdir('/dev/fd'))
+for _ in range(20):
+    for path in sys.argv[1:]:
+        try:
+            authorize_destination(path, 'http://127.0.0.1:12345/receive')
+        except DeliveryError:
+            continue
+        raise AssertionError('Policy reader accepted a nonregular file')
+after = len(os.listdir('/dev/fd'))
+if after != before:
+    raise AssertionError(f'Policy descriptors before: {before}, after: {after}')
+"""
+        result = subprocess.run(
+            [sys.executable, "-c", program, self.directory.name, str(fifo)],
+            cwd=ROOT, capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)

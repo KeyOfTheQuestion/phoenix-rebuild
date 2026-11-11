@@ -3,6 +3,7 @@
 ## 2026-11-11 · Delivery receipt lookup
 
 - Added `delivery-receipt --attempt-id ID` to read a journal row directly by its primary key. The CLI reports found, missing and invalid lookups with distinct exit codes. [Receipt lookup evidence](docs/maintenance/2026-11-11-receipt-lookup.md).
+- Isolated the policy descriptor count check after a CI failure. The check now observes descriptors in a process dedicated to policy validation. [Failure and follow-up](docs/maintenance/2026-11-11-receipt-lookup.md#ci-failure-and-follow-up).
 
 ## 2026-11-10 · Read-only delivery history pagination
 

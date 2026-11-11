@@ -30,3 +30,19 @@ The eight-check v2 continuity fixture passed from yesterday's successful
 policies and keyed events over HTTP with the predecessor, aged synthetic event
 timestamps, and verified the receiving implementation against that database.
 [Continuity report](2026-11-11-continuity/report.json).
+
+## CI failure and follow-up
+
+The first CI run passed 40 of 41 delivery checks on CPython 3.9.25.
+K09 failed in the descriptor count check. The smoke report gives the failing
+check and its duration. [CI run](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/42947514237), [retained report](2026-11-11-ci-delivery-failure.json).
+
+The old test counted all process descriptors alongside HTTP fixture threads.
+Closing an unrelated descriptor during policy validation reproduced a false
+failure with counts of 9 before and 8 after. The CI report leaves the particular
+descriptor change unconfirmed. The revised test exercises the actual policy
+reader in its own process. K08 covers delivery refusal before HTTP access.
+
+The revised test passed while an unrelated descriptor closed in the parent.
+Suppressing descriptor closes in the child produced 45 open descriptors from
+an initial 5, and the revised test caught that injected leak. [Follow-up client report](2026-11-11-delivery-recheck.json).
