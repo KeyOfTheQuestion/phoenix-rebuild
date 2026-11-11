@@ -131,6 +131,27 @@ def decode_history_cursor(cursor):
         raise JournalError("Invalid delivery history cursor") from error
 
 
+def _attempt_record(row):
+    item = dict(row)
+    receipt_json = item.pop("receipt_json")
+    if receipt_json is None:
+        item.update(state="unconfirmed", receipt=None)
+    else:
+        item.update(state="finished", receipt=json.loads(receipt_json))
+    return item
+
+
+def delivery_attempt(path, identifier):
+    """Read one attempt by its journal ID."""
+    if not isinstance(identifier, str) or not re.fullmatch(r"[0-9a-f]{32}", identifier):
+        raise JournalError("Invalid delivery attempt ID")
+    with database(path, readonly=True) as connection:
+        row = connection.execute("SELECT * FROM delivery_attempts WHERE id = ?", (identifier,)).fetchone()
+        if row is None:
+            return None
+        return _attempt_record(row)
+
+
 def delivery_history_page(path, limit=20, cursor=None):
     if type(limit) is not int or not 1 <= limit <= 100:
         raise JournalError("History limit must be an integer from 1 to 100")
@@ -140,13 +161,7 @@ def delivery_history_page(path, limit=20, cursor=None):
         parameters = (*position, limit + 1) if position is not None else (limit + 1,)
         rows = connection.execute("SELECT * FROM delivery_attempts" + clause +
                                   " ORDER BY started_at DESC, id DESC LIMIT ?", parameters).fetchall()
-        result = []
-        for row in rows[:limit]:
-            item = dict(row)
-            raw = item.pop("receipt_json")
-            item.update(state="finished" if raw is not None else "unconfirmed",
-                        receipt=json.loads(raw) if raw is not None else None)
-            result.append(item)
+        result = [_attempt_record(row) for row in rows[:limit]]
         next_cursor = None
         if len(rows) > limit:
             last = result[-1]

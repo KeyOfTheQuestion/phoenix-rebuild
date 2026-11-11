@@ -347,6 +347,12 @@ controls. D01 additionally pages an actual AI-backed delivery receipt. These
 remain client observations, not new reconstruction checks or AI attempts. See
 the [pagination evidence](maintenance/2026-11-10-history-pagination.md).
 
+`delivery-receipt --attempt-id ID` reads a single journal record by primary key.
+The client smoke exercises lookup beyond the first page and verifies that a
+receipt from actual loopback delivery matches the history row. It also checks
+early input validation and the CLI outcomes for found, absent and malformed IDs.
+[Receipt lookup evidence](maintenance/2026-11-11-receipt-lookup.md).
+
 The CI verify matrix is explicitly pinned to Ubuntu 24.04 after the moving
 `ubuntu-latest` image selected Ubuntu 26.04 without a Python 3.9 x64 build.
 The [setup failure and official manifest observation](maintenance/2026-11-10-history-pagination.md#ci-runner-migration-failure-and-platform-correction)

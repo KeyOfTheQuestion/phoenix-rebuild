@@ -191,6 +191,10 @@ ordered by start time and ID, and remain stable against newer inserts. Receipts
 can finalize between pages; this is a seek position rather than a transaction
 snapshot. See the [38-check observations and limits](docs/maintenance/2026-11-10-history-pagination.md).
 
+Use `delivery-receipt --journal ./deliveries.sqlite3 --attempt-id ID` with the
+`journal_attempt_id` returned by delivery to inspect one attempt directly. The
+read-only lookup returns its current state and stored receipt, even when the
+attempt falls beyond the first history page. [Receipt lookup and exit codes](docs/delivery.md#look-up-a-delivery-receipt).
 
 ## Check the notebook in a browser
 

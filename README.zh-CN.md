@@ -145,6 +145,11 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 排序，较新记录插入不会挤动后续页；回执仍可能在翻页期间完成。这是继续读取的
 位置，不是事务快照。详见 [38 项检查与方法边界](docs/maintenance/2026-11-10-history-pagination.md)。
 
+将投递返回的 `journal_attempt_id` 传给
+`delivery-receipt --journal ./deliveries.sqlite3 --attempt-id ID`，即可直接查询一次投递。
+查询为只读，返回该记录的当前状态和已保存的收据，也适用于历史首页之外的记录。
+[收据查询与退出码](docs/delivery.md#look-up-a-delivery-receipt)。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

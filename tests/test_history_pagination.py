@@ -14,6 +14,46 @@ from phoenix import delivery_journal as journal
 
 
 class HistoryPageTests(unittest.TestCase):
+    def test_H09_lookup_finds_an_attempt_beyond_the_first_page(self):
+        self.seed(123)
+        identifier = "%032x" % 1
+        before = self.path.read_bytes()
+        attempt = journal.delivery_attempt(self.path, identifier)
+        self.assertEqual(attempt["id"], identifier)
+        self.assertEqual(attempt["state"], "unconfirmed")
+        self.assertIsNone(attempt["receipt"])
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H10_lookup_validates_before_opening_the_journal(self):
+        with patch.object(journal, "database", side_effect=AssertionError("Database opened")):
+            for identifier in (None, "A" * 32, "0" * 33, "' OR 1=1"):
+                with self.subTest(identifier=identifier), self.assertRaisesRegex(journal.JournalError, "attempt ID"):
+                    journal.delivery_attempt(self.path, identifier)
+        self.assertFalse(self.path.exists())
+
+    def test_H11_receipt_cli_distinguishes_found_missing_and_invalid_ids(self):
+        self.seed(2)
+        identifier = "%032x" % 1
+        journal.finish_attempt(self.path, identifier, {"status": "delivery-unknown", "attempts": 1, "http_status": None})
+        before = self.path.read_bytes()
+        cases = ((identifier, 0), ("f" * 32, 1), ("private-input!", 2))
+        for value, expected_exit in cases:
+            argv = ["phoenix", "delivery-receipt", "--journal", str(self.path), "--attempt-id", value]
+            stdout, stderr = io.StringIO(), io.StringIO()
+            with self.subTest(value=value), patch("sys.argv", argv), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                self.assertEqual(cli.main(), expected_exit)
+            if expected_exit == 0:
+                result = json.loads(stdout.getvalue())
+                self.assertEqual(result["kind"], "local-delivery-receipt")
+                self.assertEqual(result["attempt"]["id"], identifier)
+                self.assertEqual(result["attempt"]["receipt"]["status"], "delivery-unknown")
+            elif expected_exit == 1:
+                self.assertIsNone(json.loads(stdout.getvalue())["attempt"])
+            else:
+                self.assertEqual(stdout.getvalue(), "")
+                self.assertNotIn(value, stderr.getvalue())
+        self.assertEqual(self.path.read_bytes(), before)
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.path = Path(self.directory.name) / "attempts.sqlite3"

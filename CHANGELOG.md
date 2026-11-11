@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11 · Delivery receipt lookup
+
+- Added `delivery-receipt --attempt-id ID` to read a journal row directly by its primary key. The CLI reports found, missing and invalid lookups with distinct exit codes. [Receipt lookup evidence](docs/maintenance/2026-11-11-receipt-lookup.md).
+
 ## 2026-11-10 · Read-only delivery history pagination
 
 - Added `delivery-history --cursor TOKEN`, an additive `next_cursor` response and `delivery_history_page`. Continue beyond the first 100 records using start-time/ID keyset ordering; retain the legacy Python list API and SQLite schema.

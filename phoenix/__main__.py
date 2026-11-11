@@ -36,6 +36,9 @@ def main():
     history.add_argument("--journal", required=True)
     history.add_argument("--limit", type=int, default=20, help="Newest 1..100 attempts, default 20")
     history.add_argument("--cursor", help="Continue from the previous response's next_cursor")
+    receipt = commands.add_parser("delivery-receipt", help="Read one local delivery attempt by ID")
+    receipt.add_argument("--journal", required=True)
+    receipt.add_argument("--attempt-id", required=True, help="The journal_attempt_id returned by deliver-event")
     container = commands.add_parser("container-verify", help="Run HTTP acceptance inside an optional, restricted Docker container")
     container.add_argument("--candidate", default=str(ROOT / "examples/reference/server.py"))
     container.add_argument("--predecessor", default=str(ROOT / "examples/reference/server.py"))
@@ -87,6 +90,15 @@ def main():
             return 2
         print(json.dumps({"kind": "local-delivery-history", **page}, indent=2, ensure_ascii=False))
         return 0
+    if args.command == "delivery-receipt":
+        from .delivery_journal import JournalError, delivery_attempt
+        try:
+            attempt = delivery_attempt(args.journal, args.attempt_id)
+        except JournalError as error:
+            print("Delivery receipt refused: " + str(error), file=sys.stderr)
+            return 2
+        print(json.dumps({"kind": "local-delivery-receipt", "attempt": attempt}, indent=2, ensure_ascii=False))
+        return 0 if attempt is not None else 1
     if args.command in ("verify-continuity", "replay-continuity"):
         from .audit import EvidenceError
         from .continuity import verify_continuity, replay_continuity

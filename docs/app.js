@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-11-10 进展：投递历史新增只读游标分页，可继续查看首批 100 条之后的记录，保留未确认状态且不重发。38 项客户端检查使用今天的真实 AI 收件服务；今天重建首次通过 32/32，昨日到今日的交接通过 8/8。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-10-history-pagination.md">查看历史分页与重建证据 ↗</a>',
+  maintenanceNote:'2026-11-11 新增按投递尝试 ID 直接查询收据。客户端使用今天的真实 AI 收件服务通过 41 项检查。今天重建首次通过 32/32，昨日到今日的交接通过 8/8。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-11-receipt-lookup.md">查看收据查询与重建证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',

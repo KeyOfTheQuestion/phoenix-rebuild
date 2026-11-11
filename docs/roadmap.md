@@ -30,7 +30,9 @@
    validates a captured allowlist before network/journal activity and binds
    its hash to final receipts. [Read-only journal pagination 2026-11-10](maintenance/2026-11-10-history-pagination.md)
    adds bounded returned pages and keyset continuation beyond the newest 100 rows,
-   preserving receipt uncertainty and the legacy list API. Delivery to other hosts, a policy for those
+   preserving receipt uncertainty and the legacy list API. [Receipt lookup 2026-11-11](maintenance/2026-11-11-receipt-lookup.md)
+   retrieves a single saved attempt by ID, including records outside the first page.
+   Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix
    implemented 2026-11-03] New acceptance/replay results and evidence dialogs record actual

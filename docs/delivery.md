@@ -236,3 +236,26 @@ finalization between pages and the legacy API. H05 instruments the database
 boundary for invalid-input refusal; negative controls exercise canonical checks.
 D01 also reads the actual AI-backed delivery receipt through the page API.
 The expanded delivery smoke records 38 checks; old reports retain their bytes.
+
+## Look up a delivery receipt
+
+Use the `journal_attempt_id` from `deliver-event` with the same journal file.
+
+```sh
+python3 -m phoenix delivery-receipt --journal ./deliveries.sqlite3 --attempt-id ID
+```
+
+The lookup reads one row by its primary key. A found attempt has the same
+fields as a history row. Its state is `unconfirmed` with `receipt: null` while
+the final receipt is pending, or `finished` with the stored receipt. Read
+`receipt.status` on a finished attempt to determine the delivery outcome.
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | The output contains the matching record under `attempt`. |
+| 1 | The journal has no matching row. Output contains `attempt: null`. |
+| 2 | The identifier is malformed or the journal could not be read. A diagnostic goes to stderr. |
+
+IDs contain 32 lowercase hexadecimal characters. Validation precedes journal
+access. Python callers can use `delivery_attempt(path, identifier)` to retrieve
+the record or `None`. Both entry points use read-only access.
