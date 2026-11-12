@@ -180,3 +180,45 @@ class HistoryPageTests(unittest.TestCase):
         before = self.path.read_bytes()
         self.assertEqual(len(journal.delivery_history_page(self.path, 100, cursor)["attempts"]), 30)
         self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H12_state_filter_applies_before_the_page_limit(self):
+        self.seed(125, tied=True)
+        receipt = json.dumps({"status": "delivery-unknown", "attempts": 1, "http_status": None})
+        with journal.database(self.path) as connection, connection:
+            connection.execute("UPDATE delivery_attempts SET receipt_json = ? WHERE id > ?", (receipt, "%032x" % 3))
+        before = self.path.read_bytes()
+        first = journal.delivery_history_page(self.path, 2, state="unconfirmed")
+        self.assertEqual([row["id"] for row in first["attempts"]], ["%032x" % n for n in (3, 2)])
+        self.assertIsNotNone(first["next_cursor"])
+        last = journal.delivery_history_page(self.path, 2, first["next_cursor"], state="unconfirmed")
+        self.assertEqual([row["id"] for row in last["attempts"]], ["%032x" % 1])
+        self.assertIsNone(last["next_cursor"])
+        finished = journal.delivery_history_page(self.path, 2, state="finished")
+        self.assertEqual([row["id"] for row in finished["attempts"]], ["%032x" % n for n in (125, 124)])
+        self.assertTrue(all(row["receipt"]["status"] == "delivery-unknown" for row in finished["attempts"]))
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H13_cli_state_filter_observes_finalization_between_pages(self):
+        self.seed(3)
+
+        def page(extra):
+            argv = ["phoenix", "delivery-history", "--journal", str(self.path), "--limit", "1",
+                    "--state", "unconfirmed", *extra]
+            output = io.StringIO()
+            with patch("sys.argv", argv), contextlib.redirect_stdout(output):
+                self.assertEqual(cli.main(), 0)
+            return json.loads(output.getvalue())
+
+        first = page([])
+        self.assertEqual(first["attempts"][0]["id"], "%032x" % 3)
+        journal.finish_attempt(self.path, "%032x" % 2, {"status": "delivered", "attempts": 1, "http_status": 202})
+        last = page(["--cursor", first["next_cursor"]])
+        self.assertEqual([row["id"] for row in last["attempts"]], ["%032x" % 1])
+        self.assertIsNone(last["next_cursor"])
+
+    def test_H14_unknown_state_refuses_before_journal_access(self):
+        with patch.object(journal, "database", side_effect=AssertionError("Database opened")):
+            for state in ("", "delivered", "unknown", True):
+                with self.subTest(state=state), self.assertRaisesRegex(journal.JournalError, "History state"):
+                    journal.delivery_history_page(self.path, state=state)
+        self.assertFalse(self.path.exists())

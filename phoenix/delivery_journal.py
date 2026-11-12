@@ -152,13 +152,22 @@ def delivery_attempt(path, identifier):
         return _attempt_record(row)
 
 
-def delivery_history_page(path, limit=20, cursor=None):
+def delivery_history_page(path, limit=20, cursor=None, *, state=None):
     if type(limit) is not int or not 1 <= limit <= 100:
         raise JournalError("History limit must be an integer from 1 to 100")
+    if state not in (None, "unconfirmed", "finished"):
+        raise JournalError("History state must be unconfirmed or finished")
     position = decode_history_cursor(cursor) if cursor is not None else None
+    filters = []
+    if position is not None:
+        filters.append("(started_at, id) < (?, ?)")
+    if state == "unconfirmed":
+        filters.append("receipt_json IS NULL")
+    elif state == "finished":
+        filters.append("receipt_json IS NOT NULL")
+    clause = " WHERE " + " AND ".join(filters) if filters else ""
+    parameters = (*position, limit + 1) if position is not None else (limit + 1,)
     with database(path, readonly=True) as connection:
-        clause = " WHERE (started_at, id) < (?, ?)" if position is not None else ""
-        parameters = (*position, limit + 1) if position is not None else (limit + 1,)
         rows = connection.execute("SELECT * FROM delivery_attempts" + clause +
                                   " ORDER BY started_at DESC, id DESC LIMIT ?", parameters).fetchall()
         result = [_attempt_record(row) for row in rows[:limit]]

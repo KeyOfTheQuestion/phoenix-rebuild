@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-12 · Delivery history state filter
+
+- Added read-only `delivery-history --state unconfirmed|finished`. Filtered pages show pending receipts or saved outcomes in start-time and ID order. [State filter evidence](docs/maintenance/2026-11-12-history-state.md).
+
 ## 2026-11-11 · Delivery receipt lookup
 
 - Added `delivery-receipt --attempt-id ID` to read a journal row directly by its primary key. The CLI reports found, missing and invalid lookups with distinct exit codes. [Receipt lookup evidence](docs/maintenance/2026-11-11-receipt-lookup.md).

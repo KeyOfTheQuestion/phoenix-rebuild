@@ -237,6 +237,23 @@ boundary for invalid-input refusal; negative controls exercise canonical checks.
 D01 also reads the actual AI-backed delivery receipt through the page API.
 The expanded delivery smoke records 38 checks; old reports retain their bytes.
 
+## Filter delivery history by state
+
+```sh
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --state unconfirmed
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --state finished --limit 20
+```
+
+`unconfirmed` selects attempts awaiting a saved receipt. `finished` selects
+attempts with any saved outcome, including `delivery-unknown` and `rejected`.
+Omit `--state` to read both states.
+
+The query filters rows before applying the page limit. Pass the same state
+with `--cursor TOKEN` to continue that filtered list. Each read sees the journal
+state at query time. An attempt finalized between pages leaves the unconfirmed
+list. Python callers can pass `state="unconfirmed"` or `state="finished"` to
+`delivery_history_page`.
+
 ## Look up a delivery receipt
 
 Use the `journal_attempt_id` from `deliver-event` with the same journal file.

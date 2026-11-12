@@ -36,6 +36,7 @@ def main():
     history.add_argument("--journal", required=True)
     history.add_argument("--limit", type=int, default=20, help="Newest 1..100 attempts, default 20")
     history.add_argument("--cursor", help="Continue from the previous response's next_cursor")
+    history.add_argument("--state", help="Filter by journal state: unconfirmed or finished")
     receipt = commands.add_parser("delivery-receipt", help="Read one local delivery attempt by ID")
     receipt.add_argument("--journal", required=True)
     receipt.add_argument("--attempt-id", required=True, help="The journal_attempt_id returned by deliver-event")
@@ -84,7 +85,7 @@ def main():
     if args.command == "delivery-history":
         from .delivery_journal import JournalError, delivery_history_page
         try:
-            page = delivery_history_page(args.journal, args.limit, args.cursor)
+            page = delivery_history_page(args.journal, args.limit, args.cursor, state=args.state)
         except JournalError as error:
             print("Delivery history refused: " + str(error), file=sys.stderr)
             return 2

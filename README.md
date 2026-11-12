@@ -196,6 +196,11 @@ Use `delivery-receipt --journal ./deliveries.sqlite3 --attempt-id ID` with the
 read-only lookup returns its current state and stored receipt, even when the
 attempt falls beyond the first history page. [Receipt lookup and exit codes](docs/delivery.md#look-up-a-delivery-receipt).
 
+Use `delivery-history --journal ./deliveries.sqlite3 --state unconfirmed` to
+find attempts awaiting a saved receipt. Use `--state finished` to view attempts
+with a saved outcome. Repeat the state filter when following `next_cursor`.
+[Filter delivery history](docs/delivery.md#filter-delivery-history-by-state).
+
 ## Check the notebook in a browser
 
 Optional development checks use Python 3.10+ and pinned Playwright with headless Chromium. They exercise the real notebook under a Pages-style project path: ledger metrics, filters, language persistence, every evidence dialog and artifact link, contract navigation, and loading-error recovery. These checks run in CI and before Pages publication; they do not change the service's Python 3.9+ requirement or add runtime dependencies.

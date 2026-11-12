@@ -353,6 +353,11 @@ receipt from actual loopback delivery matches the history row. It also checks
 early input validation and the CLI outcomes for found, absent and malformed IDs.
 [Receipt lookup evidence](maintenance/2026-11-11-receipt-lookup.md).
 
+`delivery-history --state unconfirmed|finished` applies the receipt-presence
+predicate before the page limit. The client smoke covers sparse matches,
+finalization between pages, input validation and a finished receipt written by
+actual loopback delivery. [State filter evidence](maintenance/2026-11-12-history-state.md).
+
 The CI verify matrix is explicitly pinned to Ubuntu 24.04 after the moving
 `ubuntu-latest` image selected Ubuntu 26.04 without a Python 3.9 x64 build.
 The [setup failure and official manifest observation](maintenance/2026-11-10-history-pagination.md#ci-runner-migration-failure-and-platform-correction)
