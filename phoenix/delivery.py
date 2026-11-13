@@ -49,6 +49,10 @@ def safe_header(value):
     return isinstance(value, str) and all(32 <= ord(c) <= 255 and ord(c) != 127 for c in value)
 
 
+def valid_event_id(value):
+    return isinstance(value, str) and 1 <= len(value) <= 200 and safe_header(value)
+
+
 def valid_result(result, post_started):
     if not isinstance(result, dict) or type(result.get("attempts")) is not int \
             or result["attempts"] != int(post_started):
@@ -120,7 +124,7 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3, journal
     """Read one event, post it at most once, and enforce a worker-wide deadline."""
     endpoint(source, source=True)
     endpoint(destination)
-    if not isinstance(event_id, str) or not 1 <= len(event_id) <= 200 or not safe_header(event_id):
+    if not valid_event_id(event_id):
         raise DeliveryError("Use an event ID of 1..200 printable header characters")
     if not isinstance(admin_token, str) or not admin_token or len(admin_token) > 512 \
             or not safe_header(admin_token) or not admin_token.isascii():

@@ -10,6 +10,8 @@ import sqlite3
 import tempfile
 import uuid
 
+from .delivery import valid_event_id
+
 
 APPLICATION_ID = 0x50484A31
 RECEIPT_FIELDS = {
@@ -152,21 +154,28 @@ def delivery_attempt(path, identifier):
         return _attempt_record(row)
 
 
-def delivery_history_page(path, limit=20, cursor=None, *, state=None):
+def delivery_history_page(path, limit=20, cursor=None, *, state=None, event_id=None):
     if type(limit) is not int or not 1 <= limit <= 100:
         raise JournalError("History limit must be an integer from 1 to 100")
     if state not in (None, "unconfirmed", "finished"):
         raise JournalError("History state must be unconfirmed or finished")
+    if event_id is not None and not valid_event_id(event_id):
+        raise JournalError("Use an event ID of 1..200 printable header characters")
     position = decode_history_cursor(cursor) if cursor is not None else None
     filters = []
+    parameters = []
     if position is not None:
         filters.append("(started_at, id) < (?, ?)")
+        parameters.extend(position)
+    if event_id is not None:
+        filters.append("event_id = ?")
+        parameters.append(event_id)
     if state == "unconfirmed":
         filters.append("receipt_json IS NULL")
     elif state == "finished":
         filters.append("receipt_json IS NOT NULL")
     clause = " WHERE " + " AND ".join(filters) if filters else ""
-    parameters = (*position, limit + 1) if position is not None else (limit + 1,)
+    parameters.append(limit + 1)
     with database(path, readonly=True) as connection:
         rows = connection.execute("SELECT * FROM delivery_attempts" + clause +
                                   " ORDER BY started_at DESC, id DESC LIMIT ?", parameters).fetchall()

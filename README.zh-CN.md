@@ -155,6 +155,10 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 通过 `next_cursor` 翻页时，请传入同一个状态筛选条件。
 [按状态筛选投递历史](docs/delivery.md#filter-delivery-history-by-state)。
 
+用 `delivery-history --journal ./deliveries.sqlite3 --event-id ID` 查询某个收件
+事件的本地投递记录。可以同时传入 `--state`，通过 `next_cursor` 翻页时保留
+两个筛选条件。[按事件 ID 筛选](docs/delivery.md#filter-delivery-history-by-event-id)。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

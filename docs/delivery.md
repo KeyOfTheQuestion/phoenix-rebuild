@@ -254,6 +254,26 @@ state at query time. An attempt finalized between pages leaves the unconfirmed
 list. Python callers can pass `state="unconfirmed"` or `state="finished"` to
 `delivery_history_page`.
 
+## Filter delivery history by event ID
+
+```sh
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --event-id EVENT_ID --state finished
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --event-id EVENT_ID \
+  --state finished --cursor TOKEN_FROM_NEXT_CURSOR
+```
+
+Use the event ID returned by the inbox. SQLite matches it exactly and
+case-sensitively against the stored `event_id` before applying the page limit.
+If a journal contains attempts from different source origins with the same
+event ID, the query returns matches from each origin. An absent match returns
+an empty `attempts` list and a null cursor. The filter accepts the same event
+IDs as `deliver-event`, and invalid values return exit code 2 before opening
+the journal.
+
+Repeat the same event and state filters when continuing a page. Python callers
+can pass `event_id=EVENT_ID` to `delivery_history_page`.
+[Event filter observations](maintenance/2026-11-13-history-event.md).
+
 ## Look up a delivery receipt
 
 Use the `journal_attempt_id` from `deliver-event` with the same journal file.

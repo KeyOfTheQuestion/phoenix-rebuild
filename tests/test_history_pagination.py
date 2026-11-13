@@ -222,3 +222,62 @@ class HistoryPageTests(unittest.TestCase):
                 with self.subTest(state=state), self.assertRaisesRegex(journal.JournalError, "History state"):
                     journal.delivery_history_page(self.path, state=state)
         self.assertFalse(self.path.exists())
+
+    def test_H15_event_filter_finds_sparse_exact_matches(self):
+        self.seed(125, tied=True)
+        event_id = "evt-é' OR 1=1 --"
+        with journal.database(self.path) as connection, connection:
+            connection.execute("UPDATE delivery_attempts SET event_id = ? WHERE id <= ?", (event_id, "%032x" % 3))
+        before = self.path.read_bytes()
+        first = journal.delivery_history_page(self.path, 2, event_id=event_id)
+        self.assertEqual([row["id"] for row in first["attempts"]], ["%032x" % n for n in (3, 2)])
+        self.assertIsNotNone(first["next_cursor"])
+        last = journal.delivery_history_page(self.path, 2, first["next_cursor"], event_id=event_id)
+        self.assertEqual([row["id"] for row in last["attempts"]], ["%032x" % 1])
+        self.assertIsNone(last["next_cursor"])
+        self.assertEqual(journal.delivery_history_page(self.path, event_id=event_id.upper()),
+                         {"attempts": [], "next_cursor": None})
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H16_cli_combines_event_and_state_across_pages(self):
+        self.seed(6, tied=True)
+        event_id = "synthetic-match"
+        with journal.database(self.path) as connection, connection:
+            connection.execute("UPDATE delivery_attempts SET event_id = ? WHERE id <= ?", (event_id, "%032x" % 4))
+        journal.finish_attempt(self.path, "%032x" % 2, {"status": "delivery-unknown", "attempts": 1})
+        journal.finish_attempt(self.path, "%032x" % 6, {"status": "delivered", "attempts": 1})
+        before = self.path.read_bytes()
+
+        def page(state, extra=()):
+            argv = ["phoenix", "delivery-history", "--journal", str(self.path), "--limit", "2",
+                    "--event-id", event_id, "--state", state, *extra]
+            output = io.StringIO()
+            with patch("sys.argv", argv), contextlib.redirect_stdout(output):
+                self.assertEqual(cli.main(), 0)
+            return json.loads(output.getvalue())
+
+        first = page("unconfirmed")
+        self.assertEqual([row["id"] for row in first["attempts"]], ["%032x" % n for n in (4, 3)])
+        self.assertIsNotNone(first["next_cursor"])
+        last = page("unconfirmed", ("--cursor", first["next_cursor"]))
+        self.assertEqual([row["id"] for row in last["attempts"]], ["%032x" % 1])
+        self.assertIsNone(last["next_cursor"])
+        finished = page("finished")
+        self.assertEqual([row["id"] for row in finished["attempts"]], ["%032x" % 2])
+        self.assertEqual(finished["attempts"][0]["receipt"]["status"], "delivery-unknown")
+        self.assertIsNone(finished["next_cursor"])
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H17_invalid_event_ids_refuse_before_journal_access(self):
+        with patch.object(journal, "database", side_effect=AssertionError("Database opened")):
+            for event_id in ("", 1, "a" * 201, "\x00", "\x7f", "雪"):
+                with self.subTest(event_id=event_id), self.assertRaisesRegex(journal.JournalError, "event ID"):
+                    journal.delivery_history_page(self.path, event_id=event_id)
+            value = "synthetic-private\ninput"
+            argv = ["phoenix", "delivery-history", "--journal", str(self.path), "--event-id", value]
+            stdout, stderr = io.StringIO(), io.StringIO()
+            with patch("sys.argv", argv), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                self.assertEqual(cli.main(), 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertNotIn("synthetic-private", stderr.getvalue())
+        self.assertFalse(self.path.exists())

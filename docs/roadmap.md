@@ -34,6 +34,8 @@
    retrieves a single saved attempt by ID, including records outside the first page.
    [History state filter 2026-11-12](maintenance/2026-11-12-history-state.md)
    pages pending receipts or saved outcomes directly.
+   [History event filter 2026-11-13](maintenance/2026-11-13-history-event.md)
+   traces attempts for one event across pages and receipt states.
    Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix

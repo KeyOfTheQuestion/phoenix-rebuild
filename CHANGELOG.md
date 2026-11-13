@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-13 · Delivery history event filter
+
+- Added read-only `delivery-history --event-id ID`. The exact stored event ID can be combined with `--state` and cursor pagination. [Event filter evidence](docs/maintenance/2026-11-13-history-event.md).
+
 ## 2026-11-12 · Delivery history state filter
 
 - Added read-only `delivery-history --state unconfirmed|finished`. Filtered pages show pending receipts or saved outcomes in start-time and ID order. [State filter evidence](docs/maintenance/2026-11-12-history-state.md).

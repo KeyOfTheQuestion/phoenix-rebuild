@@ -358,6 +358,13 @@ predicate before the page limit. The client smoke covers sparse matches,
 finalization between pages, input validation and a finished receipt written by
 actual loopback delivery. [State filter evidence](maintenance/2026-11-12-history-state.md).
 
+`delivery-history --event-id ID` combines an exact, bound event ID predicate
+with the receipt-state and seek predicates before the page limit. The tests
+exercise sparse matches, literal SQL-like ID text, CLI continuation with both
+filters, and invalid-input refusal before opening the journal. D01 reads a
+matching finished receipt from actual loopback delivery.
+[Event filter evidence](maintenance/2026-11-13-history-event.md).
+
 The CI verify matrix is explicitly pinned to Ubuntu 24.04 after the moving
 `ubuntu-latest` image selected Ubuntu 26.04 without a Python 3.9 x64 build.
 The [setup failure and official manifest observation](maintenance/2026-11-10-history-pagination.md#ci-runner-migration-failure-and-platform-correction)
