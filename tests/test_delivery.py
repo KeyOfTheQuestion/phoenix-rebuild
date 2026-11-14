@@ -158,7 +158,7 @@ class DeliveryTests(DeliveryFixture, unittest.TestCase):
                 self.assertEqual(self.destination_state["requests"][-1]["body"], BODY.encode())
                 from phoenix.delivery_journal import delivery_attempt, delivery_history_page
                 page = delivery_history_page(Path(temporary) / "attempts.sqlite3", 1,
-                                             state="finished", event_id=identifier)
+                                             state="finished", event_id=identifier, destination=self.destination + "/approved")
                 self.assertEqual(delivery_attempt(Path(temporary) / "attempts.sqlite3", approved["journal_attempt_id"]),
                                  page["attempts"][0])
                 self.assertEqual(page["attempts"][0]["event_id"], identifier)

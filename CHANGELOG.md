@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-14 · Delivery history receiver filter
+
+- Added read-only `delivery-history --destination URL`, which combines the stored receiver fingerprint with event, state and cursor filters. [Receiver filter evidence](docs/maintenance/2026-11-14-history-destination.md).
+
 ## 2026-11-13 · Delivery history event filter
 
 - Added read-only `delivery-history --event-id ID`. The exact stored event ID can be combined with `--state` and cursor pagination. [Event filter evidence](docs/maintenance/2026-11-13-history-event.md).

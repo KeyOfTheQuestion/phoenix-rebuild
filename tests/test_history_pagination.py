@@ -2,10 +2,12 @@
 import base64
 import contextlib
 from datetime import datetime, timedelta, timezone
+import hashlib
 import io
 import json
 from pathlib import Path
 import tempfile
+import traceback
 import unittest
 from unittest.mock import patch
 
@@ -280,4 +282,61 @@ class HistoryPageTests(unittest.TestCase):
                 self.assertEqual(cli.main(), 2)
             self.assertEqual(stdout.getvalue(), "")
             self.assertNotIn("synthetic-private", stderr.getvalue())
+        self.assertFalse(self.path.exists())
+
+    def test_H18_destination_filter_combines_exact_match_state_and_cursor(self):
+        self.seed(125, tied=True)
+        destination = "http://127.0.0.1:9000/webhook?key=synthetic"
+        other = "http://127.0.0.1:9000/webhook?key=other"
+        event_id = "synthetic-shared"
+        expected_hash = hashlib.sha256(destination.encode("ascii")).hexdigest()
+        other_hash = hashlib.sha256(other.encode("ascii")).hexdigest()
+        with journal.database(self.path) as connection, connection:
+            connection.execute("UPDATE delivery_attempts SET event_id = ?, destination_sha256 = ?",
+                               (event_id, other_hash))
+            connection.execute("UPDATE delivery_attempts SET destination_sha256 = ? WHERE id <= ?",
+                               (expected_hash, "%032x" % 5))
+            connection.execute("UPDATE delivery_attempts SET event_id = ? WHERE id = ?",
+                               ("different-event", "%032x" % 5))
+        journal.finish_attempt(self.path, "%032x" % 4, {"status": "delivered", "attempts": 1})
+        before = self.path.read_bytes()
+
+        def page(url, extra=()):
+            argv = ["phoenix", "delivery-history", "--journal", str(self.path), "--limit", "2",
+                    "--destination", url, "--state", "unconfirmed", "--event-id", event_id, *extra]
+            output = io.StringIO()
+            with patch("sys.argv", argv), contextlib.redirect_stdout(output):
+                self.assertEqual(cli.main(), 0)
+            self.assertNotIn(destination, output.getvalue())
+            return json.loads(output.getvalue())
+
+        first = page(destination)
+        self.assertEqual([row["id"] for row in first["attempts"]], ["%032x" % n for n in (3, 2)])
+        self.assertIsNotNone(first["next_cursor"])
+        last = page(destination, ("--cursor", first["next_cursor"]))
+        self.assertEqual([row["id"] for row in last["attempts"]], ["%032x" % 1])
+        self.assertIsNone(last["next_cursor"])
+        self.assertEqual(page(destination.split("?")[0])["attempts"], [])
+        self.assertEqual(page(other)["attempts"][0]["id"], "%032x" % 125)
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H19_invalid_destination_refuses_without_journal_access_or_url_echo(self):
+        with patch.object(journal, "database", side_effect=AssertionError("Database opened")):
+            for url in ("", 7, "http://localhost:9000/", "http://127.0.0.1/", "http://127.0.0.1:9000/#frag"):
+                with self.subTest(url=url), self.assertRaisesRegex(journal.JournalError, "destination"):
+                    journal.delivery_history_page(self.path, destination=url)
+            marker = "synthetic-private"
+            url = "http://127.0.0.1:" + marker + "/"
+            try:
+                journal.delivery_history_page(self.path, destination=url)
+            except journal.JournalError as error:
+                self.assertNotIn(marker, "".join(traceback.format_exception(type(error), error, error.__traceback__)))
+            else:
+                self.fail("Malformed port was accepted")
+            argv = ["phoenix", "delivery-history", "--journal", str(self.path), "--destination", url]
+            stdout, stderr = io.StringIO(), io.StringIO()
+            with patch("sys.argv", argv), contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                self.assertEqual(cli.main(), 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertNotIn(marker, stderr.getvalue())
         self.assertFalse(self.path.exists())

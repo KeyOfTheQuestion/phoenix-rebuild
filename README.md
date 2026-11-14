@@ -206,6 +206,11 @@ all local attempts for one stored event. Combine it with `--state` and repeat
 both filters when following `next_cursor`.
 [Filter by event ID](docs/delivery.md#filter-delivery-history-by-event-id).
 
+Use `delivery-history --journal ./deliveries.sqlite3 --destination http://127.0.0.1:9000/webhook`
+to trace attempts for an exact receiver URL using its stored fingerprint.
+Keep the destination filter when following `next_cursor`.
+[Filter by receiver URL](docs/delivery.md#filter-delivery-history-by-receiver-url).
+
 ## Check the notebook in a browser
 
 Optional development checks use Python 3.10+ and pinned Playwright with headless Chromium. They exercise the real notebook under a Pages-style project path: ledger metrics, filters, language persistence, every evidence dialog and artifact link, contract navigation, and loading-error recovery. These checks run in CI and before Pages publication; they do not change the service's Python 3.9+ requirement or add runtime dependencies.

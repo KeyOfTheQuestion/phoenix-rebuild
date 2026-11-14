@@ -36,6 +36,8 @@
    pages pending receipts or saved outcomes directly.
    [History event filter 2026-11-13](maintenance/2026-11-13-history-event.md)
    traces attempts for one event across pages and receipt states.
+   [History receiver filter 2026-11-14](maintenance/2026-11-14-history-destination.md)
+   matches the exact receiver URL's stored fingerprint across pages.
    Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix

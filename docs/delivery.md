@@ -274,6 +274,27 @@ Repeat the same event and state filters when continuing a page. Python callers
 can pass `event_id=EVENT_ID` to `delivery_history_page`.
 [Event filter observations](maintenance/2026-11-13-history-event.md).
 
+## Filter delivery history by receiver URL
+
+```sh
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 \
+  --destination http://127.0.0.1:9000/webhook --event-id EVENT_ID --state finished
+```
+
+Supply the same IPv4 loopback HTTP URL string used for delivery. The reader
+validates the URL and compares its SHA-256 to the journal's existing
+`destination_sha256` before applying the page limit. Matching uses the entire
+string, including the port, path, query and any trailing slash. The URL is
+hashed in memory and omitted from the JSON output. Use a synthetic URL in
+examples and keep secrets out of command-line arguments.
+
+The query opens the journal read-only and makes no HTTP requests. A valid URL
+with no matching rows returns an empty page with a null cursor. An invalid
+URL returns exit code 2 before journal access. Repeat all filters with
+`--cursor TOKEN`. Python callers can pass `destination=URL` to
+`delivery_history_page`.
+[Receiver filter observations](maintenance/2026-11-14-history-destination.md).
+
 ## Look up a delivery receipt
 
 Use the `journal_attempt_id` from `deliver-event` with the same journal file.

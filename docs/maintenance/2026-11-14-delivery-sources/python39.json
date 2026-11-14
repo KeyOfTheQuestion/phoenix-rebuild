@@ -1,0 +1,326 @@
+{
+  "checks": [
+    {
+      "duration_ms": 511.38,
+      "id": "D01",
+      "passed": true,
+      "title": "delivers the actual inbox body and selected headers"
+    },
+    {
+      "duration_ms": 316.98,
+      "id": "D02",
+      "passed": true,
+      "title": "redirects are reported without following them"
+    },
+    {
+      "duration_ms": 174.19,
+      "id": "D03",
+      "passed": true,
+      "title": "receiver failure is one attempt"
+    },
+    {
+      "duration_ms": 1087.65,
+      "id": "D04",
+      "passed": true,
+      "title": "invalid source events never start delivery"
+    },
+    {
+      "duration_ms": 14.91,
+      "id": "D05",
+      "passed": true,
+      "title": "invalid addresses credentials and deadlines refuse before network"
+    },
+    {
+      "duration_ms": 176.1,
+      "id": "D06",
+      "passed": true,
+      "title": "source credentials and unselected headers are not forwarded"
+    },
+    {
+      "duration_ms": 826.8,
+      "id": "D07",
+      "passed": true,
+      "title": "deadline after post keeps the outcome unknown"
+    },
+    {
+      "duration_ms": 425.45,
+      "id": "D08",
+      "passed": true,
+      "title": "slow drip source is bounded by the overall deadline"
+    },
+    {
+      "duration_ms": 200.69,
+      "id": "D09",
+      "passed": true,
+      "title": "receiver response capture is capped"
+    },
+    {
+      "duration_ms": 327.3,
+      "id": "D10",
+      "passed": true,
+      "title": "cli uses the token environment and truthful exit codes"
+    },
+    {
+      "duration_ms": 312.14,
+      "id": "D11",
+      "passed": true,
+      "title": "empty and maximum utf8 bodies arrive exactly"
+    },
+    {
+      "duration_ms": 25.9,
+      "id": "D12",
+      "passed": true,
+      "title": "inconsistent or partial worker messages keep receipts truthful"
+    },
+    {
+      "duration_ms": 470.25,
+      "id": "J01",
+      "passed": true,
+      "title": "final receipts are private redacted and persistent"
+    },
+    {
+      "duration_ms": 14.0,
+      "id": "J02",
+      "passed": true,
+      "title": "unavailable or unrelated journal refuses before http"
+    },
+    {
+      "duration_ms": 329.39,
+      "id": "J03",
+      "passed": true,
+      "title": "history is bounded read only and never delivers"
+    },
+    {
+      "duration_ms": 227.7,
+      "id": "J04",
+      "passed": true,
+      "title": "killed client retains unconfirmed attempt without retry"
+    },
+    {
+      "duration_ms": 525.25,
+      "id": "J05",
+      "passed": true,
+      "title": "concurrent clients retain distinct attempts"
+    },
+    {
+      "duration_ms": 1295.28,
+      "id": "J06",
+      "passed": true,
+      "title": "failed final commit keeps http outcome and unconfirmed row"
+    },
+    {
+      "duration_ms": 389.74,
+      "id": "J07",
+      "passed": true,
+      "title": "simultaneous first use publishes only initialized database"
+    },
+    {
+      "duration_ms": 60.98,
+      "id": "J08",
+      "passed": true,
+      "title": "refusing unrelated hot database preserves recovery files"
+    },
+    {
+      "duration_ms": 175.63,
+      "id": "J09",
+      "passed": true,
+      "title": "wal history refuses without creating sidecars"
+    },
+    {
+      "duration_ms": 179.97,
+      "id": "K01",
+      "passed": true,
+      "title": "exact approved destination delivers and binds final journal"
+    },
+    {
+      "duration_ms": 25.62,
+      "id": "K02",
+      "passed": true,
+      "title": "near matches refuse before http or journal creation"
+    },
+    {
+      "duration_ms": 24.11,
+      "id": "K03",
+      "passed": true,
+      "title": "entire policy schema is strict"
+    },
+    {
+      "duration_ms": 184.21,
+      "id": "K04",
+      "passed": true,
+      "title": "byte and entry limits are enforced at boundaries"
+    },
+    {
+      "duration_ms": 178.47,
+      "id": "K05",
+      "passed": true,
+      "title": "policy is captured once and edits apply to next invocation"
+    },
+    {
+      "duration_ms": 1122.52,
+      "id": "K06",
+      "passed": true,
+      "title": "policy hash survives rejection source error and unknown delivery"
+    },
+    {
+      "duration_ms": 212.91,
+      "id": "K07",
+      "passed": true,
+      "title": "cli enforces policy and redacts refusals"
+    },
+    {
+      "duration_ms": 26.75,
+      "id": "K08",
+      "passed": true,
+      "title": "unavailable and nonregular files refuse before http"
+    },
+    {
+      "duration_ms": 62.6,
+      "id": "K09",
+      "passed": true,
+      "title": "repeated nonregular refusals release file descriptors"
+    },
+    {
+      "duration_ms": 6.01,
+      "id": "H01",
+      "passed": true,
+      "title": "traverses more than one hundred rows without mutation"
+    },
+    {
+      "duration_ms": 2.84,
+      "id": "H02",
+      "passed": true,
+      "title": "equal timestamps use the id tie breaker"
+    },
+    {
+      "duration_ms": 3.43,
+      "id": "H03",
+      "passed": true,
+      "title": "newer insert does not shift the continuation"
+    },
+    {
+      "duration_ms": 3.0,
+      "id": "H04",
+      "passed": true,
+      "title": "finalization can update receipts without changing order"
+    },
+    {
+      "duration_ms": 2.69,
+      "id": "H05",
+      "passed": true,
+      "title": "invalid cursors refuse before opening a missing journal"
+    },
+    {
+      "duration_ms": 4.07,
+      "id": "H06",
+      "passed": true,
+      "title": "empty and exact terminal pages have no cursor"
+    },
+    {
+      "duration_ms": 8.38,
+      "id": "H07",
+      "passed": true,
+      "title": "cli continues and redacts invalid cursor diagnostics"
+    },
+    {
+      "duration_ms": 2.75,
+      "id": "H08",
+      "passed": true,
+      "title": "legacy list api and unsigned seek positions remain read only"
+    },
+    {
+      "duration_ms": 2.56,
+      "id": "H09",
+      "passed": true,
+      "title": "lookup finds an attempt beyond the first page"
+    },
+    {
+      "duration_ms": 0.42,
+      "id": "H10",
+      "passed": true,
+      "title": "lookup validates before opening the journal"
+    },
+    {
+      "duration_ms": 8.9,
+      "id": "H11",
+      "passed": true,
+      "title": "receipt cli distinguishes found missing and invalid ids"
+    },
+    {
+      "duration_ms": 4.26,
+      "id": "H12",
+      "passed": true,
+      "title": "state filter applies before the page limit"
+    },
+    {
+      "duration_ms": 7.86,
+      "id": "H13",
+      "passed": true,
+      "title": "cli state filter observes finalization between pages"
+    },
+    {
+      "duration_ms": 0.44,
+      "id": "H14",
+      "passed": true,
+      "title": "unknown state refuses before journal access"
+    },
+    {
+      "duration_ms": 3.72,
+      "id": "H15",
+      "passed": true,
+      "title": "event filter finds sparse exact matches"
+    },
+    {
+      "duration_ms": 9.69,
+      "id": "H16",
+      "passed": true,
+      "title": "cli combines event and state across pages"
+    },
+    {
+      "duration_ms": 2.99,
+      "id": "H17",
+      "passed": true,
+      "title": "invalid event ids refuse before journal access"
+    },
+    {
+      "duration_ms": 16.9,
+      "id": "H18",
+      "passed": true,
+      "title": "destination filter combines exact match state and cursor"
+    },
+    {
+      "duration_ms": 3.9,
+      "id": "H19",
+      "passed": true,
+      "title": "invalid destination refuses without journal access or url echo"
+    }
+  ],
+  "execution_runtime": {
+    "python_implementation": "CPython",
+    "python_version": "3.9.6",
+    "sqlite_version": "3.43.2"
+  },
+  "inbox_ai_run_id": "20261114T023215Z-093277",
+  "kind": "loopback-delivery-verification",
+  "passed": 49,
+  "public_ledger_changed": false,
+  "schema_version": 1,
+  "scope": "current checkout; source HTTP, loopback POST, protocol faults, filtered journal pages, receipt lookup and captured destination policy; synthetic data",
+  "source_sha256": {
+    "checks.py": "e898ef944955778d9832815e6bfaf354d81d6da2f6f0f7da4a33ec5aa074d1cc",
+    "cli.py": "68c8d9df1d17dd0c3f22be670617aec9726209d1e5192c7d70770dcf49248469",
+    "delivery.py": "ea2c69360650cb184f366f083f4cf756454520e77b588cb646956db1eabb9055",
+    "history_checks.py": "a3de19feb2b03b4278bea4252d94b6e20e603bd4305cb5a58d77d452d3410d39",
+    "http_helper.py": "494d66e9c3e66b33596ebb0ba55e68d3db32347bc1e658c3bc1f0a87f3ebe0b1",
+    "inbox.py": "c5bddf31d17762fcbb1f7034b93e20f023f64c372e4193a4e5edcdabdb49bd52",
+    "journal.py": "b768346944fef912e80838900514506fdc532123ae112d4b219b80801f658cca",
+    "journal_checks.py": "15b8110d302199c6dbe70860b992a861a30da4d1e9a151a3f5126087ff73ece2",
+    "policy.py": "21d0c07c0b6da7db1b7a3cb0df6cdc3c0217b5dbeeefd846d97140dcc7fbd244",
+    "policy_checks.py": "81cb6980ca145da87f76760dda4fb71abaaa1eefcf2a109282629870b553b194",
+    "records.py": "ffd8cb2e5d8542a461a3cd80f2b0f77f1c890ee5745b05e4f6e016d00fa7740b",
+    "runner.py": "630c20b1d33f838161a268dd1068062c54ca69148df9eb058a052f0def7df3cf"
+  },
+  "started_at": "2026-11-14T02:36:04.376069+00:00",
+  "status": "passed",
+  "total": 49
+}

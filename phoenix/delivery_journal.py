@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 import base64
 import binascii
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -10,7 +11,7 @@ import sqlite3
 import tempfile
 import uuid
 
-from .delivery import valid_event_id
+from .delivery import DeliveryError, endpoint, valid_event_id
 
 
 APPLICATION_ID = 0x50484A31
@@ -154,7 +155,7 @@ def delivery_attempt(path, identifier):
         return _attempt_record(row)
 
 
-def delivery_history_page(path, limit=20, cursor=None, *, state=None, event_id=None):
+def delivery_history_page(path, limit=20, cursor=None, *, state=None, event_id=None, destination=None):
     if type(limit) is not int or not 1 <= limit <= 100:
         raise JournalError("History limit must be an integer from 1 to 100")
     if state not in (None, "unconfirmed", "finished"):
@@ -170,6 +171,13 @@ def delivery_history_page(path, limit=20, cursor=None, *, state=None, event_id=N
     if event_id is not None:
         filters.append("event_id = ?")
         parameters.append(event_id)
+    if destination is not None:
+        try:
+            endpoint(destination)
+        except DeliveryError:
+            raise JournalError("Invalid delivery history destination URL") from None
+        filters.append("destination_sha256 = ?")
+        parameters.append(hashlib.sha256(destination.encode("ascii")).hexdigest())
     if state == "unconfirmed":
         filters.append("receipt_json IS NULL")
     elif state == "finished":

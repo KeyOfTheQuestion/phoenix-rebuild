@@ -365,6 +365,12 @@ filters, and invalid-input refusal before opening the journal. D01 reads a
 matching finished receipt from actual loopback delivery.
 [Event filter evidence](maintenance/2026-11-13-history-event.md).
 
+`delivery-history --destination URL` uses the original destination URL's
+SHA-256 as a bound journal predicate. The smoke exercises exact query-string
+matching, continuation with event and state filters, malformed input before
+journal access and a matching receipt from actual loopback delivery.
+[Receiver filter evidence](maintenance/2026-11-14-history-destination.md).
+
 The CI verify matrix is explicitly pinned to Ubuntu 24.04 after the moving
 `ubuntu-latest` image selected Ubuntu 26.04 without a Python 3.9 x64 build.
 The [setup failure and official manifest observation](maintenance/2026-11-10-history-pagination.md#ci-runner-migration-failure-and-platform-correction)
