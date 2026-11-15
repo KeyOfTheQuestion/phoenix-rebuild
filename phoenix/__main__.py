@@ -32,6 +32,7 @@ def main():
     delivery.add_argument("--timeout", type=float, default=3, help="Overall worker deadline, 0.1..10 seconds")
     delivery.add_argument("--journal", help="Optional local SQLite attempt history; committed before network activity")
     delivery.add_argument("--destination-policy", help="Optional exact loopback URL allowlist JSON file")
+    delivery.add_argument("--expect-body-sha256", help="Require this SHA-256 of the original UTF-8 body before sending")
     history = commands.add_parser("delivery-history", help="Read local delivery attempts without retrying them")
     history.add_argument("--journal", required=True)
     history.add_argument("--limit", type=int, default=20, help="Newest 1..100 attempts, default 20")
@@ -72,7 +73,8 @@ def main():
         try:
             report = deliver_event(args.source, args.event_id, args.destination,
                                    os.environ.get("PHOENIX_ADMIN_TOKEN", ""), args.timeout,
-                                   journal=args.journal, policy=args.destination_policy)
+                                   journal=args.journal, policy=args.destination_policy,
+                                   expected_body_sha256=args.expect_body_sha256)
         except (DeliveryError, JournalError, OSError) as error:
             print("Delivery refused: " + str(error), file=sys.stderr)
             return 2

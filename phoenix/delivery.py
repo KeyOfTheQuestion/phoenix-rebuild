@@ -6,6 +6,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -53,9 +54,11 @@ def valid_event_id(value):
     return isinstance(value, str) and 1 <= len(value) <= 200 and safe_header(value)
 
 
-def valid_result(result, post_started):
+def valid_result(result, post_started, expected_body_sha256=None):
     if not isinstance(result, dict) or type(result.get("attempts")) is not int \
             or result["attempts"] != int(post_started):
+        return False
+    if post_started and expected_body_sha256 is not None and result.get("body_sha256") != expected_body_sha256:
         return False
     status = result.get("status")
     http_status = result.get("http_status")
@@ -96,6 +99,10 @@ def worker(payload):
             raise DeliveryError("Invalid source headers")
         headers["X-Phoenix-Event-Id"] = payload["event_id"]
         receipt.update(body_sha256=fingerprint, request_bytes=len(body))
+        expected_body_sha256 = payload.get("expected_body_sha256")
+        if expected_body_sha256 is not None and fingerprint != expected_body_sha256:
+            receipt["error"] = "source-body-digest-mismatch"
+            return receipt
     except (OSError, http.client.HTTPException, ValueError, UnicodeError):
         receipt["error"] = "source-response-invalid"
         return receipt
@@ -120,12 +127,17 @@ def worker(payload):
     return receipt
 
 
-def deliver_event(source, event_id, destination, admin_token, timeout=3, journal=None, policy=None):
+def deliver_event(source, event_id, destination, admin_token, timeout=3, journal=None, policy=None,
+                  *, expected_body_sha256=None):
     """Read one event, post it at most once, and enforce a worker-wide deadline."""
     endpoint(source, source=True)
     endpoint(destination)
     if not valid_event_id(event_id):
         raise DeliveryError("Use an event ID of 1..200 printable header characters")
+    if expected_body_sha256 is not None and (
+        not isinstance(expected_body_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_body_sha256)
+    ):
+        raise DeliveryError("Use an expected body SHA-256 of 64 lowercase hexadecimal characters")
     if not isinstance(admin_token, str) or not admin_token or len(admin_token) > 512 \
             or not safe_header(admin_token) or not admin_token.isascii():
         raise DeliveryError("PHOENIX_ADMIN_TOKEN must contain 1..512 printable ASCII characters")
@@ -139,7 +151,7 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3, journal
     timestamp = datetime.now(timezone.utc).isoformat()
     source_bytes = Path(__file__).read_bytes()
     payload = {"source": source, "event_id": event_id, "destination": destination,
-               "token": admin_token, "timeout": timeout}
+               "token": admin_token, "timeout": timeout, "expected_body_sha256": expected_body_sha256}
     journal_id = None
     if journal is not None:
         from .delivery_journal import start_attempt
@@ -187,13 +199,15 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3, journal
                     result = final_message.get("result")
     except ValueError:
         pass
-    if not valid_result(result, post_started):
+    if not valid_result(result, post_started, expected_body_sha256):
         result = {"status": "delivery-unknown" if post_started else "source-error",
                   "attempts": int(post_started), "http_status": None,
                   "error": "deadline" if timed_out else "worker-result-unavailable"}
     result.update(schema_version=1, kind="loopback-delivery", event_id=event_id,
                   started_at=timestamp, duration_seconds=round(time.monotonic() - started, 3),
                   timeout_seconds=timeout, worker_sha256=hashlib.sha256(source_bytes).hexdigest())
+    if expected_body_sha256 is not None:
+        result["expected_body_sha256"] = expected_body_sha256
     if policy_sha256 is not None:
         result["destination_policy_sha256"] = policy_sha256
     if journal_id is not None:

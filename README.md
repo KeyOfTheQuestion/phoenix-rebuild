@@ -167,6 +167,11 @@ enforces a worker-wide deadline and response limit. A missing response after
 POST starts produces `delivery-unknown`. The pilot accepts IPv4 loopback HTTP
 addresses and has [independent receiver checks](docs/maintenance/2026-11-07-loopback-delivery.md).
 
+Pass `--expect-body-sha256 DIGEST` with a trusted digest of the original UTF-8
+body to require an exact match before the POST. A mismatch reports
+`source-body-digest-mismatch` with zero POST attempts.
+[Pin the body digest](docs/delivery.md#pin-the-body-digest).
+
 Add `--journal ./deliveries.sqlite3` to retain an invocation before network
 activity. Inspect it with `python3 -m phoenix delivery-history --journal
 ./deliveries.sqlite3 --limit 20`. Interrupted attempts remain `unconfirmed`;

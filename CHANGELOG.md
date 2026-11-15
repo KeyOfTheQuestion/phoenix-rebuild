@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-15 · Delivery body digest precondition
+
+- Added optional `deliver-event --expect-body-sha256 DIGEST`. The client reports a mismatch before the POST and includes the expected digest in the receipt. [Body digest evidence](docs/maintenance/2026-11-15-delivery-body-pin.md).
+
 ## 2026-11-14 · Delivery history receiver filter
 
 - Added read-only `delivery-history --destination URL`, which combines the stored receiver fingerprint with event, state and cursor filters. [Receiver filter evidence](docs/maintenance/2026-11-14-history-destination.md).

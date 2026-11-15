@@ -125,6 +125,11 @@ python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
 当前试验接受 IPv4 回环 HTTP 地址。详见[使用方法](docs/delivery.md)及
 [独立接收器验证](docs/maintenance/2026-11-07-loopback-delivery.md)。
 
+传入 `--expect-body-sha256 DIGEST`，即可在 POST 前用可信的原始 UTF-8 正文摘要
+核对实际内容。摘要不符时，回执的错误字段为 `source-body-digest-mismatch`，
+POST 尝试次数为 0。
+[固定正文摘要](docs/delivery.md#pin-the-body-digest)。
+
 加上 `--journal ./deliveries.sqlite3`，可在联网前保存本次调用；使用
 `python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --limit 20`
 查看历史。中断记录保留为 `unconfirmed`，查询不会重新发送。日志只保存事件

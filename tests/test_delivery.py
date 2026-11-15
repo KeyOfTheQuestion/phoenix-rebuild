@@ -150,9 +150,10 @@ class DeliveryTests(DeliveryFixture, unittest.TestCase):
                 policy = Path(temporary) / "destination-policy.json"
                 raw_policy = json.dumps({"schema_version": 1, "destinations": [self.destination + "/approved"]}).encode()
                 policy.write_bytes(raw_policy)
+                expected = hashlib.sha256(BODY.encode("utf-8")).hexdigest()
                 approved = self.deliver(source="http://127.0.0.1:%s" % subject.port, event_id=identifier,
                                         admin_token=subject.token, destination=self.destination + "/approved", policy=policy,
-                                        journal=Path(temporary) / "attempts.sqlite3")
+                                        journal=Path(temporary) / "attempts.sqlite3", expected_body_sha256=expected)
                 self.assertEqual(approved["status"], "delivered")
                 self.assertEqual(approved["destination_policy_sha256"], hashlib.sha256(raw_policy).hexdigest())
                 self.assertEqual(self.destination_state["requests"][-1]["body"], BODY.encode())
@@ -163,6 +164,7 @@ class DeliveryTests(DeliveryFixture, unittest.TestCase):
                                  page["attempts"][0])
                 self.assertEqual(page["attempts"][0]["event_id"], identifier)
                 self.assertEqual(page["attempts"][0]["receipt"]["destination_policy_sha256"], approved["destination_policy_sha256"])
+                self.assertEqual(page["attempts"][0]["receipt"]["expected_body_sha256"], expected)
                 self.assertIsNone(page["next_cursor"])
             finally:
                 subject.stop()
@@ -291,6 +293,66 @@ class DeliveryTests(DeliveryFixture, unittest.TestCase):
                 self.assertEqual(report["attempts"], attempts)
                 self.assertEqual(report["status"], "delivery-unknown" if attempts else "source-error")
                 self.assertIsNone(report["http_status"])
+
+        expected = hashlib.sha256(BODY.encode("utf-8")).hexdigest()
+        for observed in (None, "0" * 64):
+            result = {"status": "delivered", "attempts": 1, "http_status": 202}
+            if observed is not None:
+                result["body_sha256"] = observed
+            output = b'{"phase":"post-started"}\n' + json.dumps({"result": result}).encode("utf-8")
+            with self.subTest(observed=observed), patch("phoenix.delivery.subprocess.Popen") as start:
+                process = start.return_value
+                process.returncode = 0
+                process.communicate.return_value = (output, b"")
+                report = self.deliver(expected_body_sha256=expected)
+                self.assertEqual((report["status"], report["attempts"], report["http_status"]),
+                                 ("delivery-unknown", 1, None))
+                self.assertEqual(report["error"], "worker-result-unavailable")
+                self.assertEqual(report["expected_body_sha256"], expected)
+                self.assertNotIn("body_sha256", report)
+
+
+    def test_D13_pinned_digest_blocks_a_self_consistent_source_change(self):
+        from phoenix.delivery_journal import delivery_attempt
+
+        changed = "replacement payload"
+        observed = hashlib.sha256(changed.encode("utf-8")).hexdigest()
+        expected = hashlib.sha256(BODY.encode("utf-8")).hexdigest()
+        self.source_state["event"].update(body=changed, body_sha256=observed)
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "attempts.sqlite3"
+            argv = ["phoenix", "deliver-event", "--source", self.source, "--event-id", "event-1",
+                    "--destination", self.destination, "--journal", str(path), "--expect-body-sha256", expected]
+            output = io.StringIO()
+            with patch.dict(os.environ, PHOENIX_ADMIN_TOKEN=TOKEN), patch("sys.argv", argv), \
+                    contextlib.redirect_stdout(output):
+                self.assertEqual(cli.main(), 2)
+            receipt = json.loads(output.getvalue())
+            self.assertEqual((receipt["status"], receipt["attempts"], receipt["http_status"]),
+                             ("source-error", 0, None))
+            self.assertEqual(receipt["error"], "source-body-digest-mismatch")
+            self.assertEqual(receipt["body_sha256"], observed)
+            self.assertEqual(receipt["expected_body_sha256"], expected)
+            self.assertNotIn(changed, output.getvalue())
+            self.assertTrue(receipt["journal_saved"])
+            saved = delivery_attempt(path, receipt["journal_attempt_id"])
+            self.assertEqual(saved["state"], "finished")
+            self.assertEqual(saved["receipt"]["error"], receipt["error"])
+            self.assertEqual(saved["receipt"]["attempts"], 0)
+            self.assertEqual(saved["receipt"]["expected_body_sha256"], expected)
+            self.assertEqual(saved["receipt"]["body_sha256"], observed)
+        self.assertEqual(len(self.source_state["requests"]), 1)
+        self.assertEqual(self.destination_state["requests"], [])
+
+    def test_D14_invalid_expected_digest_refuses_before_io(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "attempts.sqlite3"
+            for digest in ("", "0" * 63, "A" * 64, "g" * 64, True, "0" * 64 + "\n"):
+                with self.subTest(digest=digest), self.assertRaisesRegex(DeliveryError, "expected body SHA-256"):
+                    self.deliver(journal=path, expected_body_sha256=digest)
+            self.assertFalse(path.exists())
+        self.assertEqual(self.source_state["requests"], [])
+        self.assertEqual(self.destination_state["requests"], [])
 
 
 if __name__ == "__main__":

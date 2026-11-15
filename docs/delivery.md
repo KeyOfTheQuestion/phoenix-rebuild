@@ -71,6 +71,35 @@ record support. CI and Pages run it without model credentials. Historical
 checkout observations can be reproduced from their commit and source snapshots.
 See the [first observations](maintenance/2026-11-07-loopback-delivery.md).
 
+## Pin the body digest
+
+```sh
+python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
+  --event-id EVENT_ID --destination http://127.0.0.1:9000/webhook \
+  --expect-body-sha256 "$EXPECTED_DIGEST" --journal ./deliveries.sqlite3
+```
+
+Set `EXPECTED_DIGEST` to a trusted digest of the exact original UTF-8 body
+bytes, including any whitespace or trailing newline. The client first checks
+the fetched event against its own reported digest, then compares the
+computed SHA-256 to the supplied value before the POST phase begins.
+The check covers the body bytes. Event identity and forwarded headers follow
+the existing delivery checks.
+
+The flag accepts 64 lowercase hexadecimal characters. A malformed value
+returns exit 2 before journal creation or network access. A valid value
+that differs from the fetched body returns `source-error` with
+`error: source-body-digest-mismatch`, `attempts: 0` and `http_status: null`.
+The result carries the requested `expected_body_sha256` and, when the body
+was validated, the observed `body_sha256`. When final persistence succeeds,
+the journal keeps the same digest evidence. A timeout receipt may contain the
+expected digest alone, which records what was requested.
+If a worker reports that it started a POST but its completion lacks the
+matching digest, the client reports `delivery-unknown`.
+
+Python callers can pass `expected_body_sha256=DIGEST` to `deliver_event`.
+[Verification record](maintenance/2026-11-15-delivery-body-pin.md).
+
 ## Optional local attempt journal
 
 Use a new local file to keep an attempt even if the client is interrupted:
