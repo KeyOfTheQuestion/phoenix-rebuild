@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-11-15 支持在 Webhook 投递前校验预期正文摘要。今天的 AI 重建首轮通过 32/32，昨日到今日的数据交接通过 8/8。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-15-delivery-body-pin.md">查看投递检查与重建证据 ↗</a>',
+  maintenanceNote:'2026-11-16 支持在不连接接收端的情况下预检 Webhook 投递。今天的 AI 重建首轮通过 32/32，昨日到今日的数据交接通过 8/8。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-16-delivery-dry-run.md">查看预检与重建证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',

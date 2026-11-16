@@ -40,6 +40,8 @@
    matches the exact receiver URL's stored fingerprint across pages.
    [Body digest precondition 2026-11-15](maintenance/2026-11-15-delivery-body-pin.md)
    lets callers require the expected payload before sending it.
+   [Delivery preflight 2026-11-16](maintenance/2026-11-16-delivery-dry-run.md)
+   checks the source and preconditions before connecting to the receiver.
    Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix

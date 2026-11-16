@@ -172,6 +172,11 @@ body to require an exact match before the POST. A mismatch reports
 `source-body-digest-mismatch` with zero POST attempts.
 [Pin the body digest](docs/delivery.md#pin-the-body-digest).
 
+Add `--dry-run` to validate the event, expected digest and optional policy
+before sending. A successful preflight reports `ready` with zero POST
+attempts. It opens no receiver connection and cannot be combined with
+`--journal`. [Check a delivery without sending it](docs/delivery.md#check-a-delivery-without-sending-it).
+
 Add `--journal ./deliveries.sqlite3` to retain an invocation before network
 activity. Inspect it with `python3 -m phoenix delivery-history --journal
 ./deliveries.sqlite3 --limit 20`. Interrupted attempts remain `unconfirmed`;

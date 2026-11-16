@@ -41,6 +41,7 @@ automatic retry and uses a new connection for the receiver.
 
 | Receipt status | Meaning | CLI exit |
 | --- | --- | --- |
+| `ready` | A dry run successfully validated the source event and any supplied preconditions | 0 |
 | `delivered` | A receiver response in the 200..299 range was read | 0 |
 | `rejected` | The receiver returned another HTTP status | 1 |
 | `source-error` | Fetching or validating the event failed before a POST started | 2 |
@@ -99,6 +100,28 @@ matching digest, the client reports `delivery-unknown`.
 
 Python callers can pass `expected_body_sha256=DIGEST` to `deliver_event`.
 [Verification record](maintenance/2026-11-15-delivery-body-pin.md).
+
+## Check a delivery without sending it
+
+```sh
+python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
+  --event-id EVENT_ID --destination http://127.0.0.1:9000/webhook --dry-run
+```
+
+A dry run checks the destination URL format and any supplied destination
+policy, then fetches and validates the source event under the existing worker
+deadline. It also enforces `--expect-body-sha256` if supplied. On success the
+receipt carries `dry_run: true`, `status: ready`, `attempts: 0`,
+`http_status: null`, the validated body digest and the number of bytes
+that would be sent. Source or precondition failures return exit 2.
+
+The receiver port need not be listening. The parent validates its URL and
+omits it from the dry-run worker input. A later send fetches and validates
+the event again. Use `--expect-body-sha256` to require the digest observed
+in a preflight.
+Combining `--dry-run` with `--journal` returns exit 2 before network access
+or journal creation. Python callers can set `dry_run=True`.
+[Verification record](maintenance/2026-11-16-delivery-dry-run.md).
 
 ## Optional local attempt journal
 

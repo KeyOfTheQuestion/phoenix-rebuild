@@ -33,6 +33,7 @@ def main():
     delivery.add_argument("--journal", help="Optional local SQLite attempt history; committed before network activity")
     delivery.add_argument("--destination-policy", help="Optional exact loopback URL allowlist JSON file")
     delivery.add_argument("--expect-body-sha256", help="Require this SHA-256 of the original UTF-8 body before sending")
+    delivery.add_argument("--dry-run", action="store_true", help="Validate the source event without connecting to the receiver")
     history = commands.add_parser("delivery-history", help="Read local delivery attempts without retrying them")
     history.add_argument("--journal", required=True)
     history.add_argument("--limit", type=int, default=20, help="Newest 1..100 attempts, default 20")
@@ -74,14 +75,14 @@ def main():
             report = deliver_event(args.source, args.event_id, args.destination,
                                    os.environ.get("PHOENIX_ADMIN_TOKEN", ""), args.timeout,
                                    journal=args.journal, policy=args.destination_policy,
-                                   expected_body_sha256=args.expect_body_sha256)
+                                   expected_body_sha256=args.expect_body_sha256, dry_run=args.dry_run)
         except (DeliveryError, JournalError, OSError) as error:
             print("Delivery refused: " + str(error), file=sys.stderr)
             return 2
         print(json.dumps(report, indent=2, ensure_ascii=False))
         if report.get("journal_saved") is False:
             return 2
-        if report["status"] == "delivered":
+        if report["status"] in ("delivered", "ready"):
             return 0
         if report["status"] == "rejected":
             return 1

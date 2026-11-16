@@ -128,6 +128,13 @@ class DeliveryTests(DeliveryFixture, unittest.TestCase):
                 self.assertEqual(status, 201)
                 identifier = received["id"]
                 before = subject.request("GET", "/api/events/" + identifier)[1]
+                preview = self.deliver(source="http://127.0.0.1:%s" % subject.port, event_id=identifier,
+                                       admin_token=subject.token, destination=self.destination + "/receive?fixture=1",
+                                       expected_body_sha256=hashlib.sha256(BODY.encode("utf-8")).hexdigest(),
+                                       dry_run=True)
+                self.assertEqual((preview["status"], preview["attempts"], preview["http_status"]), ("ready", 0, None))
+                self.assertTrue(preview["dry_run"])
+                self.assertEqual(self.destination_state["requests"], [])
                 report = self.deliver(source="http://127.0.0.1:%s" % subject.port, event_id=identifier,
                                       admin_token=subject.token, destination=self.destination + "/receive?fixture=1")
                 self.assertEqual((report["status"], report["http_status"], report["attempts"]), ("delivered", 202, 1))
@@ -353,6 +360,73 @@ class DeliveryTests(DeliveryFixture, unittest.TestCase):
             self.assertFalse(path.exists())
         self.assertEqual(self.source_state["requests"], [])
         self.assertEqual(self.destination_state["requests"], [])
+
+
+    def test_D15_cli_dry_run_checks_source_and_policy_without_posting(self):
+        expected = hashlib.sha256(BODY.encode("utf-8")).hexdigest()
+        destination = self.destination + "/receive"
+        with tempfile.TemporaryDirectory() as temporary:
+            policy = Path(temporary) / "policy.json"
+            journal = Path(temporary) / "attempts.sqlite3"
+            policy.write_text(json.dumps({"schema_version": 1, "destinations": [destination]}))
+            argv = ["phoenix", "deliver-event", "--source", self.source, "--event-id", "event-1",
+                    "--destination", destination, "--dry-run", "--destination-policy", str(policy)]
+
+            def run(extra):
+                output, errors = io.StringIO(), io.StringIO()
+                with patch.dict(os.environ, PHOENIX_ADMIN_TOKEN=TOKEN), patch("sys.argv", argv + extra), \
+                        contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+                    code = cli.main()
+                self.assertNotIn(TOKEN, output.getvalue() + errors.getvalue())
+                return code, output.getvalue(), errors.getvalue()
+
+            code, output, _ = run(["--expect-body-sha256", expected])
+            self.assertEqual(code, 0)
+            report = json.loads(output)
+            self.assertEqual((report["status"], report["attempts"], report["http_status"]), ("ready", 0, None))
+            self.assertTrue(report["dry_run"])
+            self.assertEqual(report["body_sha256"], expected)
+            self.assertEqual(report["request_bytes"], len(BODY.encode("utf-8")))
+            self.assertEqual(report["destination_policy_sha256"], hashlib.sha256(policy.read_bytes()).hexdigest())
+            self.assertNotIn("journal_attempt_id", report)
+
+            code, output, _ = run(["--expect-body-sha256", "0" * 64])
+            self.assertEqual(code, 2)
+            self.assertEqual(json.loads(output)["error"], "source-body-digest-mismatch")
+            self.assertEqual(run(["--journal", str(journal)])[0], 2)
+            self.assertFalse(journal.exists())
+            policy.write_text(json.dumps({"schema_version": 1, "destinations": [self.destination + "/other"]}))
+            self.assertEqual(run([])[0], 2)
+        self.assertEqual(len(self.source_state["requests"]), 2)
+        self.assertEqual(self.destination_state["requests"], [])
+
+    def test_D16_dry_run_worker_completion_cannot_claim_delivery_or_skip_body_checks(self):
+        observed = hashlib.sha256(BODY.encode("utf-8")).hexdigest()
+        cases = [
+            (True, [], {"status": "ready", "attempts": 0, "http_status": None}, "source-error"),
+            (True, [], {"status": "ready", "attempts": 0, "http_status": None,
+                        "body_sha256": "0" * 64, "request_bytes": 1}, "source-error"),
+            (True, [{"phase": "post-started"}], {"status": "delivered", "attempts": 1, "http_status": 202,
+                                                "body_sha256": observed}, "delivery-unknown"),
+            (False, [], {"status": "ready", "attempts": 0, "http_status": None,
+                         "body_sha256": observed, "request_bytes": 1}, "source-error"),
+        ]
+        for dry_run, markers, result, status in cases:
+            output = "\n".join(json.dumps(message) for message in [*markers, {"result": result}])
+            with self.subTest(dry_run=dry_run, markers=markers, result=result), \
+                    patch("phoenix.delivery.subprocess.Popen") as start:
+                process = start.return_value
+                process.returncode = 0
+                process.communicate.return_value = (output.encode("utf-8"), b"")
+                report = self.deliver(dry_run=dry_run, expected_body_sha256=observed)
+                payload = json.loads(process.communicate.call_args.args[0])
+                if dry_run:
+                    self.assertNotIn("destination", payload)
+                else:
+                    self.assertEqual(payload["destination"], self.destination + "/receive")
+                self.assertEqual((report["status"], report["attempts"], report["http_status"]),
+                                 (status, len(markers), None))
+                self.assertEqual(report["error"], "worker-result-unavailable")
 
 
 if __name__ == "__main__":

@@ -378,6 +378,13 @@ The real AI inbox control verifies an exact UTF-8 match, and the journal
 retains the requested and observed digests when a final receipt is saved.
 [Body digest evidence](maintenance/2026-11-15-delivery-body-pin.md).
 
+`deliver-event --dry-run` uses the delivery worker's bounded source
+validation and stops before the receiver phase. The smoke checks a real AI
+inbox, source and policy failures, journal refusal, zero receiver requests
+and invalid worker receipts. A successful `ready` receipt binds the validated
+body digest and size.
+[Preflight evidence](maintenance/2026-11-16-delivery-dry-run.md).
+
 The CI verify matrix is explicitly pinned to Ubuntu 24.04 after the moving
 `ubuntu-latest` image selected Ubuntu 26.04 without a Python 3.9 x64 build.
 The [setup failure and official manifest observation](maintenance/2026-11-10-history-pagination.md#ci-runner-migration-failure-and-platform-correction)

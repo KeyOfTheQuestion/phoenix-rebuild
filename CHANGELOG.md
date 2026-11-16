@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-16 · Delivery preflight
+
+- Added `deliver-event --dry-run` to validate an event and its delivery preconditions without a receiver connection or attempt journal. [Preflight evidence](docs/maintenance/2026-11-16-delivery-dry-run.md).
+
 ## 2026-11-15 · Delivery body digest precondition
 
 - Added optional `deliver-event --expect-body-sha256 DIGEST`. The client reports a mismatch before the POST and includes the expected digest in the receipt. [Body digest evidence](docs/maintenance/2026-11-15-delivery-body-pin.md).

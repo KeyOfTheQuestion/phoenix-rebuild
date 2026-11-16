@@ -54,14 +54,23 @@ def valid_event_id(value):
     return isinstance(value, str) and 1 <= len(value) <= 200 and safe_header(value)
 
 
-def valid_result(result, post_started, expected_body_sha256=None):
+def valid_result(result, post_started, expected_body_sha256=None, *, dry_run=False):
     if not isinstance(result, dict) or type(result.get("attempts")) is not int \
             or result["attempts"] != int(post_started):
+        return False
+    if dry_run and post_started:
         return False
     if post_started and expected_body_sha256 is not None and result.get("body_sha256") != expected_body_sha256:
         return False
     status = result.get("status")
     http_status = result.get("http_status")
+    if status == "ready":
+        digest = result.get("body_sha256")
+        request_bytes = result.get("request_bytes")
+        return (dry_run and http_status is None and "error" not in result
+                and isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest) is not None
+                and (expected_body_sha256 is None or digest == expected_body_sha256)
+                and type(request_bytes) is int and 0 <= request_bytes <= MAX_BODY)
     if status in ("delivered", "rejected"):
         if not post_started or type(http_status) is not int or not 100 <= http_status <= 599:
             return False
@@ -73,7 +82,9 @@ def valid_result(result, post_started, expected_body_sha256=None):
 
 def worker(payload):
     source_port, _ = endpoint(payload["source"], source=True)
-    destination_port, path = endpoint(payload["destination"])
+    dry_run = payload.get("dry_run", False)
+    if not dry_run:
+        destination_port, path = endpoint(payload["destination"])
     receipt = {"status": "source-error", "attempts": 0, "http_status": None}
     connection = http.client.HTTPConnection("127.0.0.1", source_port, timeout=payload["timeout"])
     try:
@@ -108,6 +119,9 @@ def worker(payload):
         return receipt
     finally:
         connection.close()
+    if dry_run:
+        receipt["status"] = "ready"
+        return receipt
     # Flush the phase marker before a network attempt. The parent uses it if the
     # absolute deadline kills this worker while a delivery may have happened.
     print(json.dumps({"phase": "post-started"}), flush=True)
@@ -128,8 +142,12 @@ def worker(payload):
 
 
 def deliver_event(source, event_id, destination, admin_token, timeout=3, journal=None, policy=None,
-                  *, expected_body_sha256=None):
-    """Read one event, post it at most once, and enforce a worker-wide deadline."""
+                  *, expected_body_sha256=None, dry_run=False):
+    """Validate one event and optionally post it under a worker-wide deadline."""
+    if type(dry_run) is not bool:
+        raise DeliveryError("Dry run must be a boolean")
+    if dry_run and journal is not None:
+        raise DeliveryError("Dry run cannot be combined with a delivery journal")
     endpoint(source, source=True)
     endpoint(destination)
     if not valid_event_id(event_id):
@@ -150,8 +168,12 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3, journal
     started = time.monotonic()
     timestamp = datetime.now(timezone.utc).isoformat()
     source_bytes = Path(__file__).read_bytes()
-    payload = {"source": source, "event_id": event_id, "destination": destination,
-               "token": admin_token, "timeout": timeout, "expected_body_sha256": expected_body_sha256}
+    payload = {"source": source, "event_id": event_id,
+               "token": admin_token, "timeout": timeout, "expected_body_sha256": expected_body_sha256,
+               "dry_run": dry_run}
+    # A worker from an older checkout must fail closed if it ignores dry_run.
+    if not dry_run:
+        payload["destination"] = destination
     journal_id = None
     if journal is not None:
         from .delivery_journal import start_attempt
@@ -199,13 +221,15 @@ def deliver_event(source, event_id, destination, admin_token, timeout=3, journal
                     result = final_message.get("result")
     except ValueError:
         pass
-    if not valid_result(result, post_started, expected_body_sha256):
+    if not valid_result(result, post_started, expected_body_sha256, dry_run=dry_run):
         result = {"status": "delivery-unknown" if post_started else "source-error",
                   "attempts": int(post_started), "http_status": None,
                   "error": "deadline" if timed_out else "worker-result-unavailable"}
     result.update(schema_version=1, kind="loopback-delivery", event_id=event_id,
                   started_at=timestamp, duration_seconds=round(time.monotonic() - started, 3),
                   timeout_seconds=timeout, worker_sha256=hashlib.sha256(source_bytes).hexdigest())
+    if dry_run:
+        result["dry_run"] = True
     if expected_body_sha256 is not None:
         result["expected_body_sha256"] = expected_body_sha256
     if policy_sha256 is not None:

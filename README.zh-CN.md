@@ -130,6 +130,10 @@ python3 -m phoenix deliver-event --source http://127.0.0.1:8787 \
 POST 尝试次数为 0。
 [固定正文摘要](docs/delivery.md#pin-the-body-digest)。
 
+加上 `--dry-run` 可预检事件、预期摘要和可选的目标策略。通过时返回
+`ready`，POST 尝试次数为 0。预检不连接接收端，也不能与 `--journal` 同用。
+[预检投递](docs/delivery.md#check-a-delivery-without-sending-it)。
+
 加上 `--journal ./deliveries.sqlite3`，可在联网前保存本次调用；使用
 `python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --limit 20`
 查看历史。中断记录保留为 `unconfirmed`，查询不会重新发送。日志只保存事件
