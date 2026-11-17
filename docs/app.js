@@ -1,6 +1,6 @@
 'use strict';
 const zh = {
-  maintenanceNote:'2026-11-16 支持在不连接接收端的情况下预检 Webhook 投递。今天的 AI 重建首轮通过 32/32，昨日到今日的数据交接通过 8/8。<a href="https://github.com/KeyOfTheQuestion/phoenix-rebuild/blob/main/docs/maintenance/2026-11-16-delivery-dry-run.md">查看预检与重建证据 ↗</a>',
+  maintenanceNote:'2026-11-17 每次实验的证据弹窗现在都有永久链接。今天的 AI 重建首轮通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261117T022946Z-78d1d1">直达今天的证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',
@@ -23,6 +23,7 @@ function translate(){
   document.querySelectorAll('[data-i18n]').forEach(e=>{e.innerHTML=language==='zh' ? (zh[e.dataset.i18n]||original.get(e.dataset.i18n)) : original.get(e.dataset.i18n);});
   document.getElementById('language').textContent=language==='zh'?'EN':'中文';
   render();
+  renderLoadError();
 }
 
 function render(){
@@ -51,16 +52,49 @@ document.getElementById('copy-command').addEventListener('click',async()=>{
   catch{document.getElementById('copy-command').textContent=text('See the commands below ↓','请查看下方复现命令 ↓');document.querySelector('.terminal-card').scrollIntoView({behavior:'smooth'});}
 });
 const dialog=document.getElementById('evidence-dialog');
+const loadError=document.getElementById('load-error');
+const loadErrorMessages={
+  unknown:['This evidence link does not identify a published run.','此证据链接未指向已公开的实验记录。'],
+  report:['Could not load this report. Please retry or open the GitHub evidence directory.','报告读取失败，请重试或到 GitHub 的证据目录查看。'],
+  ledger:['The ledger could not be loaded. Serve this folder over HTTP, or inspect docs/runs.json on GitHub.','记录加载失败。请通过 HTTP 打开页面，或直接在 GitHub 查看 docs/runs.json。']
+};
+let loadErrorKind=null;
+let evidenceRequest=0;
+
+function renderLoadError(){
+  loadError.hidden=loadErrorKind===null;
+  loadError.textContent=loadErrorKind===null?'':text(...loadErrorMessages[loadErrorKind]);
+}
+
+function setLoadError(kind){
+  loadErrorKind=kind;
+  renderLoadError();
+}
 document.getElementById('close-dialog').addEventListener('click',()=>dialog.close());
 dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
-document.getElementById('runs').addEventListener('click',async e=>{
-  const button=e.target.closest('[data-run]');if(!button)return;
-  button.disabled=true;
+
+async function openEvidence(id){
+  const request=++evidenceRequest;
+  if(!records.some(record=>record.id===id)){
+    setLoadError('unknown');
+    return;
+  }
   try{
-    const id=button.dataset.run;
-    const response=await fetch(`evidence/${encodeURIComponent(id)}/report.json`);if(!response.ok)throw new Error('Report unavailable');
+    const response=await fetch(`evidence/${encodeURIComponent(id)}/report.json`);
+    if(!response.ok){
+      throw new Error('Report unavailable');
+    }
     const r=await response.json();
+    if(request!==evidenceRequest){
+      return;
+    }
+    if(r.id!==id){
+      throw new Error('Report identifies a different run');
+    }
     document.getElementById('dialog-run-id').textContent=id;
+    const permalink=document.getElementById('evidence-permalink');
+    permalink.href=`?run=${encodeURIComponent(id)}`;
+    permalink.textContent=text('Permalink ↗','永久链接 ↗');
     document.getElementById('dialog-title').textContent=text('An inspectable result.','一份可核验的结果。');
     const generation=r.provenance?.generation_seconds;
     document.getElementById('dialog-summary').textContent=`${r.passed}/${r.total} ${text('checks passed','项验收通过')} · ${r.kind} · ${text('Contract','契约')} ${r.contract_id||'001'} · ${text('Verification','验收')} ${r.duration_seconds}s${generation!=null?' · '+text('Generation','生成')+' '+generation+'s':''}`;
@@ -70,12 +104,45 @@ document.getElementById('runs').addEventListener('click',async e=>{
     const runtime=r.execution_runtime ? `${r.execution_runtime.python_implementation} ${r.execution_runtime.python_version}; SQLite ${r.execution_runtime.sqlite_version}` : text('Not recorded','未记录');
     const execution=r.execution==='docker-container'?text('Docker container; cooperative evaluator.','Docker 容器；协作式验收。'):r.execution==='docker-container-attempted'?text('Container verification error; no acceptance verdict.','容器验收环境错误；未产生验收结论。'):r.execution==='local-subprocess-attempted'?text('Local verifier runtime error; no acceptance verdict.','本地验收器运行错误；未产生验收结论。'):r.execution==='not-executed'?text('Candidate not executed.','未执行候选代码。'):text('Local subprocess.','本地子进程。');
     document.getElementById('dialog-provenance').textContent=`SHA-256: ${r.candidate_sha256} · ${text('Runtime: ','运行时：')}${runtime} · ${text('Usage','用量')}: ${tokens} · ${text('Cost: unknown.','费用未知。')} ${execution} ${r.kind==='ai-rebuild'?text('Procedural generation context separation.','生成上下文通过流程分开。'):text('Reference verification; no model call.','参考验证；未调用模型。')}`;
+    setLoadError(null);
     dialog.showModal();
-  }catch(error){const status=document.getElementById('load-error');status.hidden=false;status.textContent=text('Could not load this report. Please retry or open the GitHub evidence directory.','报告读取失败，请重试或到 GitHub 的证据目录查看。');}finally{button.disabled=false;}
+  }catch{
+    if(request===evidenceRequest){
+      setLoadError('report');
+    }
+  }
+}
+
+document.getElementById('runs').addEventListener('click',async e=>{
+  const button=e.target.closest('[data-run]');
+  if(!button){
+    return;
+  }
+  button.disabled=true;
+  try{
+    await openEvidence(button.dataset.run);
+  }finally{
+    button.disabled=false;
+  }
 });
 
 async function load(){
-  try{const response=await fetch('runs.json',{cache:'no-cache'});if(!response.ok)throw new Error('Ledger unavailable');records=await response.json();translate();}
-  catch{document.getElementById('runs').innerHTML='';const status=document.getElementById('load-error');status.hidden=false;status.className='notice';status.textContent=text('The ledger could not be loaded. Serve this folder over HTTP, or inspect docs/runs.json on GitHub.','记录加载失败。请通过 HTTP 打开页面，或直接在 GitHub 查看 docs/runs.json。');}
+  try{
+    const response=await fetch('runs.json',{cache:'no-cache'});
+    if(!response.ok){
+      throw new Error('Ledger unavailable');
+    }
+    records=await response.json();
+    translate();
+  }catch{
+    document.getElementById('runs').innerHTML='';
+    loadError.className='notice';
+    setLoadError('ledger');
+    return;
+  }
+  const run=new URLSearchParams(location.search).get('run');
+  if(run!==null){
+    await openEvidence(run);
+  }
 }
 translate();load();

@@ -273,6 +273,70 @@ class NotebookBrowserTests(unittest.TestCase):
         expect(self.page.locator("#load-error")).to_contain_text("The ledger could not be loaded.")
         expect(self.page.locator("#runs [data-run]")).to_have_count(0)
 
+    def test_evidence_permalink_opens_the_same_archived_run_in_a_fresh_context(self):
+        self.open_notebook()
+        row = next(row for row in self.ledger if row["kind"] != "ai-rebuild")
+        run_id = row["id"]
+        self.page.locator('[data-run="%s"]' % run_id).click()
+        link = self.page.get_by_role("link", name="Permalink ↗", exact=True)
+        expect(link).to_have_attribute("href", "?run=" + run_id)
+        permalink = urljoin(self.page.url, link.get_attribute("href"))
+        self.assertEqual(self.page.url, self.base)
+        context = self.browser.new_context()
+        self.addCleanup(context.close)
+        page = context.new_page()
+        page.add_init_script("localStorage.setItem('phoenix-language', 'zh')")
+        page.goto(permalink)
+        expect(page.locator("#evidence-dialog")).to_be_visible()
+        expect(page.locator("#dialog-run-id")).to_have_text(run_id)
+        expect(page.get_by_role("link", name="永久链接 ↗", exact=True)).to_have_attribute("href", "?run=" + run_id)
+        page.keyboard.press("Escape")
+        expect(page.locator("#evidence-dialog")).to_be_hidden()
+        expect(page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
+        page.reload()
+        expect(page.locator("#dialog-run-id")).to_have_text(run_id)
+        expect(page.locator("#evidence-dialog")).to_be_visible()
+
+    def test_unknown_permalink_leaves_the_ledger_usable_and_fetches_no_report(self):
+        requests = []
+        self.page.on("request", lambda request: requests.append(request.url))
+        self.page.goto(self.base + "?run=..%2Fmissing", wait_until="networkidle")
+        expect(self.page.locator("#load-error")).to_contain_text("This evidence link does not identify a published run.")
+        expect(self.page.locator("#evidence-dialog")).to_be_hidden()
+        self.assertFalse(any("report.json" in url for url in requests))
+        expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
+        self.page.locator("#language").click()
+        expect(self.page.locator("#load-error")).to_have_text("此证据链接未指向已公开的实验记录。")
+        self.page.locator("#runs [data-run]").first.click()
+        expect(self.page.locator("#evidence-dialog")).to_be_visible()
+        expect(self.page.locator("#load-error")).to_be_hidden()
+
+    def test_permalink_refuses_a_report_for_a_different_run(self):
+        requested = self.ledger[0]["id"]
+        wrong = self.ledger[1]["id"]
+        report = json.loads((SITE / "evidence" / wrong / "report.json").read_bytes())
+        self.page.route("**/evidence/%s/report.json" % requested, lambda route: route.fulfill(json=report))
+        self.page.goto(self.base + "?run=" + requested)
+        expect(self.page.locator("#load-error")).to_contain_text("Could not load this report.")
+        expect(self.page.locator("#evidence-dialog")).to_be_hidden()
+
+    def test_late_report_cannot_replace_a_newer_evidence_selection(self):
+        self.open_notebook()
+        slow, latest = (row["id"] for row in self.ledger[:2])
+        pattern = "**/evidence/%s/report.json" % slow
+        pending = []
+        self.page.route(pattern, pending.append)
+        slow_button = self.page.locator('[data-run="%s"]' % slow)
+        slow_button.click()
+        expect(slow_button).to_be_disabled()
+        self.page.locator('[data-run="%s"]' % latest).click()
+        expect(self.page.locator("#dialog-run-id")).to_have_text(latest)
+        self.page.locator("#close-dialog").click()
+        self.assertEqual(len(pending), 1)
+        pending[0].continue_()
+        expect(slow_button).to_be_enabled()
+        expect(self.page.locator("#evidence-dialog")).to_be_hidden()
+
     def test_unavailable_report_allows_a_retry(self):
         self.open_notebook()
         route_pattern = "**/evidence/**/report.json"

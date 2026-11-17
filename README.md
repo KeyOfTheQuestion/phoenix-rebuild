@@ -223,6 +223,9 @@ Keep the destination filter when following `next_cursor`.
 
 ## Check the notebook in a browser
 
+Open an evidence dialog and use **Permalink** to share that run. The link
+opens the same archived evidence directly in a fresh browser.
+
 Optional development checks use Python 3.10+ and pinned Playwright with headless Chromium. They exercise the real notebook under a Pages-style project path: ledger metrics, filters, language persistence, every evidence dialog and artifact link, contract navigation, and loading-error recovery. These checks run in CI and before Pages publication; they do not change the service's Python 3.9+ requirement or add runtime dependencies.
 
 See [browser test setup](docs/setup.md#notebook-browser-checks) and the [2026-10-22 checks and reconstruction record](docs/maintenance/2026-10-22-notebook-browser-checks.md).

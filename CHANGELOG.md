@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-17 · Evidence permalinks
+
+- Added a shareable link in each notebook evidence dialog. Opening it loads the selected run directly. [Verification record](docs/maintenance/2026-11-17-evidence-permalinks.md).
+
 ## 2026-11-16 · Delivery preflight
 
 - Added `deliver-event --dry-run` to validate an event and its delivery preconditions without a receiver connection or attempt journal. [Preflight evidence](docs/maintenance/2026-11-16-delivery-dry-run.md).
