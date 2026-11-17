@@ -325,7 +325,7 @@ class NotebookBrowserTests(unittest.TestCase):
         slow, latest = (row["id"] for row in self.ledger[:2])
         pattern = "**/evidence/%s/report.json" % slow
         pending = []
-        self.page.route(pattern, pending.append)
+        self.page.route(pattern, lambda route: pending.append(route))
         slow_button = self.page.locator('[data-run="%s"]' % slow)
         slow_button.click()
         expect(slow_button).to_be_disabled()

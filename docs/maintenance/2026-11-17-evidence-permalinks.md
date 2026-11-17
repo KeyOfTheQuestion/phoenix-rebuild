@@ -22,6 +22,12 @@ previous language after a switch. The notice now follows the language
 toggle. Additional controls cover a report carrying the wrong ID and a
 late response for a superseded selection.
 
+The first CI browser job ran 15 tests. Fourteen passed, and the late
+response test stopped before making a request because Playwright could
+not wrap the built-in list method passed as its handler. The follow-up
+uses a Python function for the callback.
+[Initial CI browser job](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/44004209461/job/133775430549).
+
 The backend regression passed 164 unit tests, 19 independent HTTP
 checks and the evidence audit on CPython 3.9.6.
 
