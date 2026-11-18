@@ -18,6 +18,8 @@
 4. [Done 2026-10-22] Add an end-to-end browser check for ledger filters, language and artifact links, including a Pages publication check ([verification record](maintenance/2026-10-22-notebook-browser-checks.md)).
    [Evidence permalinks 2026-11-17](maintenance/2026-11-17-evidence-permalinks.md)
    open a specific published run directly in the notebook.
+   [Outcome filtering 2026-11-18](maintenance/2026-11-18-notebook-outcomes.md)
+   distinguishes acceptance, generation, and verification environment failures.
 5. [Pilot 2026-10-27; composed acceptance 2026-10-28; reference archive 2026-10-29; container replay 2026-10-30; AI generation 2026-11-04] Contract 002 now has atomic migration, bounded expiry and full frozen 32-check AI reconstruction via `rebuild --contract 002`. AI archives use `retention-ai-v1`; reference rows retain their separate profile and stay outside AI metrics. Both support local, Docker and runtime-matrix replay. Default generation remains contract 001 with local acceptance; v2 generation also supports explicit Docker acceptance (2026-11-05). The first actual v2 attempt passed 32/32 on Python 3.9 and replayed on 3.9/3.14 ([evidence and limits](maintenance/2026-11-04-retention-ai.md)).
 6. [Done in initial release] Exercise continuity between two different successful AI rebuilds (use `rebuild --predecessor docs/evidence/RUN/server.py`).
 7. Add another provider adapter with the same evidence format.

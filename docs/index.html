@@ -11,7 +11,7 @@
   <title>Phoenix — A backend, born again.</title>
   <link rel="icon" type="image/svg+xml" href="mark.svg">
   <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <script src="app.js?v=20261118" defer></script>
 </head>
 <body>
   <a class="skip" href="#notebook">Skip to experiment records</a>
@@ -44,11 +44,26 @@
       <div class="metric-principle"><span class="metric-label" data-i18n="principle">THE RULE</span><p data-i18n="principleText">A green test is a claim.<br>The artifacts are the evidence.</p></div>
     </section>
     <section class="shell notebook" id="notebook">
-      <div class="section-heading"><div><div class="eyebrow" data-i18n="labNotes">THE LAB NOTEBOOK</div><h2 data-i18n="recordTitle">Nothing up our sleeves.</h2><p data-i18n="recordIntro">Open an attempt. Read its checks, generated code, and exact contract.</p></div><div class="filters" role="group" aria-label="Filter experiment records"><button class="active" data-filter="all" aria-pressed="true" data-i18n="all">All records</button><button data-filter="ai-rebuild" aria-pressed="false" data-i18n="aiOnly">AI rebuilds</button></div></div>
+      <div class="section-heading">
+        <div><div class="eyebrow" data-i18n="labNotes">THE LAB NOTEBOOK</div><h2 data-i18n="recordTitle">Nothing up our sleeves.</h2><p data-i18n="recordIntro">Open an attempt. Read its checks, generated code, and exact contract.</p></div>
+        <div class="filters" role="group" aria-labelledby="record-filters-label">
+          <span class="sr-only" id="record-filters-label" data-i18n="recordFilters">Filter experiment records</span>
+          <button class="active" data-filter="all" aria-pressed="true" data-i18n="all">All records</button>
+          <button data-filter="ai-rebuild" aria-pressed="false" data-i18n="aiOnly">AI rebuilds</button>
+          <label class="sr-only" for="outcome-filter" data-i18n="outcomeFilter">Filter by outcome</label>
+          <select id="outcome-filter">
+            <option value="all" data-i18n="allOutcomes">All outcomes</option>
+            <option value="passed" data-i18n="passedOutcome">Passed</option>
+            <option value="failed" data-i18n="failedOutcome">Acceptance failed</option>
+            <option value="generation-failed" data-i18n="generationFailedOutcome">Generation failed</option>
+            <option value="verification-error" data-i18n="verificationErrorOutcome">Verification error</option>
+          </select>
+        </div>
+      </div>
       <div id="load-error" role="status" hidden></div>
       <div class="table-wrap"><table><caption class="sr-only">Phoenix experiment records</caption><thead><tr><th data-i18n="colAttempt">ATTEMPT / UTC</th><th data-i18n="colOrigin">ORIGIN</th><th data-i18n="colVerdict">VERDICT</th><th data-i18n="colChecks">CHECKS</th><th data-i18n="colDuration">VERIFY TIME</th><th><span class="sr-only">Evidence</span></th></tr></thead><tbody id="runs"><tr><td colspan="6" class="empty" data-i18n="loading">Loading the public record…</td></tr></tbody></table></div>
       <p class="ledger-note" data-i18n="ledgerNote">Usage is published only when the generator reports it. Monetary cost is unknown. No invented savings, streaks, or scores.</p>
-      <p class="ledger-note" data-i18n="maintenanceNote">2026-11-17. Every evidence dialog now has a permalink. Today's AI reconstruction passed 32/32 on attempt 1, and the handoff from yesterday passed 8/8. <a href="?run=20261117T022946Z-78d1d1">Open today's evidence ↗</a></p>
+      <p class="ledger-note" data-i18n="maintenanceNote">2026-11-18. Filter the ledger by outcome. Today's AI reconstruction passed 32/32 on attempt 1, and the handoff from yesterday passed 8/8. <a href="?run=20261118T023139Z-cfc064">Open today's evidence ↗</a></p>
     </section>
     <section class="shell lower-grid">
       <article class="method"><div class="eyebrow" data-i18n="whatProves">WHAT THIS ACTUALLY TESTS</div><h2 data-i18n="methodTitle">The code changes.<br>The promise stays.</h2><p data-i18n="methodIntro">Our first subject is a durable webhook inbox, not a hello-world endpoint. The contract asks for a small service with real boundaries.</p><ul><li data-i18n="feature1">Capture exact UTF-8 webhook bodies</li><li data-i18n="feature2">Deduplicate concurrent deliveries</li><li data-i18n="feature3">Keep credentials out of responses and logs</li><li data-i18n="feature4">Read persisted events after a restart or rebuild</li></ul><a class="text-link" href="contract.html" data-i18n="readContract">Read the complete contract ↗</a></article>

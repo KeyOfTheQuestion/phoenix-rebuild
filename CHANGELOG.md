@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-18 · Notebook outcome filter
+
+- Added an outcome selector that combines with the AI-only filter and distinguishes acceptance failures, generation failures and verification errors. [Verification record](docs/maintenance/2026-11-18-notebook-outcomes.md).
+
 ## 2026-11-17 · Evidence permalinks
 
 - Added a shareable link in each notebook evidence dialog. Opening it loads the selected run directly. [Verification record](docs/maintenance/2026-11-17-evidence-permalinks.md).

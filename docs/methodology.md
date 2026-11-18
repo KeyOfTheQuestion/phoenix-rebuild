@@ -154,6 +154,12 @@ The browser checks cover a fresh context, a reload, localized link text and
 an unknown run that triggers no report request.
 [Permalink verification](maintenance/2026-11-17-evidence-permalinks.md).
 
+The outcome selector matches the exact ledger status and intersects with
+the existing source filter. The overall counts continue to use the full
+ledger. Browser checks compare displayed record IDs for each outcome and
+use a synthetic verification error to distinguish it from an acceptance
+failure. [Outcome verification](maintenance/2026-11-18-notebook-outcomes.md).
+
 The suite uses fresh browser contexts and local synthetic failure responses.
 It covers Chromium desktop behavior, not all browsers, mobile devices or
 accessibility requirements. See the [2026-10-22 verification record](maintenance/2026-10-22-notebook-browser-checks.md).

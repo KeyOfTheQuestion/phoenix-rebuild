@@ -223,6 +223,10 @@ Keep the destination filter when following `next_cursor`.
 
 ## Check the notebook in a browser
 
+Use **All outcomes** to show only passed, acceptance-failed,
+generation-failed or verification-error records. Combine it with **AI
+rebuilds** to narrow the table while keeping the overall totals visible.
+
 Open an evidence dialog and use **Permalink** to share that run. The link
 opens the same archived evidence directly in a fresh browser.
 

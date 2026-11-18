@@ -5,6 +5,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from importlib.metadata import version
 import json
 from pathlib import Path
+import re
 import sys
 import threading
 import unittest
@@ -93,6 +94,42 @@ class NotebookBrowserTests(unittest.TestCase):
         expect(all_filter).to_have_attribute("aria-pressed", "true")
         expect(ai_filter).to_have_attribute("aria-pressed", "false")
         expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
+
+    def test_outcome_filter_distinguishes_statuses_and_composes_with_ai_filter(self):
+        self.open_notebook()
+        expect(self.page.get_by_role("combobox", name="Filter by outcome")).to_be_visible()
+        outcome = self.page.locator("#outcome-filter")
+        buttons = self.page.locator("#runs [data-run]")
+        for status in ("passed", "failed", "generation-failed", "verification-error"):
+            with self.subTest(status=status):
+                outcome.select_option(status)
+                expected = [row["id"] for row in self.ledger if row["status"] == status]
+                self.assertEqual(buttons.evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+                if not expected:
+                    expect(self.page.locator("#runs .empty")).to_be_visible()
+        expect(self.page.locator("#ai-count")).to_have_text(str(len(self.ai)))
+        expect(self.page.locator("#success-count")).to_have_text(str(sum(row["status"] == "passed" for row in self.ai)))
+        outcome.select_option("passed")
+        self.page.get_by_role("button", name="AI rebuilds", exact=True).click()
+        expected = [row["id"] for row in self.ai if row["status"] == "passed"]
+        self.assertEqual(buttons.evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+        self.page.locator("#language").click()
+        expect(self.page.get_by_role("combobox", name="按结果筛选")).to_have_value("passed")
+        expect(outcome.locator("option[value='generation-failed']")).to_have_text("生成失败")
+        self.assertEqual(buttons.evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+        self.page.get_by_role("button", name="全部记录", exact=True).click()
+        self.page.locator("#outcome-filter").select_option("all")
+        expect(buttons).to_have_count(len(self.ledger))
+
+    def test_notebook_loads_without_the_outcome_control_in_cached_markup(self):
+        html = (SITE / "index.html").read_text(encoding="utf-8")
+        cached, removed = re.subn(r'<select id="outcome-filter">.*?</select>', "", html, flags=re.DOTALL)
+        self.assertEqual(removed, 1)
+        self.page.route(self.base, lambda route: route.fulfill(content_type="text/html; charset=utf-8", body=cached))
+        self.open_notebook()
+        self.page.locator("#runs [data-run]").first.click()
+        expect(self.page.locator("#evidence-dialog")).to_be_visible()
+        expect(self.page.locator("#dialog-run-id")).to_have_text(self.ledger[0]["id"])
 
     def test_language_switch_persists_after_reload(self):
         self.open_notebook()
@@ -247,6 +284,9 @@ class NotebookBrowserTests(unittest.TestCase):
                 self.page.route(pattern, lambda route: route.fulfill(json=report))
                 self.page.goto(self.base, wait_until="networkidle")
                 if failed:
+                    self.page.locator("#outcome-filter").select_option("failed")
+                    expect(self.page.locator("#runs [data-run]")).to_have_count(0)
+                    self.page.locator("#outcome-filter").select_option("verification-error")
                     expect(self.page.locator("#runs .verdict")).to_have_text("VERIFICATION ERROR")
                 self.page.locator("#runs [data-run]").click()
                 expect(self.page.locator("#dialog-provenance")).not_to_contain_text("Local subprocess")
