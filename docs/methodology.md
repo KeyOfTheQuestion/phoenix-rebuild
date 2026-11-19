@@ -154,6 +154,13 @@ The browser checks cover a fresh context, a reload, localized link text and
 an unknown run that triggers no report request.
 [Permalink verification](maintenance/2026-11-17-evidence-permalinks.md).
 
+Evidence dialogs show a run-specific replay command for safe record IDs
+with a verifier digest and a completed or verification-error status.
+Generation failures have no replay command. Browser checks cover exact
+commands, translated instructions, clearing stale text and refusing
+shell-like identifiers in synthetic responses.
+[Replay instruction verification](maintenance/2026-11-19-notebook-replay.md).
+
 The outcome selector matches the exact ledger status and intersects with
 the existing source filter. The overall counts continue to use the full
 ledger. Browser checks compare displayed record IDs for each outcome and

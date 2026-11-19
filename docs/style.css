@@ -11,3 +11,10 @@
   font: inherit;
   font-size: 10px;
 }
+.replay-command {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 12px/1.6 var(--mono);
+  border: 1px solid var(--line);
+  padding: 12px;
+}

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-19 · Replay commands in evidence dialogs
+
+- Replayable notebook records now show the exact archive replay command and local execution guidance. [Verification record](docs/maintenance/2026-11-19-notebook-replay.md).
+
 ## 2026-11-18 · Notebook outcome filter
 
 - Added an outcome selector that combines with the AI-only filter and distinguishes acceptance failures, generation failures and verification errors. [Verification record](docs/maintenance/2026-11-18-notebook-outcomes.md).

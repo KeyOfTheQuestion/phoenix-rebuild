@@ -159,6 +159,14 @@ class NotebookBrowserTests(unittest.TestCase):
                 expect(self.page.locator("#dialog-summary")).to_contain_text("%s/%s checks passed" % (report["passed"], report["total"]))
                 expect(self.page.locator("#dialog-provenance")).to_contain_text(report["candidate_sha256"])
                 expect(self.page.locator("#checks-list .check-row")).to_have_count(len(report["checks"]))
+                replay = self.page.locator("#replay-instructions")
+                if report["status"] == "generation-failed":
+                    expect(replay).to_be_hidden()
+                    expect(self.page.locator("#replay-command")).to_have_text("")
+                else:
+                    expect(replay).to_be_visible()
+                    expect(self.page.locator("#replay-command")).to_have_text("python3 -m phoenix replay " + run_id)
+                    expect(self.page.locator("#replay-notice")).to_contain_text("trusted archived code")
                 if report["status"] == "generation-failed":
                     expect(self.page.locator("#checks-list")).to_contain_text(report["error"])
                 expected = {"evidence/%s/%s" % (run_id, name) for name in set(manifest) | {"manifest.json"}}
@@ -184,6 +192,46 @@ class NotebookBrowserTests(unittest.TestCase):
                 popup.close()
                 self.page.get_by_role("button", name="Close evidence", exact=True).click()
                 expect(self.page.locator("#evidence-dialog")).to_be_hidden()
+
+    def test_replay_command_stays_safe_and_is_cleared_between_records(self):
+        self.open_notebook()
+        failed = next(row for row in self.ledger if row["status"] == "generation-failed")
+        successful = next(row for row in self.ledger if row["status"] == "passed")
+        self.page.locator('[data-run="%s"]' % successful["id"]).click()
+        expect(self.page.locator("#replay-instructions")).to_be_visible()
+        self.page.locator("#close-dialog").click()
+        self.page.locator("#language").click()
+        self.page.locator('[data-run="%s"]' % failed["id"]).click()
+        expect(self.page.locator("#replay-instructions")).to_be_hidden()
+        expect(self.page.locator("#replay-command")).to_have_text("")
+        self.page.locator("#close-dialog").click()
+        self.page.locator('[data-run="%s"]' % successful["id"]).click()
+        expect(self.page.locator("#replay-heading")).to_have_text("重放此记录")
+        expect(self.page.locator("#replay-notice")).to_contain_text("可信的归档代码")
+        expect(self.page.locator("#replay-command")).to_have_text("python3 -m phoenix replay " + successful["id"])
+        self.page.locator("#close-dialog").click()
+
+        # Synthetic untrusted IDs never become executable shell snippets.
+        row = dict(successful, id="synthetic;echo unsafe")
+        report = json.loads((SITE / "evidence" / successful["id"] / "report.json").read_bytes())
+        report["id"] = row["id"]
+        self.page.route("**/runs.json", lambda route: route.fulfill(json=[row]))
+        self.page.route("**/evidence/**/report.json", lambda route: route.fulfill(json=report))
+        self.page.goto(self.base, wait_until="networkidle")
+        self.page.locator("#runs [data-run]").click()
+        expect(self.page.locator("#evidence-dialog")).to_be_visible()
+        expect(self.page.locator("#replay-instructions")).to_be_hidden()
+        expect(self.page.locator("#replay-command")).to_have_text("")
+
+    def test_notebook_opens_evidence_without_replay_section_in_cached_markup(self):
+        html = (SITE / "index.html").read_text(encoding="utf-8")
+        cached, removed = re.subn(r'<section id="replay-instructions".*?</section>', "", html, flags=re.DOTALL)
+        self.assertEqual(removed, 1)
+        self.page.route(self.base, lambda route: route.fulfill(content_type="text/html; charset=utf-8", body=cached))
+        self.open_notebook()
+        self.page.locator("#runs [data-run]").first.click()
+        expect(self.page.locator("#evidence-dialog")).to_be_visible()
+        expect(self.page.locator("#dialog-run-id")).to_have_text(self.ledger[0]["id"])
 
     def test_contract_navigation_loads_the_published_specification(self):
         self.open_notebook()

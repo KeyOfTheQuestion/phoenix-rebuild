@@ -2,7 +2,7 @@
 const zh = {
   recordFilters:'筛选实验记录',outcomeFilter:'按结果筛选',allOutcomes:'全部结果',
   passedOutcome:'通过',failedOutcome:'验收未通过',generationFailedOutcome:'生成失败',verificationErrorOutcome:'验收环境错误',
-  maintenanceNote:'2026-11-18 实验记录支持按结果筛选。今天的 AI 重建首轮通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261118T023139Z-cfc064">直达今天的证据 ↗</a>',
+  maintenanceNote:'2026-11-19 可重放的记录现在显示对应的重放命令。今天的 AI 重建与归档重放均通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261119T023616Z-0bbb0b">直达今天的证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',
@@ -97,6 +97,18 @@ async function openEvidence(id){
       throw new Error('Report identifies a different run');
     }
     document.getElementById('dialog-run-id').textContent=id;
+    const replay=document.getElementById('replay-instructions');
+    if(replay){
+      const canReplay=/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(id)
+        && /^[0-9a-f]{64}$/.test(r.verifier_sha256||'')
+        && ['passed','failed','verification-error'].includes(r.status);
+      replay.hidden=!canReplay;
+      document.getElementById('replay-heading').textContent=text('Replay this record','重放此记录');
+      document.getElementById('replay-command').textContent=canReplay?`python3 -m phoenix replay ${id}`:'';
+      document.getElementById('replay-notice').textContent=text(
+        'Run from a current checkout of this repository with Python 3.9+. This executes trusted archived code locally and measures your current runtime.',
+        '在本仓库最新检出目录中使用 Python 3.9+ 运行。此命令在本机执行可信的归档代码，并记录当前运行时的结果。');
+    }
     const permalink=document.getElementById('evidence-permalink');
     permalink.href=`?run=${encodeURIComponent(id)}`;
     permalink.textContent=text('Permalink ↗','永久链接 ↗');

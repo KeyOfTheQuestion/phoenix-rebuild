@@ -181,6 +181,9 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 
 打开证据弹窗后，可用「永久链接」分享该次实验。对方打开链接即可查看同一份归档证据。
 
+可重放的记录会显示 `python3 -m phoenix replay RUN_ID` 命令。在本仓库最新检出目录
+运行，即可用当前运行时复查归档代码。[重放指引与边界](docs/maintenance/2026-11-19-notebook-replay.md)。
+
 详见[浏览器测试安装说明](docs/setup.md#notebook-browser-checks)与 [2026-10-22 检查及重建记录](docs/maintenance/2026-10-22-notebook-browser-checks.md)。
 
 ## 记录的含义和边界

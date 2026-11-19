@@ -1,0 +1,75 @@
+{
+  "started_at": "2026-11-19T02:37:53.807495+00:00",
+  "execution_runtime": {
+    "python_implementation": "CPython",
+    "python_version": "3.9.6",
+    "sqlite_version": "3.43.2"
+  },
+  "expected_total": 8,
+  "checks": [
+    {
+      "id": "V01",
+      "title": "Create, age and reopen the HTTP-written v2 predecessor fixture",
+      "passed": true,
+      "duration_ms": 363.77
+    },
+    {
+      "id": "V02",
+      "title": "Start the candidate at version 2 and preserve every named row",
+      "passed": true,
+      "duration_ms": 267.04
+    },
+    {
+      "id": "V03",
+      "title": "Preserve enabled, explicitly disabled and longer retention policies",
+      "passed": true,
+      "duration_ms": 2.86
+    },
+    {
+      "id": "V04",
+      "title": "Preserve event details, hook credentials, duplicate IDs and conflicts",
+      "passed": true,
+      "duration_ms": 14.64
+    },
+    {
+      "id": "V05",
+      "title": "Restart without implicit expiry or changes to rows, policies and retries",
+      "passed": true,
+      "duration_ms": 227.32
+    },
+    {
+      "id": "V06",
+      "title": "Delete only the oldest eligible active event with limit one",
+      "passed": true,
+      "duration_ms": 5.76
+    },
+    {
+      "id": "V07",
+      "title": "Protect disabled and longer-policy events during explicit expiry",
+      "passed": true,
+      "duration_ms": 6.47
+    },
+    {
+      "id": "V08",
+      "title": "Reuse the expired key and preserve the replacement and policies across restart",
+      "passed": true,
+      "duration_ms": 188.07
+    }
+  ],
+  "duration_seconds": 1.078,
+  "passed": 8,
+  "total": 8,
+  "status": "passed",
+  "schema_version": 1,
+  "kind": "v2-continuity-verification",
+  "contract_id": "002",
+  "contract_version": "2.0.0",
+  "verifier_profile": "v2-continuity-v1",
+  "execution": "local-subprocess",
+  "candidate_sha256": "0dbb72bcc988e1f3fccb57de47161a326a928ca6b32144ea86f13ee6028a9c71",
+  "predecessor_sha256": "0eb117810a14f23f907bbc7282d5078f4b48e8d38f42575451f34da6e26290e1",
+  "contract_sha256": "8585891ec40f537a09ee306442845532c19d22122182b21f0f6041b2288bb374",
+  "verifier_sha256": "04ea41766fa1b1339697ea7fab1a721905b1b91b1f1de98da342c43424c36c5c",
+  "shared_subject_sha256": "494d66e9c3e66b33596ebb0ba55e68d3db32347bc1e658c3bc1f0a87f3ebe0b1",
+  "fixture": "The v2 predecessor creates policies, inboxes and keyed events via HTTP. The fixture backdates only synthetic event timestamps in SQLite while stopped and observes the predecessor again before handoff."
+}
