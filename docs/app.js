@@ -2,7 +2,7 @@
 const zh = {
   recordFilters:'筛选实验记录',outcomeFilter:'按结果筛选',allOutcomes:'全部结果',
   passedOutcome:'通过',failedOutcome:'验收未通过',generationFailedOutcome:'生成失败',verificationErrorOutcome:'验收环境错误',
-  maintenanceNote:'2026-11-19 可重放的记录现在显示对应的重放命令。今天的 AI 重建与归档重放均通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261119T023616Z-0bbb0b">直达今天的证据 ↗</a>',
+  maintenanceNote:'2026-11-21 来源与结果筛选现在支持通过网址分享。今天的 AI 重建通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261121T023358Z-835bd7">直达今天的证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',
@@ -18,6 +18,15 @@ let language = localStorage.getItem('phoenix-language') === 'zh' ? 'zh' : 'en';
 let filter = 'all';
 let records = [];
 const outcomeFilter = document.getElementById('outcome-filter');
+function restoreFilters(){
+  const parameters=new URLSearchParams(location.search);
+  filter=parameters.get('kind')==='ai-rebuild'?'ai-rebuild':'all';
+  const status=parameters.get('status');
+  if(outcomeFilter){
+    outcomeFilter.value=['passed','failed','generation-failed','verification-error'].includes(status)?status:'all';
+  }
+}
+restoreFilters();
 const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const text = (en, cn) => language === 'zh' ? cn : en;
 
@@ -30,6 +39,11 @@ function translate(){
 }
 
 function render(){
+  document.querySelectorAll('[data-filter]').forEach(button=>{
+    const selected=button.dataset.filter===filter;
+    button.classList.toggle('active',selected);
+    button.setAttribute('aria-pressed',String(selected));
+  });
   const ai=records.filter(r=>r.kind==='ai-rebuild');
   document.getElementById('ai-count').textContent=String(ai.length);
   document.getElementById('success-count').textContent=String(ai.filter(r=>r.status==='passed').length);
@@ -47,10 +61,30 @@ function render(){
 }
 
 document.getElementById('language').addEventListener('click',()=>{language=language==='en'?'zh':'en';localStorage.setItem('phoenix-language',language);translate();});
+function saveFilters(){
+  const url=new URL(location.href);
+  url.searchParams.delete('kind');
+  url.searchParams.delete('status');
+  if(filter!=='all'){
+    url.searchParams.set('kind',filter);
+  }
+  const status=outcomeFilter?.value??'all';
+  if(status!=='all'){
+    url.searchParams.set('status',status);
+  }
+  history.replaceState(history.state,'',url);
+  render();
+}
+
 document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
-  filter=button.dataset.filter;document.querySelectorAll('[data-filter]').forEach(b=>{b.classList.toggle('active',b===button);b.setAttribute('aria-pressed',String(b===button));});render();
+  filter=button.dataset.filter;
+  saveFilters();
 }));
-outcomeFilter?.addEventListener('change',render);
+outcomeFilter?.addEventListener('change',saveFilters);
+window.addEventListener('popstate',()=>{
+  restoreFilters();
+  render();
+});
 document.getElementById('copy-command').addEventListener('click',async()=>{
   const command='git clone https://github.com/KeyOfTheQuestion/phoenix-rebuild\ncd phoenix-rebuild\npython3 -m phoenix verify';
   try{await navigator.clipboard.writeText(command);document.getElementById('copy-command').textContent=text('Copied ✓','已复制 ✓');}

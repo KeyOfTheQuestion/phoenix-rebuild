@@ -227,6 +227,10 @@ Use **All outcomes** to show only passed, acceptance-failed,
 generation-failed or verification-error records. Combine it with **AI
 rebuilds** to narrow the table while keeping the overall totals visible.
 
+Share the resulting page address to reopen that filtered view. For example,
+`?kind=ai-rebuild&status=failed` shows AI attempts that failed acceptance.
+Reset both controls to show all records.
+
 Open an evidence dialog and use **Permalink** to share that run. The link
 opens the same archived evidence directly in a fresh browser.
 

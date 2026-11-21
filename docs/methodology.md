@@ -167,6 +167,13 @@ ledger. Browser checks compare displayed record IDs for each outcome and
 use a synthetic verification error to distinguish it from an acceptance
 failure. [Outcome verification](maintenance/2026-11-18-notebook-outcomes.md).
 
+The notebook restores `kind=ai-rebuild` and an exact `status` from
+the page address. Filter changes replace those parameters while retaining
+the evidence ID and fragment. Unrecognized values use the default view.
+The query selects matching records in the current ledger. Browser
+history navigation restores the corresponding filters.
+[Shareable filter verification](maintenance/2026-11-20-shared-filters.md).
+
 The suite uses fresh browser contexts and local synthetic failure responses.
 It covers Chromium desktop behavior, not all browsers, mobile devices or
 accessibility requirements. See the [2026-10-22 verification record](maintenance/2026-10-22-notebook-browser-checks.md).

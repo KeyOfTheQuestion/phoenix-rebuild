@@ -131,6 +131,66 @@ class NotebookBrowserTests(unittest.TestCase):
         expect(self.page.locator("#evidence-dialog")).to_be_visible()
         expect(self.page.locator("#dialog-run-id")).to_have_text(self.ledger[0]["id"])
 
+    def test_shared_filter_url_restores_the_view_and_retains_other_parameters(self):
+        self.open_notebook()
+        self.page.get_by_role("button", name="AI rebuilds", exact=True).click()
+        self.page.locator("#outcome-filter").select_option("failed")
+        shared = self.page.url
+        self.assertIn("kind=ai-rebuild", shared)
+        self.assertIn("status=failed", shared)
+        expected = [row["id"] for row in self.ai if row["status"] == "failed"]
+        context = self.browser.new_context()
+        self.addCleanup(context.close)
+        page = context.new_page()
+        page.goto(shared, wait_until="networkidle")
+        expect(page.locator("#outcome-filter")).to_have_value("failed")
+        expect(page.get_by_role("button", name="AI rebuilds", exact=True)).to_have_attribute("aria-pressed", "true")
+        self.assertEqual(page.locator("#runs [data-run]").evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+        page.reload(wait_until="networkidle")
+        self.assertEqual(page.locator("#runs [data-run]").evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+        page.locator("#language").click()
+        self.assertEqual(page.url, shared)
+        page.get_by_role("button", name="全部记录", exact=True).click()
+        page.locator("#outcome-filter").select_option("all")
+        self.assertEqual(page.url, self.base)
+        expect(page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
+
+        # A report outside the chosen table filter still opens by its permalink.
+        run_id = next(row["id"] for row in self.ledger if row["status"] == "passed")
+        self.page.goto(self.base + "?run=" + run_id + "&kind=ai-rebuild&status=failed#notebook")
+        expect(self.page.locator("#dialog-run-id")).to_have_text(run_id)
+        expect(self.page.locator("#evidence-dialog")).to_be_visible()
+        self.page.locator("#close-dialog").click()
+        self.page.locator("#outcome-filter").select_option("passed")
+        self.assertIn("run=" + run_id, self.page.url)
+        self.assertIn("status=passed", self.page.url)
+        self.assertTrue(self.page.url.endswith("#notebook"))
+
+    def test_unrecognized_filter_parameters_use_the_default_view(self):
+        self.page.goto(self.base + "?kind=unknown&status=unknown", wait_until="networkidle")
+        expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
+        expect(self.page.locator("#outcome-filter")).to_have_value("all")
+        expect(self.page.get_by_role("button", name="All records", exact=True)).to_have_attribute("aria-pressed", "true")
+        expect(self.page.locator("#load-error")).to_be_hidden()
+
+    def test_history_navigation_keeps_filter_controls_and_table_in_sync(self):
+        self.open_notebook()
+        self.page.evaluate("location.hash = 'notebook'")
+        self.page.locator("#outcome-filter").select_option("failed")
+        self.page.get_by_role("button", name="AI rebuilds", exact=True).click()
+        filtered_url = self.page.url
+        self.page.go_back()
+        expect(self.page.locator("#outcome-filter")).to_have_value("all")
+        expect(self.page.get_by_role("button", name="All records", exact=True)).to_have_attribute("aria-pressed", "true")
+        expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
+        self.assertEqual(self.page.url, self.base)
+        self.page.go_forward()
+        expect(self.page.locator("#outcome-filter")).to_have_value("failed")
+        expect(self.page.get_by_role("button", name="AI rebuilds", exact=True)).to_have_attribute("aria-pressed", "true")
+        expected = [row["id"] for row in self.ai if row["status"] == "failed"]
+        self.assertEqual(self.page.locator("#runs [data-run]").evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+        self.assertEqual(self.page.url, filtered_url)
+
     def test_language_switch_persists_after_reload(self):
         self.open_notebook()
         self.page.locator("#language").click()

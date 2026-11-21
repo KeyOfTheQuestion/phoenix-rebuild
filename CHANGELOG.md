@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-21 · Shareable notebook filters
+
+- Notebook source and outcome filters are now reflected in the page address and restored on a fresh visit, reload or history navigation. Work begun on November 20 was completed for publication on November 21. [Verification record](docs/maintenance/2026-11-20-shared-filters.md).
+
 ## 2026-11-19 · Replay commands in evidence dialogs
 
 - Replayable notebook records now show the exact archive replay command and local execution guidance. [Verification record](docs/maintenance/2026-11-19-notebook-replay.md).
