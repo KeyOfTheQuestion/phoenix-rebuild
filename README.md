@@ -227,9 +227,14 @@ Use **All outcomes** to show only passed, acceptance-failed,
 generation-failed or verification-error records. Combine it with **AI
 rebuilds** to narrow the table while keeping the overall totals visible.
 
+Use **All contracts** to select contract 001 or 002 alongside those filters.
+Legacy records without a contract field belong to 001. This helps inspect
+the different 19-check and 32-check experiments separately.
+
 Share the resulting page address to reopen that filtered view. For example,
 `?kind=ai-rebuild&status=failed` shows AI attempts that failed acceptance.
-Reset both controls to show all records.
+Add `contract=002` to select only contract-002 records. Reset all filters
+to show all records.
 
 Open an evidence dialog and use **Permalink** to share that run. The link
 opens the same archived evidence directly in a fresh browser.

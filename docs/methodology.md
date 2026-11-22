@@ -174,6 +174,12 @@ The query selects matching records in the current ledger. Browser
 history navigation restores the corresponding filters.
 [Shareable filter verification](maintenance/2026-11-20-shared-filters.md).
 
+The contract selector intersects with source and outcome, restoring `contract=001`
+or `contract=002` from the URL. Legacy rows without a contract ID retain their
+existing 001 interpretation. Overall metrics still use the full ledger, and
+filtering neither changes a run's acceptance scope nor rewrites historical rows.
+[Contract filter verification](maintenance/2026-11-22-contract-filter.md).
+
 The suite uses fresh browser contexts and local synthetic failure responses.
 It covers Chromium desktop behavior, not all browsers, mobile devices or
 accessibility requirements. See the [2026-10-22 verification record](maintenance/2026-10-22-notebook-browser-checks.md).

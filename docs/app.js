@@ -1,8 +1,9 @@
 'use strict';
 const zh = {
   recordFilters:'筛选实验记录',outcomeFilter:'按结果筛选',allOutcomes:'全部结果',
+  contractFilter:'按契约筛选',allContracts:'全部契约',contract001:'契约 001',contract002:'契约 002',
   passedOutcome:'通过',failedOutcome:'验收未通过',generationFailedOutcome:'生成失败',verificationErrorOutcome:'验收环境错误',
-  maintenanceNote:'2026-11-21 来源与结果筛选现在支持通过网址分享。今天的 AI 重建通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261121T023358Z-835bd7">直达今天的证据 ↗</a>',
+  maintenanceNote:'2026-11-22 现在可按契约筛选，分别查看 001 与 002 实验。今天的 AI 重建通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261122T022850Z-b8bf3f">直达今天的证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',
@@ -18,12 +19,17 @@ let language = localStorage.getItem('phoenix-language') === 'zh' ? 'zh' : 'en';
 let filter = 'all';
 let records = [];
 const outcomeFilter = document.getElementById('outcome-filter');
+const contractFilter = document.getElementById('contract-filter');
 function restoreFilters(){
   const parameters=new URLSearchParams(location.search);
   filter=parameters.get('kind')==='ai-rebuild'?'ai-rebuild':'all';
   const status=parameters.get('status');
   if(outcomeFilter){
     outcomeFilter.value=['passed','failed','generation-failed','verification-error'].includes(status)?status:'all';
+  }
+  const contract=parameters.get('contract');
+  if(contractFilter){
+    contractFilter.value=['001','002'].includes(contract)?contract:'all';
   }
 }
 restoreFilters();
@@ -51,7 +57,10 @@ function render(){
   document.getElementById('compat-status').textContent=latestPass?text('Verified','已验证'):text('Pending','待验证');
   document.getElementById('compat-status').style.color=latestPass?'var(--green)':'var(--muted)';
   const outcome=outcomeFilter?.value??'all';
-  const shown=records.filter(r=>(filter==='all'||r.kind===filter)&&(outcome==='all'||r.status===outcome));
+  const contract=contractFilter?.value??'all';
+  const shown=records.filter(r=>(filter==='all'||r.kind===filter)
+    &&(outcome==='all'||r.status===outcome)
+    &&(contract==='all'||(r.contract_id||'001')===contract));
   document.getElementById('runs').innerHTML=shown.length ? shown.map(r=>{
     const isAI=r.kind==='ai-rebuild';
     const date=new Date(r.started_at);
@@ -65,12 +74,17 @@ function saveFilters(){
   const url=new URL(location.href);
   url.searchParams.delete('kind');
   url.searchParams.delete('status');
+  url.searchParams.delete('contract');
   if(filter!=='all'){
     url.searchParams.set('kind',filter);
   }
   const status=outcomeFilter?.value??'all';
   if(status!=='all'){
     url.searchParams.set('status',status);
+  }
+  const contract=contractFilter?.value??'all';
+  if(contract!=='all'){
+    url.searchParams.set('contract',contract);
   }
   history.replaceState(history.state,'',url);
   render();
@@ -81,6 +95,7 @@ document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListen
   saveFilters();
 }));
 outcomeFilter?.addEventListener('change',saveFilters);
+contractFilter?.addEventListener('change',saveFilters);
 window.addEventListener('popstate',()=>{
   restoreFilters();
   render();

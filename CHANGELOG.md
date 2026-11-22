@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-22 · Contract filters in the notebook
+
+- The notebook can filter contract 001 and 002 alongside source and outcome, including shareable URLs and history navigation. Legacy records remain contract 001 and overall metrics retain the full ledger. [Verification record](docs/maintenance/2026-11-22-contract-filter.md).
+
 ## 2026-11-21 · Shareable notebook filters
 
 - Notebook source and outcome filters are now reflected in the page address and restored on a fresh visit, reload or history navigation. Work begun on November 20 was completed for publication on November 21. [Verification record](docs/maintenance/2026-11-20-shared-filters.md).

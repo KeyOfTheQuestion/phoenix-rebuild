@@ -131,6 +131,72 @@ class NotebookBrowserTests(unittest.TestCase):
         expect(self.page.locator("#evidence-dialog")).to_be_visible()
         expect(self.page.locator("#dialog-run-id")).to_have_text(self.ledger[0]["id"])
 
+    def test_contract_filter_composes_with_source_and_outcome_in_both_languages(self):
+        self.open_notebook()
+        expect(self.page.get_by_role("combobox", name="Filter by contract")).to_be_visible()
+        contract = self.page.locator("#contract-filter")
+        self.assertTrue(any(not row.get("contract_id") for row in self.ledger), "Exercise legacy contract-001 records")
+        for contract_id in ("001", "002"):
+            contract.select_option(contract_id)
+            for source in ("all", "ai-rebuild"):
+                self.page.locator('[data-filter="%s"]' % source).click()
+                for status in ("all", "passed", "failed"):
+                    self.page.locator("#outcome-filter").select_option(status)
+                    expected = [row["id"] for row in self.ledger
+                                if (row.get("contract_id") or "001") == contract_id
+                                and (source == "all" or row["kind"] == source)
+                                and (status == "all" or row["status"] == status)]
+                    self.assertEqual(self.page.locator("#runs [data-run]").evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+                    if not expected:
+                        expect(self.page.locator("#runs .empty")).to_be_visible()
+        expect(self.page.locator("#ai-count")).to_have_text(str(len(self.ai)))
+        expect(self.page.locator("#success-count")).to_have_text(str(sum(row["status"] == "passed" for row in self.ai)))
+        self.page.locator("#language").click()
+        expect(self.page.get_by_role("combobox", name="按契约筛选")).to_have_value("002")
+        expect(contract.locator("option[value='all']")).to_have_text("全部契约")
+        self.page.locator("#language").click()
+        expect(contract).to_have_value("002")
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        for control in (contract, self.page.locator("#outcome-filter")):
+            expect(control).to_be_visible()
+            box = control.bounding_box()
+            self.assertGreaterEqual(box["x"], 0)
+            self.assertLessEqual(box["x"] + box["width"], 390)
+
+    def test_contract_url_restores_in_a_fresh_context_and_reset_preserves_other_parameters(self):
+        self.open_notebook()
+        self.page.goto(self.base + "?keep=example#notebook", wait_until="networkidle")
+        self.page.locator("#contract-filter").select_option("002")
+        self.page.locator("#outcome-filter").select_option("passed")
+        self.page.locator('[data-filter="ai-rebuild"]').click()
+        shared = self.page.url
+        self.assertIn("contract=002", shared)
+        context = self.browser.new_context()
+        self.addCleanup(context.close)
+        page = context.new_page()
+        page.goto(shared, wait_until="networkidle")
+        expected = [row["id"] for row in self.ai if row.get("contract_id") == "002" and row["status"] == "passed"]
+        expect(page.locator("#contract-filter")).to_have_value("002")
+        self.assertEqual(page.locator("#runs [data-run]").evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+        page.reload(wait_until="networkidle")
+        expect(page.locator("#contract-filter")).to_have_value("002")
+        self.assertEqual(page.locator("#runs [data-run]").evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
+        page.locator("#contract-filter").select_option("all")
+        self.assertNotIn("contract=", page.url)
+        self.assertIn("kind=ai-rebuild", page.url)
+        self.assertIn("status=passed", page.url)
+        self.assertIn("keep=example", page.url)
+        self.assertTrue(page.url.endswith("#notebook"))
+
+    def test_notebook_loads_without_the_contract_control_in_cached_markup(self):
+        html = (SITE / "index.html").read_text(encoding="utf-8")
+        cached, removed = re.subn(r'<select id="contract-filter">.*?</select>', "", html, flags=re.DOTALL)
+        self.assertEqual(removed, 1)
+        self.page.route(self.base, lambda route: route.fulfill(content_type="text/html; charset=utf-8", body=cached))
+        self.open_notebook()
+        self.page.locator('[data-filter="ai-rebuild"]').click()
+        expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ai))
+
     def test_shared_filter_url_restores_the_view_and_retains_other_parameters(self):
         self.open_notebook()
         self.page.get_by_role("button", name="AI rebuilds", exact=True).click()
@@ -157,19 +223,21 @@ class NotebookBrowserTests(unittest.TestCase):
 
         # A report outside the chosen table filter still opens by its permalink.
         run_id = next(row["id"] for row in self.ledger if row["status"] == "passed")
-        self.page.goto(self.base + "?run=" + run_id + "&kind=ai-rebuild&status=failed#notebook")
+        self.page.goto(self.base + "?run=" + run_id + "&kind=ai-rebuild&status=failed&contract=001#notebook")
         expect(self.page.locator("#dialog-run-id")).to_have_text(run_id)
         expect(self.page.locator("#evidence-dialog")).to_be_visible()
         self.page.locator("#close-dialog").click()
         self.page.locator("#outcome-filter").select_option("passed")
         self.assertIn("run=" + run_id, self.page.url)
         self.assertIn("status=passed", self.page.url)
+        self.assertIn("contract=001", self.page.url)
         self.assertTrue(self.page.url.endswith("#notebook"))
 
     def test_unrecognized_filter_parameters_use_the_default_view(self):
-        self.page.goto(self.base + "?kind=unknown&status=unknown", wait_until="networkidle")
+        self.page.goto(self.base + "?kind=unknown&status=unknown&contract=unknown", wait_until="networkidle")
         expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
         expect(self.page.locator("#outcome-filter")).to_have_value("all")
+        expect(self.page.locator("#contract-filter")).to_have_value("all")
         expect(self.page.get_by_role("button", name="All records", exact=True)).to_have_attribute("aria-pressed", "true")
         expect(self.page.locator("#load-error")).to_be_hidden()
 
@@ -177,17 +245,20 @@ class NotebookBrowserTests(unittest.TestCase):
         self.open_notebook()
         self.page.evaluate("location.hash = 'notebook'")
         self.page.locator("#outcome-filter").select_option("failed")
+        self.page.locator("#contract-filter").select_option("001")
         self.page.get_by_role("button", name="AI rebuilds", exact=True).click()
         filtered_url = self.page.url
         self.page.go_back()
         expect(self.page.locator("#outcome-filter")).to_have_value("all")
+        expect(self.page.locator("#contract-filter")).to_have_value("all")
         expect(self.page.get_by_role("button", name="All records", exact=True)).to_have_attribute("aria-pressed", "true")
         expect(self.page.locator("#runs [data-run]")).to_have_count(len(self.ledger))
         self.assertEqual(self.page.url, self.base)
         self.page.go_forward()
         expect(self.page.locator("#outcome-filter")).to_have_value("failed")
+        expect(self.page.locator("#contract-filter")).to_have_value("001")
         expect(self.page.get_by_role("button", name="AI rebuilds", exact=True)).to_have_attribute("aria-pressed", "true")
-        expected = [row["id"] for row in self.ai if row["status"] == "failed"]
+        expected = [row["id"] for row in self.ai if row["status"] == "failed" and (row.get("contract_id") or "001") == "001"]
         self.assertEqual(self.page.locator("#runs [data-run]").evaluate_all("rows => rows.map(row => row.dataset.run)"), expected)
         self.assertEqual(self.page.url, filtered_url)
 
