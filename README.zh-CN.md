@@ -172,6 +172,11 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 按接收端 URL 的指纹查询投递记录。通过 `next_cursor` 翻页时保留该条件。
 [按接收端 URL 筛选](docs/delivery.md#filter-delivery-history-by-receiver-url)。
 
+用 `delivery-history --journal ./deliveries.sqlite3 --source http://127.0.0.1:8787 --event-id ID`
+区分不同收件服务中相同事件 ID 的投递。来源地址须与投递时的字符串完全相同，包括
+末尾斜线。可与状态、接收端组合筛选，通过 `next_cursor` 翻页时保留全部条件。
+[按来源服务筛选](docs/delivery.md#filter-delivery-history-by-source-origin)。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

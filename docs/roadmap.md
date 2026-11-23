@@ -52,6 +52,9 @@
    lets callers require the expected payload before sending it.
    [Delivery preflight 2026-11-16](maintenance/2026-11-16-delivery-dry-run.md)
    checks the source and preconditions before connecting to the receiver.
+   [History source filter 2026-11-23](maintenance/2026-11-23-history-source.md)
+   distinguishes matching event IDs across exact source-origin fingerprints,
+   together with state, receiver and cursor filters.
    Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix

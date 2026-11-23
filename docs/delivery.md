@@ -317,7 +317,8 @@ python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 --event-id EV
 Use the event ID returned by the inbox. SQLite matches it exactly and
 case-sensitively against the stored `event_id` before applying the page limit.
 If a journal contains attempts from different source origins with the same
-event ID, the query returns matches from each origin. An absent match returns
+event ID, the query returns matches from each origin unless `--source` also
+selects one exact source fingerprint. An absent match returns
 an empty `attempts` list and a null cursor. The filter accepts the same event
 IDs as `deliver-event`, and invalid values return exit code 2 before opening
 the journal.
@@ -325,6 +326,30 @@ the journal.
 Repeat the same event and state filters when continuing a page. Python callers
 can pass `event_id=EVENT_ID` to `delivery_history_page`.
 [Event filter observations](maintenance/2026-11-13-history-event.md).
+
+## Filter delivery history by source origin
+
+```sh
+python3 -m phoenix delivery-history --journal ./deliveries.sqlite3 \
+  --source http://127.0.0.1:8787 --event-id EVENT_ID --state finished
+```
+
+Use the exact inbox origin string originally passed to `deliver-event --source`.
+The reader accepts an IPv4 loopback HTTP origin with an explicit port, validates
+it before opening the journal, and compares its SHA-256 to the existing
+`source_sha256` column before applying the page limit. An origin with an optional
+trailing slash is valid, but its fingerprint differs from the slashless string.
+There is no URL normalization. A nonempty path, query, fragment, credentials,
+non-loopback host or malformed port is refused with exit code 2 and a diagnostic
+that omits the supplied source. A valid source without matches returns an empty
+page and null cursor.
+
+Combine `--source` with `--event-id`, `--destination` and `--state`; repeat all
+filters with `--cursor TOKEN`. Python callers can use `source=ORIGIN` in
+`delivery_history_page`. History remains read-only and makes no network calls.
+No journal migration is needed: source fingerprints were already stored for
+every attempt, and the original URL is omitted from history JSON.
+[Source filter observations](maintenance/2026-11-23-history-source.md).
 
 ## Filter delivery history by receiver URL
 

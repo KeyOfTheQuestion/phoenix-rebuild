@@ -221,6 +221,12 @@ to trace attempts for an exact receiver URL using its stored fingerprint.
 Keep the destination filter when following `next_cursor`.
 [Filter by receiver URL](docs/delivery.md#filter-delivery-history-by-receiver-url).
 
+Use `delivery-history --journal ./deliveries.sqlite3 --source http://127.0.0.1:8787 --event-id ID`
+to distinguish the same event ID across inbox services. Supply the exact source
+origin string used for delivery, including any trailing slash. Combine it with
+the state and receiver filters and repeat them when following `next_cursor`.
+[Filter by source origin](docs/delivery.md#filter-delivery-history-by-source-origin).
+
 ## Check the notebook in a browser
 
 Use **All outcomes** to show only passed, acceptance-failed,

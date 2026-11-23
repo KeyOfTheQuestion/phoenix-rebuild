@@ -79,8 +79,8 @@ def main():
               "started_at": started_at, "execution_runtime": runtime_identity(),
               "inbox_ai_run_id": chosen["id"], "source_sha256": hashes, "checks": result.checks,
               "passed": sum(c["passed"] for c in result.checks), "total": len(result.checks),
-              "status": "passed" if result.wasSuccessful() and len(result.checks) == 53 else "failed",
-              "scope": "current checkout; source HTTP, delivery dry run, body digest precondition, loopback POST, protocol faults, filtered journal pages, receipt lookup and captured destination policy; synthetic data",
+              "status": "passed" if result.wasSuccessful() and len(result.checks) == 56 else "failed",
+              "scope": "current checkout; source HTTP, delivery dry run, body digest precondition, loopback POST, protocol faults, journal pages filtered by source/event/receiver/state, receipt lookup and captured destination policy; synthetic data",
               "public_ledger_changed": False}
     print("DELIVERY_EVIDENCE=" + json.dumps(report, sort_keys=True))
     return 0 if report["status"] == "passed" else 1

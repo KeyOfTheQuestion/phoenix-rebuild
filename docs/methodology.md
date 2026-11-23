@@ -403,6 +403,14 @@ matching, continuation with event and state filters, malformed input before
 journal access and a matching receipt from actual loopback delivery.
 [Receiver filter evidence](maintenance/2026-11-14-history-destination.md).
 
+`delivery-history --source ORIGIN` validates the original loopback source string
+and applies its SHA-256 as a bound predicate before the page limit. H20..H22
+exercise sparse matches with all other filters, early invalid-origin refusal,
+exact trailing-slash behavior and real CLI continuation. D01 also filters a
+saved receipt from actual AI-backed delivery by source. Schema and receipt
+uncertainty remain unchanged; these observations add no AI attempts or backend
+acceptance checks. [Source filter evidence](maintenance/2026-11-23-history-source.md).
+
 `deliver-event --expect-body-sha256 DIGEST` adds a client-supplied body
 precondition before the POST marker. The negative control serves a changed
 body with its matching source digest and observes zero receiver requests.

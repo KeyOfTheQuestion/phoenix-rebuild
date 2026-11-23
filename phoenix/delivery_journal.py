@@ -155,7 +155,7 @@ def delivery_attempt(path, identifier):
         return _attempt_record(row)
 
 
-def delivery_history_page(path, limit=20, cursor=None, *, state=None, event_id=None, destination=None):
+def delivery_history_page(path, limit=20, cursor=None, *, state=None, event_id=None, destination=None, source=None):
     if type(limit) is not int or not 1 <= limit <= 100:
         raise JournalError("History limit must be an integer from 1 to 100")
     if state not in (None, "unconfirmed", "finished"):
@@ -171,6 +171,13 @@ def delivery_history_page(path, limit=20, cursor=None, *, state=None, event_id=N
     if event_id is not None:
         filters.append("event_id = ?")
         parameters.append(event_id)
+    if source is not None:
+        try:
+            endpoint(source, source=True)
+        except DeliveryError:
+            raise JournalError("Invalid delivery history source origin") from None
+        filters.append("source_sha256 = ?")
+        parameters.append(hashlib.sha256(source.encode("ascii")).hexdigest())
     if destination is not None:
         try:
             endpoint(destination)

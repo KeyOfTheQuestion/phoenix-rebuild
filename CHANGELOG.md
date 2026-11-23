@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-23 · Source filters for delivery history
+
+- `delivery-history --source ORIGIN` selects the exact stored source fingerprint alongside event, state, receiver and cursor filters. It validates before journal access, keeps existing journals read-only and distinguishes equal event IDs across inbox services. [Verification record](docs/maintenance/2026-11-23-history-source.md).
+
 ## 2026-11-22 · Contract filters in the notebook
 
 - The notebook can filter contract 001 and 002 alongside source and outcome, including shareable URLs and history navigation. Legacy records remain contract 001 and overall metrics retain the full ledger. [Verification record](docs/maintenance/2026-11-22-contract-filter.md).

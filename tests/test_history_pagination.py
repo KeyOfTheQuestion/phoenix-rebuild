@@ -6,6 +6,8 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import traceback
 import unittest
@@ -340,3 +342,81 @@ class HistoryPageTests(unittest.TestCase):
             self.assertEqual(stdout.getvalue(), "")
             self.assertNotIn(marker, stderr.getvalue())
         self.assertFalse(self.path.exists())
+
+    def test_H20_source_filter_finds_sparse_matches_with_other_filters(self):
+        self.seed(125, tied=True)
+        source = "http://127.0.0.1:8787"
+        destination = "http://127.0.0.1:9000/webhook"
+        source_hash = hashlib.sha256(source.encode("ascii")).hexdigest()
+        with journal.database(self.path) as connection, connection:
+            connection.execute("UPDATE delivery_attempts SET event_id = ?, destination_sha256 = ?, source_sha256 = ?",
+                               ("shared-event", hashlib.sha256(destination.encode("ascii")).hexdigest(),
+                                hashlib.sha256(b"http://127.0.0.1:8788").hexdigest()))
+            connection.execute("UPDATE delivery_attempts SET source_sha256 = ? WHERE id <= ?",
+                               (source_hash, "%032x" % 5))
+            connection.execute("UPDATE delivery_attempts SET event_id = ? WHERE id = ?",
+                               ("other-event", "%032x" % 5))
+        journal.finish_attempt(self.path, "%032x" % 4, {"status": "delivery-unknown", "attempts": 1})
+        before = self.path.read_bytes()
+        filters = {"source": source, "event_id": "shared-event", "destination": destination,
+                   "state": "unconfirmed"}
+        first = journal.delivery_history_page(self.path, 2, **filters)
+        self.assertEqual([row["id"] for row in first["attempts"]], ["%032x" % n for n in (3, 2)])
+        self.assertIsNotNone(first["next_cursor"])
+        last = journal.delivery_history_page(self.path, 2, first["next_cursor"], **filters)
+        self.assertEqual([row["id"] for row in last["attempts"]], ["%032x" % 1])
+        self.assertIsNone(last["next_cursor"])
+        self.assertTrue(all(row["source_sha256"] == source_hash for row in first["attempts"] + last["attempts"]))
+        self.assertEqual(journal.delivery_history_page(self.path, source=source + "/"),
+                         {"attempts": [], "next_cursor": None})
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H21_invalid_source_refuses_before_journal_access_without_echo(self):
+        with patch.object(journal, "database", side_effect=AssertionError("Database opened")):
+            for source in ("", 1, True, "http://localhost:8787", "https://127.0.0.1:8787",
+                           "http://127.0.0.1:8787/path", "http://127.0.0.1:8787/?key=value",
+                           "http://127.0.0.1:8787/#frag", "http://127.0.0.1:synthetic-private/"):
+                with self.subTest(source=source), self.assertRaisesRegex(journal.JournalError, "source") as caught:
+                    journal.delivery_history_page(self.path, source=source)
+                diagnostic = "".join(traceback.format_exception(type(caught.exception), caught.exception,
+                                                               caught.exception.__traceback__))
+                self.assertNotIn("synthetic-private", diagnostic)
+        self.assertFalse(self.path.exists())
+
+    def test_H22_cli_source_filter_continues_matching_finished_receipts(self):
+        self.seed(5, tied=True)
+        source = "http://127.0.0.1:8787"
+        destination = "http://127.0.0.1:9000/webhook"
+        with journal.database(self.path) as connection, connection:
+            connection.execute("UPDATE delivery_attempts SET event_id = ?, destination_sha256 = ?, source_sha256 = ?",
+                               ("shared-event", hashlib.sha256(destination.encode("ascii")).hexdigest(),
+                                hashlib.sha256(b"http://127.0.0.1:8788").hexdigest()))
+            connection.execute("UPDATE delivery_attempts SET source_sha256 = ? WHERE id <= ?",
+                               (hashlib.sha256(source.encode("ascii")).hexdigest(), "%032x" % 4))
+        for n, status in ((2, "delivery-unknown"), (4, "delivered"), (5, "delivered")):
+            journal.finish_attempt(self.path, "%032x" % n, {"status": status, "attempts": 1})
+        before = self.path.read_bytes()
+
+        def page(extra=()):
+            result = subprocess.run([sys.executable, "-m", "phoenix", "delivery-history", "--journal", str(self.path),
+                                     "--limit", "1", "--source", source, "--destination", destination,
+                                     "--event-id", "shared-event", "--state", "finished", *extra],
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn(source, result.stdout)
+            return json.loads(result.stdout)
+
+        first = page()
+        self.assertEqual(first["attempts"][0]["id"], "%032x" % 4)
+        self.assertIsNotNone(first["next_cursor"])
+        last = page(("--cursor", first["next_cursor"]))
+        self.assertEqual([row["id"] for row in last["attempts"]], ["%032x" % 2])
+        self.assertEqual(last["attempts"][0]["receipt"]["status"], "delivery-unknown")
+        self.assertIsNone(last["next_cursor"])
+        invalid = subprocess.run([sys.executable, "-m", "phoenix", "delivery-history", "--journal", str(self.path),
+                                  "--source", "http://127.0.0.1:synthetic-private/"],
+                                 capture_output=True, text=True, timeout=10)
+        self.assertEqual(invalid.returncode, 2)
+        self.assertEqual(invalid.stdout, "")
+        self.assertNotIn("synthetic-private", invalid.stderr)
+        self.assertEqual(self.path.read_bytes(), before)
