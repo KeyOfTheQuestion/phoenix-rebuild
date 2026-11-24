@@ -177,6 +177,11 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 末尾斜线。可与状态、接收端组合筛选，通过 `next_cursor` 翻页时保留全部条件。
 [按来源服务筛选](docs/delivery.md#filter-delivery-history-by-source-origin)。
 
+投递验证脚本也可从仓库外运行：
+`python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py`（替换为实际路径）。
+脚本验证该检出目录中最新成功的 v2 AI 收件服务及 CLI，CI 和 Pages 现在也从临时目录
+执行它。[工作目录回归检查](docs/maintenance/2026-11-24-delivery-verification-cwd.md)。
+
 ## 浏览器端验证记录页
 
 可选的开发检查使用 Python 3.10+、固定版本的 Playwright 和无界面的 Chromium，在与 Pages 类似的项目子路径下操作真实网页，验证统计、记录筛选、语言偏好持久化、每条证据弹窗及链接、规格页导航，以及加载失败后的恢复。这些检查会在 CI 和 Pages 发布前执行；后端仍支持 Python 3.9+，没有新增运行依赖。

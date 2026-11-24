@@ -401,7 +401,7 @@ class HistoryPageTests(unittest.TestCase):
             result = subprocess.run([sys.executable, "-m", "phoenix", "delivery-history", "--journal", str(self.path),
                                      "--limit", "1", "--source", source, "--destination", destination,
                                      "--event-id", "shared-event", "--state", "finished", *extra],
-                                    capture_output=True, text=True, timeout=10)
+                                    cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertNotIn(source, result.stdout)
             return json.loads(result.stdout)
@@ -415,7 +415,7 @@ class HistoryPageTests(unittest.TestCase):
         self.assertIsNone(last["next_cursor"])
         invalid = subprocess.run([sys.executable, "-m", "phoenix", "delivery-history", "--journal", str(self.path),
                                   "--source", "http://127.0.0.1:synthetic-private/"],
-                                 capture_output=True, text=True, timeout=10)
+                                 cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=10)
         self.assertEqual(invalid.returncode, 2)
         self.assertEqual(invalid.stdout, "")
         self.assertNotIn("synthetic-private", invalid.stderr)

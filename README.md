@@ -227,6 +227,12 @@ origin string used for delivery, including any trailing slash. Combine it with
 the state and receiver filters and repeat them when following `next_cursor`.
 [Filter by source origin](docs/delivery.md#filter-delivery-history-by-source-origin).
 
+The delivery verification script also works from outside the checkout:
+`python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py` (replace the path).
+It checks the latest successful v2 AI inbox and the CLI from that checkout.
+CI and Pages now exercise this invocation from their temporary directory.
+[Working-directory regression](docs/maintenance/2026-11-24-delivery-verification-cwd.md).
+
 ## Check the notebook in a browser
 
 Use **All outcomes** to show only passed, acceptance-failed,

@@ -72,6 +72,14 @@ record support. CI and Pages run it without model credentials. Historical
 checkout observations can be reproduced from their commit and source snapshots.
 See the [first observations](maintenance/2026-11-07-loopback-delivery.md).
 
+The script can be invoked by absolute path from outside the checkout:
+`python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py` (replace the path).
+Its CLI subprocess checks explicitly use the script's checkout root, rather
+than relying on the caller's current directory to import `phoenix`.
+CI's Python matrix and Pages run this check from `runner.temp`. This uses the
+same 56 client checks and does not add model calls or backend acceptance items.
+[Working-directory regression](maintenance/2026-11-24-delivery-verification-cwd.md).
+
 ## Pin the body digest
 
 ```sh

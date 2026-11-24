@@ -411,6 +411,13 @@ saved receipt from actual AI-backed delivery by source. Schema and receipt
 uncertainty remain unchanged; these observations add no AI attempts or backend
 acceptance checks. [Source filter evidence](maintenance/2026-11-23-history-source.md).
 
+The delivery smoke can be invoked by absolute path from another working
+directory. Its H22 history CLI and J04 interrupted-delivery subprocesses select the tested checkout root
+for Python module discovery; no global directory switch is used. CI and Pages
+exercise the same smoke from their temporary directory. Check counts and
+backend acceptance are unchanged.
+[Working-directory regression](maintenance/2026-11-24-delivery-verification-cwd.md).
+
 `deliver-event --expect-body-sha256 DIGEST` adds a client-supplied body
 precondition before the POST marker. The negative control serves a changed
 body with its matching source digest and observes zero receiver requests.

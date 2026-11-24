@@ -55,6 +55,9 @@
    [History source filter 2026-11-23](maintenance/2026-11-23-history-source.md)
    distinguishes matching event IDs across exact source-origin fingerprints,
    together with state, receiver and cursor filters.
+   [Delivery verification portability 2026-11-24](maintenance/2026-11-24-delivery-verification-cwd.md)
+   fixes CLI subprocess imports when the smoke script is invoked outside the
+   checkout; CI and Pages now retain that regression coverage.
    Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix

@@ -85,7 +85,7 @@ class JournalTests(DeliveryFixture, unittest.TestCase):
         process = subprocess.Popen([sys.executable, "-m", "phoenix", "deliver-event", "--source", self.source,
                                     "--event-id", "event-1", "--destination", self.destination,
                                     "--journal", str(self.path), "--timeout", "5"],
-                                   env=dict(os.environ, PHOENIX_ADMIN_TOKEN=TOKEN),
+                                   cwd=Path(__file__).resolve().parents[1], env=dict(os.environ, PHOENIX_ADMIN_TOKEN=TOKEN),
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
         try:
             deadline = time.monotonic() + 3
