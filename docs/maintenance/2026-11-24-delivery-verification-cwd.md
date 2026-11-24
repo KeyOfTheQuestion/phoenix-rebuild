@@ -50,3 +50,21 @@ The separate v2 handoff from the November 23 candidate to today's candidate
 passed 8/8 using HTTP-created data and disclosed synthetic timestamp aging.
 This bundle remains outside the AI ledger and 32-check verdict.
 [Continuity report](2026-11-24-continuity/report.json).
+
+## Publication failure and bounded recovery
+
+The initial [Pages run](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/45314396645/attempts/1)
+passed all verification and uploaded its artifact, then deployment reported
+zero matching artifacts. A later metadata query found the uploaded artifact.
+Rerunning that job uploaded another `github-pages` artifact, and deployment
+then rejected two matching names. A [fresh workflow run](https://github.com/KeyOfTheQuestion/phoenix-rebuild/actions/runs/45315311745)
+again passed verification but reported zero artifacts at deployment. These
+publication failures do not alter any AI or client acceptance observation.
+
+The existing workflow now names the artifact using the workflow run and attempt
+IDs. If deployment fails, it waits ten seconds and makes one deployment-only
+retry against that same artifact, without uploading again or rerunning tests.
+The second failure still fails the job. This is bounded recovery for the
+observed artifact-discovery problem, not a guarantee about GitHub availability.
+Action revisions, verification guards, workflow permissions and credentials
+are unchanged. The environment URL accepts either successful deployment's output.

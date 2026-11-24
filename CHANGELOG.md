@@ -3,6 +3,7 @@
 ## 2026-11-24 · Delivery verification outside the checkout
 
 - Fixed a CLI subprocess import failure when invoking the delivery smoke script by absolute path from another directory. CI and Pages now run the same 56 client checks from their temporary directory. [Failure and verification](docs/maintenance/2026-11-24-delivery-verification-cwd.md).
+- Preserved Pages artifact-discovery failures and added unique per-attempt artifact names plus one deployment-only retry, with the existing checks and permissions retained.
 
 ## 2026-11-23 · Source filters for delivery history
 
