@@ -40,6 +40,7 @@ def initialize(path):
             connection.execute("CREATE TABLE delivery_attempts (id TEXT PRIMARY KEY, started_at TEXT NOT NULL, "
                                "event_id TEXT NOT NULL, source_sha256 TEXT NOT NULL, destination_sha256 TEXT NOT NULL, "
                                "worker_sha256 TEXT NOT NULL, receipt_json TEXT)")
+            connection.execute("CREATE INDEX delivery_attempts_history ON delivery_attempts (started_at DESC, id DESC)")
             connection.execute("PRAGMA application_id=%s" % APPLICATION_ID)
             connection.execute("PRAGMA user_version=1")
         connection.close()

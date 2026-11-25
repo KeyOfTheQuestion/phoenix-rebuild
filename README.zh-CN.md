@@ -177,6 +177,10 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 末尾斜线。可与状态、接收端组合筛选，通过 `next_cursor` 翻页时保留全部条件。
 [按来源服务筛选](docs/delivery.md#filter-delivery-history-by-source-origin)。
 
+新建投递日志包含历史记录时间／ID 排序索引。旧日志仍可读写，不会自动补建索引。
+组合筛选仍可能扫描多条记录，不承诺查询时延。
+[索引检查记录](docs/maintenance/2026-11-25-history-index.md)。
+
 投递验证脚本也可从仓库外运行：
 `python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py`（替换为实际路径）。
 脚本验证该检出目录中最新成功的 v2 AI 收件服务及 CLI，CI 和 Pages 现在也从临时目录

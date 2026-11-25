@@ -18,6 +18,51 @@ from phoenix import delivery_journal as journal
 
 
 class HistoryPageTests(unittest.TestCase):
+    def test_H23_new_journal_pages_do_not_need_a_temporary_order_sort(self):
+        self.seed(123)
+        queries = []
+        original_database = journal.database
+
+        @contextlib.contextmanager
+        def observed_database(*args, **kwargs):
+            with original_database(*args, **kwargs) as connection:
+                connection.set_trace_callback(queries.append)
+                yield connection
+
+        with patch.object(journal, "database", observed_database):
+            first = journal.delivery_history_page(self.path, 2)
+            second = journal.delivery_history_page(self.path, 2, first["next_cursor"])
+        self.assertEqual([row["id"] for row in first["attempts"] + second["attempts"]],
+                         ["%032x" % n for n in (123, 122, 121, 120)])
+        selections = [query for query in queries if query.startswith("SELECT * FROM delivery_attempts")]
+        self.assertEqual(len(selections), 2)
+        with original_database(self.path, readonly=True) as connection:
+            for selection in selections:
+                plan = [row[3] for row in connection.execute("EXPLAIN QUERY PLAN " + selection)]
+                self.assertFalse(any("TEMP B-TREE" in detail for detail in plan), plan)
+
+    def test_H24_legacy_journal_without_the_order_index_stays_readable_and_writable(self):
+        self.seed(3)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX IF EXISTS delivery_attempts_history")
+        before = self.path.read_bytes()
+        first = journal.delivery_history_page(self.path, 2)
+        last = journal.delivery_history_page(self.path, 2, first["next_cursor"])
+        self.assertEqual([row["id"] for row in first["attempts"] + last["attempts"]],
+                         ["%032x" % n for n in (3, 2, 1)])
+        self.assertIsNone(last["next_cursor"])
+        self.assertEqual(self.path.read_bytes(), before)
+        identifier = journal.start_attempt(self.path, {"started_at": "2026-11-02T00:00:00+00:00",
+                                  "event_id": "legacy-append", "source_sha256": "a" * 64,
+                                  "destination_sha256": "b" * 64, "worker_sha256": "c" * 64})
+        journal.finish_attempt(self.path, identifier, {"status": "delivery-unknown", "attempts": 1})
+        row = journal.delivery_attempt(self.path, identifier)
+        self.assertEqual((row["state"], row["receipt"]["status"]), ("finished", "delivery-unknown"))
+        with journal.database(self.path, readonly=True) as connection:
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 1)
+            self.assertEqual([row[1] for row in connection.execute("PRAGMA index_list(delivery_attempts)")
+                              if not row[2]], [])
+
     def test_H09_lookup_finds_an_attempt_beyond_the_first_page(self):
         self.seed(123)
         identifier = "%032x" % 1

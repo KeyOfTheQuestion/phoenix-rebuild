@@ -227,6 +227,11 @@ origin string used for delivery, including any trailing slash. Combine it with
 the state and receiver filters and repeat them when following `next_cursor`.
 [Filter by source origin](docs/delivery.md#filter-delivery-history-by-source-origin).
 
+New delivery journals include an index for the history time/ID ordering.
+Existing journals remain readable and writable without an automatic index
+upgrade. Filtered queries may still scan rows; this is no latency guarantee.
+[Index verification](docs/maintenance/2026-11-25-history-index.md).
+
 The delivery verification script also works from outside the checkout:
 `python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py` (replace the path).
 It checks the latest successful v2 AI inbox and the CLI from that checkout.

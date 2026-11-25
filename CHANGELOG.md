@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-25 · Ordered history access for new journals
+
+- New delivery journals include a time/ID index for ordinary history pagination. Unindexed existing journals remain readable and writable without automatic migration. Query plans and legacy behavior are checked separately from reconstruction acceptance. [Verification record](docs/maintenance/2026-11-25-history-index.md).
+
 ## 2026-11-24 · Delivery verification outside the checkout
 
 - Fixed a CLI subprocess import failure when invoking the delivery smoke script by absolute path from another directory. CI and Pages now run the same 56 client checks from their temporary directory. [Failure and verification](docs/maintenance/2026-11-24-delivery-verification-cwd.md).

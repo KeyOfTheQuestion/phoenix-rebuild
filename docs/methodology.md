@@ -414,9 +414,18 @@ acceptance checks. [Source filter evidence](maintenance/2026-11-23-history-sourc
 The delivery smoke can be invoked by absolute path from another working
 directory. Its H22 history CLI and J04 interrupted-delivery subprocesses select the tested checkout root
 for Python module discovery; no global directory switch is used. CI and Pages
-exercise the same smoke from their temporary directory. Check counts and
-backend acceptance are unchanged.
+exercise the same smoke from their temporary directory. Directory selection
+adds no backend acceptance items.
 [Working-directory regression](maintenance/2026-11-24-delivery-verification-cwd.md).
+
+New delivery journals create a time/ID order index before atomic publication
+of the database file. H23 captures the actual first-page and continuation SQL
+and checks its SQLite query plan for temporary sorting. H24 removes the optional
+index to exercise read-only traversal and subsequent writes in the legacy
+format. Existing journals are not automatically indexed. These client checks
+add no reconstruction items, and their observed plans do not establish a
+latency bound or eliminate scans for other filters.
+[Index observations](maintenance/2026-11-25-history-index.md).
 
 `deliver-event --expect-body-sha256 DIGEST` adds a client-supplied body
 precondition before the POST marker. The negative control serves a changed

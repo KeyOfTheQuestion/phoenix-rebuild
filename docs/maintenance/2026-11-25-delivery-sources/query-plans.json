@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "kind": "history-index-query-plan-observation",
+  "execution_runtime": {
+    "python_implementation": "CPython",
+    "python_version": "3.9.6",
+    "sqlite_version": "3.43.2"
+  },
+  "fixture": "123 synthetic rows created with current test fixture; optional order index explicitly removed for unindexed comparison",
+  "source_sha256": {
+    "journal.py": "2bbaccc9b0af492191efed313322035b7929cd0d14f41f50b0a0a90970f37089",
+    "history_checks.py": "69cb93d1100a167d56a9c917a7c8bff64dbcd3e22208bbcdeb16514419f87704"
+  },
+  "observations": {
+    "indexed": {
+      "plans": [
+        {
+          "query": "SELECT * FROM delivery_attempts ORDER BY started_at DESC, id DESC LIMIT 3",
+          "details": [
+            "SCAN delivery_attempts USING INDEX delivery_attempts_history"
+          ]
+        },
+        {
+          "query": "SELECT * FROM delivery_attempts WHERE (started_at, id) < ('2026-11-01T00:02:02+00:00', '0000000000000000000000000000007a') ORDER BY started_at DESC, id DESC LIMIT 3",
+          "details": [
+            "SEARCH delivery_attempts USING INDEX delivery_attempts_history ((started_at,id)<(?,?))"
+          ]
+        }
+      ],
+      "returned_ids": [
+        "0000000000000000000000000000007b",
+        "0000000000000000000000000000007a",
+        "00000000000000000000000000000079",
+        "00000000000000000000000000000078"
+      ],
+      "read_only_bytes_unchanged": true
+    },
+    "unindexed_fixture": {
+      "plans": [
+        {
+          "query": "SELECT * FROM delivery_attempts ORDER BY started_at DESC, id DESC LIMIT 3",
+          "details": [
+            "SCAN delivery_attempts",
+            "USE TEMP B-TREE FOR ORDER BY"
+          ]
+        },
+        {
+          "query": "SELECT * FROM delivery_attempts WHERE (started_at, id) < ('2026-11-01T00:02:02+00:00', '0000000000000000000000000000007a') ORDER BY started_at DESC, id DESC LIMIT 3",
+          "details": [
+            "SCAN delivery_attempts",
+            "USE TEMP B-TREE FOR ORDER BY"
+          ]
+        }
+      ],
+      "returned_ids": [
+        "0000000000000000000000000000007b",
+        "0000000000000000000000000000007a",
+        "00000000000000000000000000000079",
+        "00000000000000000000000000000078"
+      ],
+      "read_only_bytes_unchanged": true
+    }
+  }
+}

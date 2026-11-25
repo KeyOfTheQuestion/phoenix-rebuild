@@ -77,7 +77,7 @@ The script can be invoked by absolute path from outside the checkout:
 Its CLI subprocess checks explicitly use the script's checkout root, rather
 than relying on the caller's current directory to import `phoenix`.
 CI's Python matrix and Pages run this check from `runner.temp`. This uses the
-same 56 client checks and does not add model calls or backend acceptance items.
+current client checks and does not add model calls or backend acceptance items.
 [Working-directory regression](maintenance/2026-11-24-delivery-verification-cwd.md).
 
 ## Pin the body digest
@@ -269,6 +269,16 @@ records with newer keys do not shift subsequent pages. A read-only SELECT
 fetches at most `limit + 1` rows to detect continuation. Sorting/scanning work
 is not bounded by that returned-row limit; no query-latency guarantee is made.
 
+New journals create an index on `(started_at DESC, id DESC)` in the same
+transaction as the table, before the completed database is published. It
+supports the ordinary first-page and cursor-page ordering without a temporary
+sort in the observed SQLite plans. Additional filters can still require
+scanning many rows. This trades index storage and write maintenance for ordered
+access; it does not promise a maximum query time. Existing journals without
+the index remain readable and writable, with no automatic index upgrade or
+changes during read-only history queries.
+[Index and legacy compatibility observations](maintenance/2026-11-25-history-index.md).
+
 Pages are not a transaction snapshot across invocations. Receipt finalization
 can become visible on a later page without changing order. A late commit with
 an older key can appear later; external timestamp edits/deletions or clock
@@ -287,8 +297,8 @@ identity; it grants no authorization and can be edited to choose a seek position
 Python callers can use `delivery_history_page(path, limit=20, cursor=None)` to
 receive `{"attempts": [...], "next_cursor": ...}`. The existing
 `delivery_history(path, limit=20)` still returns a list with the same newest-row
-behavior. The CLI's `next_cursor` is additive. Database schema, supported file
-mode, permission checks and missing-file behavior are unchanged.
+behavior. The CLI's `next_cursor` is additive. Column layout, journal version,
+supported file mode, permission checks and missing-file behavior are unchanged.
 
 The [pagination observations](maintenance/2026-11-10-history-pagination.md)
 include complete traversal of 123 synthetic rows, timestamp ties, newer inserts,
