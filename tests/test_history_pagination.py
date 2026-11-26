@@ -1,11 +1,13 @@
 """Actual SQLite pages and CLI continuations; fixtures are synthetic local rows."""
 import base64
 import contextlib
+import concurrent.futures
 from datetime import datetime, timedelta, timezone
 import hashlib
 import io
 import json
 from pathlib import Path
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -18,6 +20,136 @@ from phoenix import delivery_journal as journal
 
 
 class HistoryPageTests(unittest.TestCase):
+    def test_H25_explicit_index_upgrade_preserves_legacy_rows_and_receipts(self):
+        self.seed(123)
+        journal.finish_attempt(self.path, "%032x" % 2, {"status": "delivery-unknown", "attempts": 1})
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+            before = [tuple(row) for row in connection.execute("SELECT * FROM delivery_attempts ORDER BY id")]
+        report = journal.index_delivery_history(self.path)
+        self.assertTrue(report["created"])
+        with journal.database(self.path, readonly=True) as connection:
+            self.assertEqual([tuple(row) for row in connection.execute("SELECT * FROM delivery_attempts ORDER BY id")], before)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 1)
+            plan = [row[3] for row in connection.execute(
+                "EXPLAIN QUERY PLAN SELECT * FROM delivery_attempts ORDER BY started_at DESC, id DESC LIMIT 3")]
+            self.assertFalse(any("TEMP B-TREE" in detail for detail in plan), plan)
+        self.assertEqual(journal.delivery_attempt(self.path, "%032x" % 2)["receipt"]["status"], "delivery-unknown")
+
+    def test_H26_index_upgrade_is_idempotent_and_serializes_concurrent_requests(self):
+        self.seed(3)
+        before = self.path.read_bytes()
+        for _ in range(2):
+            self.assertFalse(journal.index_delivery_history(self.path)["created"])
+        self.assertEqual(self.path.read_bytes(), before)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
+            reports = list(pool.map(lambda _: journal.index_delivery_history(self.path), range(3)))
+        self.assertEqual(sorted(report["created"] for report in reports), [False, False, True])
+        self.assertEqual(len(journal.delivery_history(self.path)), 3)
+
+    def test_H27_conflicting_index_definitions_are_refused_without_replacement(self):
+        self.seed(3)
+        definitions = [("", "(id)"), ("", "(started_at ASC, id ASC)"),
+                       ("", "(started_at COLLATE NOCASE DESC, id DESC)"),
+                       ("", "(started_at DESC, id DESC) WHERE receipt_json IS NOT NULL"),
+                       ("UNIQUE ", "(started_at DESC, id DESC)")]
+        for prefix, definition in definitions:
+            with self.subTest(definition=definition):
+                with journal.database(self.path) as connection, connection:
+                    connection.execute("DROP INDEX delivery_attempts_history")
+                    connection.execute("CREATE " + prefix + "INDEX delivery_attempts_history ON delivery_attempts " + definition)
+                before = self.path.read_bytes()
+                with self.assertRaisesRegex(journal.JournalError, "index definition"):
+                    journal.index_delivery_history(self.path)
+                self.assertEqual(self.path.read_bytes(), before)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+            connection.execute("CREATE TABLE unrelated (started_at TEXT, id TEXT)")
+            connection.execute("CREATE INDEX delivery_attempts_history ON unrelated (started_at DESC, id DESC)")
+        before = self.path.read_bytes()
+        with self.assertRaisesRegex(journal.JournalError, "index definition"):
+            journal.index_delivery_history(self.path)
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H28_index_cli_reports_created_and_existing_without_echoing_the_path(self):
+        self.seed(2)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+        for expected in (True, False):
+            result = subprocess.run([sys.executable, "-m", "phoenix", "delivery-journal-index", "--journal", str(self.path)],
+                                    cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads(result.stdout)
+            self.assertEqual(report["kind"], "local-delivery-history-index")
+            self.assertEqual(report["created"], expected)
+            self.assertNotIn(str(self.path), result.stdout + result.stderr)
+
+    def test_H29_index_upgrade_never_creates_or_changes_an_unrelated_database(self):
+        with self.assertRaises(journal.JournalError):
+            journal.index_delivery_history(self.path)
+        self.assertFalse(self.path.exists())
+        self.path.write_bytes(b"synthetic unrelated file")
+        before = self.path.read_bytes()
+        with self.assertRaises(journal.JournalError):
+            journal.index_delivery_history(self.path)
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertEqual({p.name for p in self.path.parent.iterdir()}, {self.path.name})
+        self.path.unlink()
+        with contextlib.closing(sqlite3.connect(str(self.path))) as connection, connection:
+            connection.execute("CREATE TABLE unrelated (value TEXT)")
+            connection.execute("INSERT INTO unrelated VALUES ('synthetic')")
+        before = self.path.read_bytes()
+        with self.assertRaises(journal.JournalError):
+            journal.index_delivery_history(self.path)
+        self.assertEqual(self.path.read_bytes(), before)
+        self.path.unlink()
+        self.seed(2)
+        with journal.database(self.path) as connection:
+            connection.execute("PRAGMA journal_mode=WAL")
+        before = {p.name: p.read_bytes() for p in self.path.parent.iterdir()}
+        with self.assertRaisesRegex(journal.JournalError, "rollback mode"):
+            journal.index_delivery_history(self.path)
+        self.assertEqual({p.name: p.read_bytes() for p in self.path.parent.iterdir()}, before)
+
+    def test_H30_busy_index_upgrade_rolls_back_before_reporting_success(self):
+        self.seed(2)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+        before = self.path.read_bytes()
+        with journal.database(self.path) as holder:
+            holder.execute("BEGIN IMMEDIATE")
+            try:
+                with self.assertRaises(journal.JournalError):
+                    journal.index_delivery_history(self.path)
+            finally:
+                holder.rollback()
+        self.assertEqual(self.path.read_bytes(), before)
+        # A regular connection holding a read transaction prevents COMMIT.
+        statements = []
+        original_database = journal.database
+
+        @contextlib.contextmanager
+        def observed_database(*args, **kwargs):
+            with original_database(*args, **kwargs) as connection:
+                connection.set_trace_callback(statements.append)
+                yield connection
+
+        with contextlib.closing(sqlite3.connect(str(self.path))) as reader:
+            reader.execute("BEGIN")
+            reader.execute("SELECT * FROM delivery_attempts").fetchall()
+            try:
+                with patch.object(journal, "database", observed_database), self.assertRaises(journal.JournalError):
+                    journal.index_delivery_history(self.path)
+            finally:
+                reader.rollback()
+        self.assertTrue(any(query.startswith("CREATE INDEX ") for query in statements), statements)
+        self.assertIn("COMMIT", statements)
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertEqual({p.name for p in self.path.parent.iterdir()}, {self.path.name})
+        self.assertTrue(journal.index_delivery_history(self.path)["created"])
+
     def test_H23_new_journal_pages_do_not_need_a_temporary_order_sort(self):
         self.seed(123)
         queries = []

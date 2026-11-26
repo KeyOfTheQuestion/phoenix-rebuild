@@ -232,6 +232,13 @@ Existing journals remain readable and writable without an automatic index
 upgrade. Filtered queries may still scan rows; this is no latency guarantee.
 [Index verification](docs/maintenance/2026-11-25-history-index.md).
 
+To add that index to an existing journal, explicitly run
+`python3 -m phoenix delivery-journal-index --journal ./deliveries.sqlite3`.
+It preserves rows and receipts, reports whether the index was created, and
+refuses a conflicting definition. This write operation can wait for a database
+lock; history queries still perform no automatic upgrade.
+[Index an existing journal](docs/delivery.md#index-an-existing-delivery-journal).
+
 The delivery verification script also works from outside the checkout:
 `python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py` (replace the path).
 It checks the latest successful v2 AI inbox and the CLI from that checkout.

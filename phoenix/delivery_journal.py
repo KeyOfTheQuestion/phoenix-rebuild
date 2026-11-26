@@ -15,6 +15,8 @@ from .delivery import DeliveryError, endpoint, valid_event_id
 
 
 APPLICATION_ID = 0x50484A31
+HISTORY_INDEX = "delivery_attempts_history"
+HISTORY_INDEX_SQL = "CREATE INDEX delivery_attempts_history ON delivery_attempts (started_at DESC, id DESC)"
 RECEIPT_FIELDS = {
     "schema_version", "kind", "event_id", "started_at", "duration_seconds", "timeout_seconds",
     "worker_sha256", "status", "attempts", "http_status", "error", "body_sha256", "request_bytes",
@@ -40,7 +42,7 @@ def initialize(path):
             connection.execute("CREATE TABLE delivery_attempts (id TEXT PRIMARY KEY, started_at TEXT NOT NULL, "
                                "event_id TEXT NOT NULL, source_sha256 TEXT NOT NULL, destination_sha256 TEXT NOT NULL, "
                                "worker_sha256 TEXT NOT NULL, receipt_json TEXT)")
-            connection.execute("CREATE INDEX delivery_attempts_history ON delivery_attempts (started_at DESC, id DESC)")
+            connection.execute(HISTORY_INDEX_SQL)
             connection.execute("PRAGMA application_id=%s" % APPLICATION_ID)
             connection.execute("PRAGMA user_version=1")
         connection.close()
@@ -96,6 +98,25 @@ def database(path, create=False, readonly=False):
     finally:
         if connection is not None:
             connection.close()
+
+
+def index_delivery_history(path):
+    """Explicitly add the optional order index to an existing supported journal."""
+    with database(path) as connection, connection:
+        connection.execute("BEGIN IMMEDIATE")
+        existing = connection.execute("SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?",
+                                      (HISTORY_INDEX,)).fetchone()
+        created = existing is None
+        if created:
+            connection.execute(HISTORY_INDEX_SQL)
+        metadata = next((row for row in connection.execute("PRAGMA index_list(delivery_attempts)")
+                         if row["name"] == HISTORY_INDEX), None)
+        keys = [(row["name"], row["desc"], row["coll"])
+                for row in connection.execute("PRAGMA index_xinfo(delivery_attempts_history)") if row["key"]]
+        if metadata is None or metadata["unique"] or metadata["partial"] \
+                or keys != [("started_at", 1, "BINARY"), ("id", 1, "BINARY")]:
+            raise JournalError("Unexpected history index definition; existing objects were not replaced")
+        return {"index": HISTORY_INDEX, "created": created}
 
 
 def start_attempt(path, metadata):

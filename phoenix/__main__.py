@@ -42,6 +42,8 @@ def main():
     history.add_argument("--event-id", help="Filter by exact stored event ID")
     history.add_argument("--source", help="Filter by the fingerprint of the exact inbox origin")
     history.add_argument("--destination", help="Filter by the fingerprint of the exact receiver URL")
+    history_index = commands.add_parser("delivery-journal-index", help="Explicitly add the history order index to an existing journal")
+    history_index.add_argument("--journal", required=True)
     receipt = commands.add_parser("delivery-receipt", help="Read one local delivery attempt by ID")
     receipt.add_argument("--journal", required=True)
     receipt.add_argument("--attempt-id", required=True, help="The journal_attempt_id returned by deliver-event")
@@ -88,6 +90,15 @@ def main():
         if report["status"] == "rejected":
             return 1
         return 2
+    if args.command == "delivery-journal-index":
+        from .delivery_journal import JournalError, index_delivery_history
+        try:
+            report = index_delivery_history(args.journal)
+        except JournalError as error:
+            print("Delivery history index refused: " + str(error), file=sys.stderr)
+            return 2
+        print(json.dumps({"kind": "local-delivery-history-index", **report}, indent=2))
+        return 0
     if args.command == "delivery-history":
         from .delivery_journal import JournalError, delivery_history_page
         try:

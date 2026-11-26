@@ -60,6 +60,9 @@
    checkout; CI and Pages now retain that regression coverage.
    [New-journal history index 2026-11-25](maintenance/2026-11-25-history-index.md)
    supports time/ID ordering while retaining unindexed legacy journal access.
+   [Explicit legacy-journal indexing 2026-11-26](maintenance/2026-11-26-journal-index-upgrade.md)
+   adds the optional index on request, preserving rows and receipts and refusing
+   conflicting definitions without replacement.
    Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix

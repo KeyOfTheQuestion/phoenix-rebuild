@@ -3,7 +3,7 @@ const zh = {
   recordFilters:'筛选实验记录',outcomeFilter:'按结果筛选',allOutcomes:'全部结果',
   contractFilter:'按契约筛选',allContracts:'全部契约',contract001:'契约 001',contract002:'契约 002',
   passedOutcome:'通过',failedOutcome:'验收未通过',generationFailedOutcome:'生成失败',verificationErrorOutcome:'验收环境错误',
-  maintenanceNote:'2026-11-25 新建投递日志增加历史排序索引，既有无索引文件仍可读写。今天的 AI 重建通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261125T023206Z-b399d4">直达今天的证据 ↗</a>',
+  maintenanceNote:'2026-11-26 现在可显式为已有投递日志建索引，并保留原数据和回执。今天的 AI 重建通过 32/32，昨日到今日的数据交接通过 8/8。<a href="?run=20261126T023550Z-37f2ed">直达今天的证据 ↗</a>',
   navNotebook:'实验记录',navContract:'公开规格',eyebrow:'一场公开的软件实验 · 编号 001',
   headline:'同一份规格。<br><em>重新诞生。</em>',intro:'保留规格，从没有实现代码的新目录开始，让 AI 再造一次后端。然后验证：原来的数据，还能不能用。',
   inspect:'查看验收证据',run:'复制复现命令 ⌘',footnote:'每次尝试都会留下记录。失败的重建，同样公开。',

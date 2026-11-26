@@ -181,6 +181,12 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 组合筛选仍可能扫描多条记录，不承诺查询时延。
 [索引检查记录](docs/maintenance/2026-11-25-history-index.md)。
 
+已有日志可显式运行
+`python3 -m phoenix delivery-journal-index --journal ./deliveries.sqlite3`
+补建索引。命令保留数据和回执，报告是否新建，并拒绝同名但定义冲突的索引。
+这是可能等待数据库写锁的维护操作，历史查询仍不会自动升级。
+[为已有日志建索引](docs/delivery.md#index-an-existing-delivery-journal)。
+
 投递验证脚本也可从仓库外运行：
 `python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py`（替换为实际路径）。
 脚本验证该检出目录中最新成功的 v2 AI 收件服务及 CLI，CI 和 Pages 现在也从临时目录

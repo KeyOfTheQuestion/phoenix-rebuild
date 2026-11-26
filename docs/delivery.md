@@ -307,6 +307,34 @@ boundary for invalid-input refusal; negative controls exercise canonical checks.
 D01 also reads the actual AI-backed delivery receipt through the page API.
 The expanded delivery smoke records 38 checks; old reports retain their bytes.
 
+## Index an existing delivery journal
+
+```sh
+python3 -m phoenix delivery-journal-index --journal ./deliveries.sqlite3
+```
+
+This explicit maintenance command adds the time/ID order index to an existing
+supported journal. It never creates a missing journal or connects to a receiver.
+The JSON result has `kind: local-delivery-history-index`, the index name, and
+`created: true` when added or `false` when the canonical index already exists.
+Both outcomes exit 0. Refusal or a database error exits 2 with a diagnostic.
+Python callers can use `index_delivery_history(path)`.
+
+The command uses a `BEGIN IMMEDIATE` transaction and the journal's existing
+one-second lock wait. Building the index can hold up writers; the lock wait
+does not bound the build's execution time. A commit failure rolls back the
+change and returns an error instead of reporting creation. Rows, receipts,
+column layout and journal version are preserved. Repeated or concurrent
+requests do not rebuild an existing canonical index.
+
+A same-name index must be the nonunique, nonpartial binary-collation index
+on `started_at DESC, id DESC` for `delivery_attempts`. Unexpected definitions
+or same-name objects on other tables are refused without replacement.
+Unrelated files and unsupported/WAL journals retain the existing refusal
+rules. This operation is optional; ordinary history reads and delivery writes
+do not automatically install the index in old journals.
+[Explicit upgrade checks](maintenance/2026-11-26-journal-index-upgrade.md).
+
 ## Filter delivery history by state
 
 ```sh

@@ -427,6 +427,15 @@ add no reconstruction items, and their observed plans do not establish a
 latency bound or eliminate scans for other filters.
 [Index observations](maintenance/2026-11-25-history-index.md).
 
+`delivery-journal-index --journal FILE` explicitly adds the optional order index
+to an existing supported journal under a write transaction. H25..H30 check
+logical row/receipt preservation, idempotence and concurrent callers, exact
+definition refusal, CLI results, missing/unrelated/WAL files, and rollback
+when writer or reader locks prevent the operation or its commit. Normal
+history reads and delivery writes still do not upgrade old journals. These
+client checks add no model calls or backend reconstruction items.
+[Upgrade observation](maintenance/2026-11-26-journal-index-upgrade.md).
+
 `deliver-event --expect-body-sha256 DIGEST` adds a client-supplied body
 precondition before the POST marker. The negative control serves a changed
 body with its matching source digest and observes zero receiver requests.
