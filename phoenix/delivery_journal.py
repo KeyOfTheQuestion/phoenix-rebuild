@@ -100,14 +100,20 @@ def database(path, create=False, readonly=False):
             connection.close()
 
 
-def index_delivery_history(path):
-    """Explicitly add the optional order index to an existing supported journal."""
-    with database(path) as connection, connection:
-        connection.execute("BEGIN IMMEDIATE")
-        existing = connection.execute("SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?",
+def index_delivery_history(path, *, dry_run=False):
+    """Inspect or explicitly add the optional order index to an existing journal."""
+    if type(dry_run) is not bool:
+        raise JournalError("Index dry_run must be a boolean")
+    with database(path, readonly=dry_run) as connection, connection:
+        connection.execute("BEGIN" if dry_run else "BEGIN IMMEDIATE")
+        existing = connection.execute("SELECT type FROM sqlite_master WHERE type IN ('index', 'table', 'view') AND name = ? COLLATE NOCASE",
                                       (HISTORY_INDEX,)).fetchone()
+        if existing is not None and existing["type"] != "index":
+            raise JournalError("Unexpected history index definition; existing objects were not replaced")
         created = existing is None
         if created:
+            if dry_run:
+                return {"index": HISTORY_INDEX, "created": False, "dry_run": True, "would_create": True}
             connection.execute(HISTORY_INDEX_SQL)
         metadata = next((row for row in connection.execute("PRAGMA index_list(delivery_attempts)")
                          if row["name"] == HISTORY_INDEX), None)
@@ -116,6 +122,8 @@ def index_delivery_history(path):
         if metadata is None or metadata["unique"] or metadata["partial"] \
                 or keys != [("started_at", 1, "BINARY"), ("id", 1, "BINARY")]:
             raise JournalError("Unexpected history index definition; existing objects were not replaced")
+        if dry_run:
+            return {"index": HISTORY_INDEX, "created": False, "dry_run": True, "would_create": False}
         return {"index": HISTORY_INDEX, "created": created}
 
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-27 · Readonly preview of journal indexing
+
+- `delivery-journal-index --dry-run` inspects the existing journal in a read-only transaction and reports creation intent without writing. Schema-name checks preserve same-name triggers while refusing actual table/view/index conflicts. [Verification record](docs/maintenance/2026-11-27-index-preview.md).
+
 ## 2026-11-26 · Explicit indexing of existing delivery journals
 
 - `delivery-journal-index --journal FILE` adds the optional history order index to an existing journal under a write transaction. It preserves rows and receipts, is idempotent, and refuses conflicting definitions or unsupported files without replacing them. [Verification record](docs/maintenance/2026-11-26-journal-index-upgrade.md).

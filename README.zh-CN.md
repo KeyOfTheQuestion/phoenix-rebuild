@@ -187,6 +187,9 @@ ID、指纹和过滤后的回执，不保存令牌、URL 或正文。目前是�
 这是可能等待数据库写锁的维护操作，历史查询仍不会自动升级。
 [为已有日志建索引](docs/delivery.md#index-an-existing-delivery-journal)。
 
+增加 `--dry-run` 可在只读事务中预览是否需要建索引。结果始终为 `created: false`，
+用 `would_create` 表示当前状态；真正升级时会重新检查，预览不会预留写入条件。
+
 投递验证脚本也可从仓库外运行：
 `python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py`（替换为实际路径）。
 脚本验证该检出目录中最新成功的 v2 AI 收件服务及 CLI，CI 和 Pages 现在也从临时目录

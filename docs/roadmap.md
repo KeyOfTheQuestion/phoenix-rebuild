@@ -63,6 +63,9 @@
    [Explicit legacy-journal indexing 2026-11-26](maintenance/2026-11-26-journal-index-upgrade.md)
    adds the optional index on request, preserving rows and receipts and refusing
    conflicting definitions without replacement.
+   [Readonly index preview 2026-11-27](maintenance/2026-11-27-index-preview.md)
+   inspects the current journal before an optional upgrade, without reserving
+   the writer lock or claiming an index was created.
    Delivery to other hosts, a policy for those
    destinations and a durable outbox remain follow-ups before webhook replay.
 9. [Runtime observations implemented 2026-11-02; installed-runtime matrix

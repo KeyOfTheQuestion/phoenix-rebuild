@@ -20,6 +20,99 @@ from phoenix import delivery_journal as journal
 
 
 class HistoryPageTests(unittest.TestCase):
+    def test_H31_index_dry_run_plans_creation_without_writing(self):
+        self.seed(2)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+        before = self.path.read_bytes()
+        statements = []
+        original_database = journal.database
+
+        @contextlib.contextmanager
+        def observed_database(*args, **kwargs):
+            with original_database(*args, **kwargs) as connection:
+                connection.set_trace_callback(statements.append)
+                yield connection
+
+        with patch.object(journal, "database", observed_database):
+            report = journal.index_delivery_history(self.path, dry_run=True)
+        self.assertEqual(report, {"index": "delivery_attempts_history", "created": False,
+                                  "dry_run": True, "would_create": True})
+        self.assertIn("BEGIN", statements)
+        self.assertFalse(any(query.strip().upper().startswith(("CREATE ", "DROP ", "ALTER ", "INSERT ", "UPDATE ", "DELETE ", "BEGIN IMMEDIATE"))
+                             for query in statements), statements)
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertEqual({p.name for p in self.path.parent.iterdir()}, {self.path.name})
+        self.assertTrue(journal.index_delivery_history(self.path)["created"])
+
+    def test_H32_index_dry_run_cli_distinguishes_missing_and_present_indexes(self):
+        self.seed(2)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+        for would_create in (True, False):
+            before = self.path.read_bytes()
+            result = subprocess.run([sys.executable, "-m", "phoenix", "delivery-journal-index", "--journal", str(self.path), "--dry-run"],
+                                    cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            report = json.loads(result.stdout)
+            self.assertEqual(report["kind"], "local-delivery-history-index")
+            self.assertEqual((report["created"], report["dry_run"], report["would_create"]), (False, True, would_create))
+            self.assertEqual(self.path.read_bytes(), before)
+            self.assertNotIn(str(self.path), result.stdout + result.stderr)
+            journal.index_delivery_history(self.path)
+
+    def test_H33_index_dry_run_distinguishes_colliding_schema_names(self):
+        self.seed(2)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+        fixtures = [("CREATE TABLE delivery_attempts_history (value TEXT)", "DROP TABLE delivery_attempts_history"),
+                    ("CREATE VIEW delivery_attempts_history AS SELECT 1 AS value", "DROP VIEW delivery_attempts_history"),
+                    ("CREATE INDEX delivery_attempts_history ON delivery_attempts (id)", "DROP INDEX delivery_attempts_history"),
+                    ("CREATE INDEX DELIVERY_ATTEMPTS_HISTORY ON delivery_attempts (id)", "DROP INDEX DELIVERY_ATTEMPTS_HISTORY")]
+        for create, remove in fixtures:
+            with self.subTest(create=create):
+                with journal.database(self.path) as connection, connection:
+                    connection.execute(create)
+                before = self.path.read_bytes()
+                with self.assertRaises(journal.JournalError):
+                    journal.index_delivery_history(self.path, dry_run=True)
+                self.assertEqual(self.path.read_bytes(), before)
+                with journal.database(self.path) as connection, connection:
+                    connection.execute(remove)
+        # Triggers have a separate namespace and do not block CREATE INDEX.
+        with journal.database(self.path) as connection, connection:
+            connection.execute("CREATE TRIGGER delivery_attempts_history AFTER INSERT ON delivery_attempts BEGIN SELECT 1; END")
+        before = self.path.read_bytes()
+        self.assertTrue(journal.index_delivery_history(self.path, dry_run=True)["would_create"])
+        self.assertEqual(self.path.read_bytes(), before)
+        self.assertTrue(journal.index_delivery_history(self.path)["created"])
+        self.assertFalse(journal.index_delivery_history(self.path, dry_run=True)["would_create"])
+        with journal.database(self.path, readonly=True) as connection:
+            self.assertEqual(connection.execute("SELECT count(*) FROM sqlite_master WHERE type='trigger' AND name='delivery_attempts_history'").fetchone()[0], 1)
+
+    def test_H34_index_dry_run_does_not_request_the_reserved_write_lock(self):
+        self.seed(2)
+        with journal.database(self.path) as connection, connection:
+            connection.execute("DROP INDEX delivery_attempts_history")
+        before = self.path.read_bytes()
+        with journal.database(self.path) as holder:
+            holder.execute("BEGIN IMMEDIATE")
+            try:
+                report = journal.index_delivery_history(self.path, dry_run=True)
+                self.assertEqual((report["created"], report["would_create"]), (False, True))
+            finally:
+                holder.rollback()
+        self.assertEqual(self.path.read_bytes(), before)
+
+    def test_H35_index_dry_run_validates_mode_and_never_creates_a_missing_journal(self):
+        with patch.object(journal, "database", side_effect=AssertionError("Database opened")):
+            for dry_run in (None, 0, 1, "true", []):
+                with self.subTest(dry_run=dry_run), self.assertRaises(journal.JournalError):
+                    journal.index_delivery_history(self.path, dry_run=dry_run)
+        with self.assertRaises(journal.JournalError):
+            journal.index_delivery_history(self.path, dry_run=True)
+        self.assertFalse(self.path.exists())
+
     def test_H25_explicit_index_upgrade_preserves_legacy_rows_and_receipts(self):
         self.seed(123)
         journal.finish_attempt(self.path, "%032x" % 2, {"status": "delivery-unknown", "attempts": 1})
@@ -61,17 +154,19 @@ class HistoryPageTests(unittest.TestCase):
                     connection.execute("DROP INDEX delivery_attempts_history")
                     connection.execute("CREATE " + prefix + "INDEX delivery_attempts_history ON delivery_attempts " + definition)
                 before = self.path.read_bytes()
-                with self.assertRaisesRegex(journal.JournalError, "index definition"):
-                    journal.index_delivery_history(self.path)
-                self.assertEqual(self.path.read_bytes(), before)
+                for dry_run in (False, True):
+                    with self.subTest(dry_run=dry_run), self.assertRaisesRegex(journal.JournalError, "index definition"):
+                        journal.index_delivery_history(self.path, dry_run=dry_run)
+                    self.assertEqual(self.path.read_bytes(), before)
         with journal.database(self.path) as connection, connection:
             connection.execute("DROP INDEX delivery_attempts_history")
             connection.execute("CREATE TABLE unrelated (started_at TEXT, id TEXT)")
             connection.execute("CREATE INDEX delivery_attempts_history ON unrelated (started_at DESC, id DESC)")
         before = self.path.read_bytes()
-        with self.assertRaisesRegex(journal.JournalError, "index definition"):
-            journal.index_delivery_history(self.path)
-        self.assertEqual(self.path.read_bytes(), before)
+        for dry_run in (False, True):
+            with self.subTest(dry_run=dry_run), self.assertRaisesRegex(journal.JournalError, "index definition"):
+                journal.index_delivery_history(self.path, dry_run=dry_run)
+            self.assertEqual(self.path.read_bytes(), before)
 
     def test_H28_index_cli_reports_created_and_existing_without_echoing_the_path(self):
         self.seed(2)

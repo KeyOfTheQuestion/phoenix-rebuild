@@ -44,6 +44,7 @@ def main():
     history.add_argument("--destination", help="Filter by the fingerprint of the exact receiver URL")
     history_index = commands.add_parser("delivery-journal-index", help="Explicitly add the history order index to an existing journal")
     history_index.add_argument("--journal", required=True)
+    history_index.add_argument("--dry-run", action="store_true", help="Inspect index readiness without writing or acquiring the writer lock")
     receipt = commands.add_parser("delivery-receipt", help="Read one local delivery attempt by ID")
     receipt.add_argument("--journal", required=True)
     receipt.add_argument("--attempt-id", required=True, help="The journal_attempt_id returned by deliver-event")
@@ -93,7 +94,7 @@ def main():
     if args.command == "delivery-journal-index":
         from .delivery_journal import JournalError, index_delivery_history
         try:
-            report = index_delivery_history(args.journal)
+            report = index_delivery_history(args.journal, dry_run=args.dry_run)
         except JournalError as error:
             print("Delivery history index refused: " + str(error), file=sys.stderr)
             return 2

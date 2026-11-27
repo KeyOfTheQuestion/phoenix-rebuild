@@ -436,6 +436,15 @@ history reads and delivery writes still do not upgrade old journals. These
 client checks add no model calls or backend reconstruction items.
 [Upgrade observation](maintenance/2026-11-26-journal-index-upgrade.md).
 
+The same command's `--dry-run` mode opens the existing journal read-only and
+inspects index existence/definition inside one read transaction. H31..H35
+check actual SQL and unchanged file bytes, CLI creation intent, schema-name
+collisions and trigger compatibility, concurrent reserved writer access, and
+invalid-mode/missing-file refusal. H27 exercises invalid definitions in both
+modes. Preview reports `created: false`; it is not a reservation for later
+maintenance and does not add a model call or backend reconstruction item.
+[Preview observation](maintenance/2026-11-27-index-preview.md).
+
 `deliver-event --expect-body-sha256 DIGEST` adds a client-supplied body
 precondition before the POST marker. The negative control serves a changed
 body with its matching source digest and observes zero receiver requests.

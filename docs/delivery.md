@@ -335,6 +335,26 @@ rules. This operation is optional; ordinary history reads and delivery writes
 do not automatically install the index in old journals.
 [Explicit upgrade checks](maintenance/2026-11-26-journal-index-upgrade.md).
 
+### Preview index maintenance without writing
+
+```sh
+python3 -m phoenix delivery-journal-index --journal ./deliveries.sqlite3 --dry-run
+```
+
+The preview opens an existing supported journal read-only and inspects its
+schema in one read transaction. It returns `dry_run: true`, `created: false`,
+and `would_create: true` if the order index is absent or `false` if the
+canonical index exists. It does not build the index or request a reserved
+write lock. Missing/unsupported journals and known table/view/index name or
+definition conflicts are refused with exit code 2. Triggers occupy a separate
+SQLite namespace and are preserved when their name also matches the index.
+
+The result describes that read snapshot, not a reservation for a later write.
+Omitting `--dry-run` performs the normal upgrade with fresh checks and write
+locking. Python callers can pass the keyword `dry_run=True` to
+`index_delivery_history`; its mode argument must be a boolean.
+[Preview checks and limits](maintenance/2026-11-27-index-preview.md).
+
 ## Filter delivery history by state
 
 ```sh

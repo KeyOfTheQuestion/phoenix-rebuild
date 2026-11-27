@@ -239,6 +239,10 @@ refuses a conflicting definition. This write operation can wait for a database
 lock; history queries still perform no automatic upgrade.
 [Index an existing journal](docs/delivery.md#index-an-existing-delivery-journal).
 
+Add `--dry-run` to inspect index readiness in a read-only transaction. The
+result always reports `created: false` and uses `would_create` to describe
+the current journal. A later real upgrade rechecks the state before writing.
+
 The delivery verification script also works from outside the checkout:
 `python3 /path/to/phoenix-rebuild/tests/delivery_smoke.py` (replace the path).
 It checks the latest successful v2 AI inbox and the CLI from that checkout.
